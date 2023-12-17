@@ -11,7 +11,6 @@ import torch
 import torchvision.transforms as transforms
 import timm.optim.optim_factory as optim_factory
 
-from utils.misc import NativeScalerWithGradNormCount as NativeScaler
 from utils.pretrain import run_iter, parseArguments, str2bool
 import utils.models_mae
 from utils.models_mae import load_model
@@ -82,15 +81,13 @@ lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, init_lr,
                                                    final_div_factor=final_lr_factor, 
                                                    three_phase=False)
 
-loss_scaler = NativeScaler()
-
 if pretrained_start:
     # Load pretrained ViT model weights here...
     pass
 
 # Load model state from previous training (if any)
 model_filename =  os.path.join(model_dir, model_name+'.pth.tar')    
-model, losses, cur_iter = load_model(model, model_filename, optimizer, loss_scaler)
+model, losses, cur_iter = load_model(model, model_filename, optimizer)
 
 
 # Data loaders
@@ -110,7 +107,7 @@ dataloader_train = torch.utils.data.DataLoader(dataset_train,
 
 print('The training set consists of %i cutouts.' % (len(dataset_train)))
 
-def train_network(model, optimizer, lr_scheduler, loss_scaler, cur_iter):
+def train_network(model, optimizer, lr_scheduler, cur_iter):
     print('Training the network with a batch size of %i ...' % (batch_size))
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
           (verbose_iters, cp_time))
@@ -128,7 +125,7 @@ def train_network(model, optimizer, lr_scheduler, loss_scaler, cur_iter):
             # Run an iteration of training
             model, optimizer, lr_scheduler, losses_cp = run_iter(model, train_samples, 
                                                                  mask_ratio, optimizer, 
-                                                                 lr_scheduler, loss_scaler, 
+                                                                 lr_scheduler, 
                                                                  losses_cp, mode='train')
             
                             
@@ -160,7 +157,6 @@ def train_network(model, optimizer, lr_scheduler, loss_scaler, cur_iter):
                 torch.save({'batch_iters': cur_iter,
                                 'losses': losses,
                                 'optimizer' : optimizer.state_dict(),
-                                'loss_scaler': loss_scaler.state_dict(),
                                 'model' : model.state_dict()},
                                 model_filename)
 
@@ -173,7 +169,6 @@ def train_network(model, optimizer, lr_scheduler, loss_scaler, cur_iter):
                 torch.save({'batch_iters': cur_iter,
                                 'losses': losses,
                                 'optimizer' : optimizer.state_dict(),
-                                'loss_scaler': loss_scaler.state_dict(),
                                 'model' : model.state_dict()},
                                 model_filename)
                 # Finish training
@@ -181,5 +176,5 @@ def train_network(model, optimizer, lr_scheduler, loss_scaler, cur_iter):
                 
 # Run the training
 if __name__=="__main__":
-    train_network(model, optimizer, lr_scheduler, loss_scaler, cur_iter)
+    train_network(model, optimizer, lr_scheduler, cur_iter)
     print('\nTraining complete.')

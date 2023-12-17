@@ -34,7 +34,7 @@ def parseArguments():
     return parser
 
 
-def run_iter(model, samples, mask_ratio, optimizer, lr_scheduler, loss_scaler,
+def run_iter(model, samples, mask_ratio, optimizer, lr_scheduler,
              losses_cp, mode='train'):
         
     if mode=='train':
@@ -53,10 +53,6 @@ def run_iter(model, samples, mask_ratio, optimizer, lr_scheduler, loss_scaler,
         optimizer.step()
         # Reset gradients
         optimizer.zero_grad(set_to_none=True)
-        
-        #loss_scaler(loss, optimizer, 
-        #            parameters=model.parameters(),
-        #            update_grad=True)
         
         # Adjust learning rate
         lr_scheduler.step()
