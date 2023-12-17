@@ -58,11 +58,14 @@ num_workers = int(config['TRAINING']['num_workers'])
 
 # Model architecture
 img_size = int(config['ARCHITECTURE']['img_size'])
+patch_size = int(config['ARCHITECTURE']['patch_size'])
 model_type = config['ARCHITECTURE']['model_type']
 
 # Construct the model
-model = utils.models_mae.__dict__[model_type](img_size=img_size,
-                                              norm_pix_loss=norm_pix_loss)
+if model_type=='base':
+    model = utils.models_mae.mae_vit_base(img_size=img_size,
+                                          patch_size=patch_size,
+                                          norm_pix_loss=norm_pix_loss)
 model.to(device)
 
 # Set weight decay to 0 for bias and norm layers
