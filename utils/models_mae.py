@@ -1,14 +1,3 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-# --------------------------------------------------------
-# References:
-# timm: https://github.com/rwightman/pytorch-image-models/tree/master/timm
-# DeiT: https://github.com/facebookresearch/deit
-# --------------------------------------------------------
-
 from functools import partial
 from collections import defaultdict
 
@@ -23,7 +12,7 @@ cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)
 from pos_embed import get_2d_sincos_pos_embed
 
-def load_model(model, model_filename, optimizer, loss_scaler):
+def load_model(model, model_filename, optimizer=None, lr_scheduler=None):
     
     # Check for pre-trained weights
     if os.path.exists(model_filename):
@@ -39,8 +28,8 @@ def load_model(model, model_filename, optimizer, loss_scaler):
         # Load optimizer states
         if optimizer is not None:
             optimizer.load_state_dict(checkpoint['optimizer'])
-        if loss_scaler is not None:
-            loss_scaler.load_state_dict(checkpoint['loss_scaler'])
+        if lr_scheduler is not None:
+            lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
         
         # Load model weights
         model.load_state_dict(checkpoint['model'])

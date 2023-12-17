@@ -87,7 +87,7 @@ if pretrained_start:
 
 # Load model state from previous training (if any)
 model_filename =  os.path.join(model_dir, model_name+'.pth.tar')    
-model, losses, cur_iter = load_model(model, model_filename, optimizer)
+model, losses, cur_iter = load_model(model, model_filename, optimizer, lr_scheduler)
 
 
 # Data loaders
@@ -157,6 +157,7 @@ def train_network(model, optimizer, lr_scheduler, cur_iter):
                 torch.save({'batch_iters': cur_iter,
                                 'losses': losses,
                                 'optimizer' : optimizer.state_dict(),
+                                'lr_scheduler' : lr_scheduler.state_dict(),
                                 'model' : model.state_dict()},
                                 model_filename)
 
@@ -169,6 +170,7 @@ def train_network(model, optimizer, lr_scheduler, cur_iter):
                 torch.save({'batch_iters': cur_iter,
                                 'losses': losses,
                                 'optimizer' : optimizer.state_dict(),
+                                'lr_scheduler' : lr_scheduler.state_dict(),
                                 'model' : model.state_dict()},
                                 model_filename)
                 # Finish training
