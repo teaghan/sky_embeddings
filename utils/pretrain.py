@@ -48,15 +48,15 @@ def run_iter(model, samples, mask_ratio, optimizer, lr_scheduler, loss_scaler,
         
     if 'train' in mode:        
         # Update the gradients
-        #loss.backward()
+        loss.backward()
         # Adjust network weights
-        #optimizer.step()
+        optimizer.step()
         # Reset gradients
-        #optimizer.zero_grad(set_to_none=True)
+        optimizer.zero_grad(set_to_none=True)
         
-        loss_scaler(loss, optimizer, 
-                    parameters=model.parameters(),
-                    update_grad=True)
+        #loss_scaler(loss, optimizer, 
+        #            parameters=model.parameters(),
+        #            update_grad=True)
         
         # Adjust learning rate
         lr_scheduler.step()
