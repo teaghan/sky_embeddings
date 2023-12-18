@@ -42,10 +42,21 @@ if data_dir is None:
 config = configparser.ConfigParser()
 config.read(config_dir+model_name+'.ini')
 
+# Display model configuration
+print('\nCreating model: %s'%model_name)
+print('\nConfiguration:')
+for key_head in config.keys():
+    if key_head=='DEFAULT':
+        continue
+    print('  %s' % key_head)
+    for key in config[key_head].keys():
+        print('    %s: %s'%(key, config[key_head][key]))
+
 # Training parameters from config file
 train_data_file = os.path.join(data_dir, config['DATA']['train_data_file'])
-channel_means = eval(config['DATA']['channel_means'])
-channel_stds = eval(config['DATA']['channel_stds'])
+#channel_means = eval(config['DATA']['channel_means'])
+#channel_stds = eval(config['DATA']['channel_stds'])
+norm_type = config['DATA']['norm_type']
 pretrained_start = str2bool(config['TRAINING']['pretrained_start'])
 batch_size = int(config['TRAINING']['batch_size'])
 total_batch_iters = int(float(config['TRAINING']['total_batch_iters']))
@@ -94,13 +105,14 @@ model, losses, cur_iter = load_model(model, model_filename, optimizer, lr_schedu
 
 
 # Data loaders
+'''
 transform_train = transforms.Compose([
             #transforms.RandomResizedCrop(args.input_size, scale=(0.2, 1.0), interpolation=3),  # 3 is bicubic
             #transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(mean=channel_means, std=channel_stds)])
-
-dataset_train = CutoutDataset(train_data_file, transform=transform_train)
+'''
+dataset_train = CutoutDataset(train_data_file, norm=norm_type)
 
 dataloader_train = torch.utils.data.DataLoader(dataset_train,
                                                       batch_size=batch_size, 
