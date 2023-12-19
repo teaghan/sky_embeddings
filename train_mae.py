@@ -19,7 +19,7 @@ from utils.dataloader import CutoutDataset
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 num_gpus = torch.cuda.device_count()
 
-torch.backends.cudnn.benchmark = True
+#torch.backends.cudnn.benchmark = True
 
 print('Using Torch version: %s' % (torch.__version__))
 print('Using a %s device with %i gpus' % (device, num_gpus))
