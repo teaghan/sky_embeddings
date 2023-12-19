@@ -46,11 +46,12 @@ def run_iter(model, samples, mask_ratio, optimizer, lr_scheduler,
     with torch.cuda.amp.autocast():
         loss, _, _ = model(samples, mask_ratio=mask_ratio)
         
-    if 'train' in mode:        
-        # Update the gradients
-        loss.backward()
-        # Adjust network weights
-        optimizer.step()
+    if 'train' in mode:
+        if not torch.isnan(loss):
+            # Update the gradients
+            loss.backward()
+            # Adjust network weights
+            optimizer.step()
         # Reset gradients
         optimizer.zero_grad(set_to_none=True)
         
