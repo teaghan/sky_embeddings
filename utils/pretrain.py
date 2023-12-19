@@ -43,8 +43,8 @@ def run_iter(model, samples, mask_ratio, optimizer, lr_scheduler,
         model.train(False)
         
     # Calculate MAE loss
-    with torch.cuda.amp.autocast():
-        loss, _, _ = model(samples, mask_ratio=mask_ratio)
+    #with torch.cuda.amp.autocast():
+    loss, _, _ = model(samples, mask_ratio=mask_ratio)
         
     if 'train' in mode:
         if not torch.isnan(loss):
