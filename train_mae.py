@@ -5,8 +5,7 @@ import configparser
 from collections import defaultdict
 import torch
 
-from utils.pretrain import run_iter, parseArguments, str2bool
-import utils.models_mae
+from utils.pretrain import run_iter, parseArguments
 from utils.models_mae import build_model
 from utils.dataloader import build_dataloader
 
@@ -50,7 +49,8 @@ def main(args):
     dataloader_train = build_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
                                         config['DATA']['norm_type'], 
                                         int(config['TRAINING']['batch_size']), 
-                                        int(config['TRAINING']['num_workers']))
+                                        int(config['TRAINING']['num_workers']), 
+                                        shuffle=True)
 
 
     print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
