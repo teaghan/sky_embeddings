@@ -60,10 +60,10 @@ def main(args):
                   float(config['TRAINING']['mask_ratio']),
                   losses, cur_iter, 
                   int(float(config['TRAINING']['total_batch_iters'])),
-                  args.verbose_iters, args.cp_time)
+                  args.verbose_iters, args.cp_time, model_filename)
 
 def train_network(model, dataloader_train, optimizer, lr_scheduler, device, mask_ratio, losses, 
-                  cur_iter, total_batch_iters, verbose_iters, cp_time):
+                  cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename):
     print('Training the network with a batch size of %i ...' % (dataloader_train.batch_size))
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
           (verbose_iters, cp_time))
