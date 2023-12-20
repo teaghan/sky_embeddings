@@ -26,7 +26,8 @@ def parseArguments():
     parser.add_argument("-ct", "--cp_time", 
                         help="Number of minutes after which to save a checkpoint.", 
                         type=float, default=15)
-    # Alternate data directory than cycgan/data/
+    
+    # Alternate data directory than sky_embeddings/data/
     parser.add_argument("-dd", "--data_dir", 
                         help="Data directory if different from StarNet_SS/data/", 
                         type=str, default=None)
@@ -43,15 +44,13 @@ def run_iter(model, samples, mask_ratio, optimizer, lr_scheduler,
         model.train(False)
         
     # Calculate MAE loss
-    #with torch.cuda.amp.autocast():
     loss, _, _ = model(samples, mask_ratio=mask_ratio)
         
     if 'train' in mode:
-        if not torch.isnan(loss):
-            # Update the gradients
-            loss.backward()
-            # Adjust network weights
-            optimizer.step()
+        # Update the gradients
+        loss.backward()
+        # Adjust network weights
+        optimizer.step()
         # Reset gradients
         optimizer.zero_grad(set_to_none=True)
         

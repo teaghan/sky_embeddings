@@ -3,6 +3,7 @@ from collections import defaultdict
 
 import torch
 import torch.nn as nn
+import timm.optim.optim_factory as optim_factory
 
 from timm.models.vision_transformer import PatchEmbed, Block
 
@@ -11,6 +12,53 @@ import sys
 cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)
 from pos_embed import get_2d_sincos_pos_embed
+from pretrain import str2bool
+
+def build_model(config, model_filename, device, build_optimizer=False):
+
+    # Model architecture
+    norm_pix_loss = str2bool(config['TRAINING']['norm_pix_loss'])
+    img_size = int(config['ARCHITECTURE']['img_size'])
+    num_channels = int(config['ARCHITECTURE']['num_channels'])
+    patch_size = int(config['ARCHITECTURE']['patch_size'])
+    model_type = config['ARCHITECTURE']['model_type']
+
+    # Construct the model
+    if model_type=='base':
+        model = mae_vit_base(img_size=img_size,
+                             in_chans=num_channels,
+                             patch_size=patch_size,
+                             norm_pix_loss=norm_pix_loss)
+    model.to(device)
+
+    if build_optimizer:
+        total_batch_iters = int(float(config['TRAINING']['total_batch_iters']))
+        weight_decay = float(config['TRAINING']['weight_decay'])
+        init_lr = float(config['TRAINING']['init_lr'])
+        final_lr_factor = float(config['TRAINING']['final_lr_factor'])
+        
+        # Set weight decay to 0 for bias and norm layers
+        param_groups = optim_factory.param_groups_weight_decay(model, weight_decay)
+
+        # Optimizer
+        optimizer = torch.optim.AdamW(param_groups, lr=init_lr, betas=(0.9, 0.95))
+
+        # Learning rate scheduler
+        lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, init_lr,
+                                                           total_steps=int(total_batch_iters), 
+                                                           pct_start=0.05, anneal_strategy='cos', 
+                                                           cycle_momentum=True, 
+                                                           base_momentum=0.85, 
+                                                           max_momentum=0.95, div_factor=25.0, 
+                                                           final_div_factor=final_lr_factor, 
+                                                           three_phase=False)
+        model, losses, cur_iter = load_model(model, model_filename, optimizer, lr_scheduler)
+        
+        return model, losses, cur_iter, optimizer, lr_scheduler
+    else:
+        model, losses, cur_iter = load_model(model, model_filename, optimizer, lr_scheduler)
+        return model, losses, cur_iter
+    
 
 def load_model(model, model_filename, optimizer=None, lr_scheduler=None):
     
@@ -81,6 +129,7 @@ class MaskedAutoencoderViT(nn.Module):
         # --------------------------------------------------------------------------
 
         self.norm_pix_loss = norm_pix_loss
+        self.in_chans = in_chans
 
         self.initialize_weights()
 
@@ -116,16 +165,16 @@ class MaskedAutoencoderViT(nn.Module):
 
     def patchify(self, imgs):
         """
-        imgs: (N, 3, H, W)
+        imgs: (N, C, H, W)
         x: (N, L, patch_size**2 *3)
         """
         p = self.patch_embed.patch_size[0]
         assert imgs.shape[2] == imgs.shape[3] and imgs.shape[2] % p == 0
 
         h = w = imgs.shape[2] // p
-        x = imgs.reshape(shape=(imgs.shape[0], 3, h, p, w, p))
+        x = imgs.reshape(shape=(imgs.shape[0], self.in_chans, h, p, w, p))
         x = torch.einsum('nchpwq->nhwpqc', x)
-        x = x.reshape(shape=(imgs.shape[0], h * w, p**2 * 3))
+        x = x.reshape(shape=(imgs.shape[0], h * w, p**2 * self.in_chans))
         return x
 
     def unpatchify(self, x):
@@ -137,9 +186,9 @@ class MaskedAutoencoderViT(nn.Module):
         h = w = int(x.shape[1]**.5)
         assert h * w == x.shape[1]
         
-        x = x.reshape(shape=(x.shape[0], h, w, p, p, 3))
+        x = x.reshape(shape=(x.shape[0], h, w, p, p, self.in_chans))
         x = torch.einsum('nhwpqc->nchpwq', x)
-        imgs = x.reshape(shape=(x.shape[0], 3, h * p, h * p))
+        imgs = x.reshape(shape=(x.shape[0], self.in_chans, h * p, h * p))
         return imgs
 
     def random_masking(self, x, mask_ratio):

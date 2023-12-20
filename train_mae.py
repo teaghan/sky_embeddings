@@ -1,129 +1,70 @@
 import os
-# Directory of training script
-cur_dir = os.path.dirname(__file__)
-
 import numpy as np
 import time
 import configparser
 from collections import defaultdict
-
 import torch
-import torchvision.transforms as transforms
-import timm.optim.optim_factory as optim_factory
 
 from utils.pretrain import run_iter, parseArguments, str2bool
 import utils.models_mae
-from utils.models_mae import load_model
-from utils.dataloader import CutoutDataset
+from utils.models_mae import build_model
+from utils.dataloader import build_dataloader
 
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-num_gpus = torch.cuda.device_count()
+def main(args):
 
-#torch.backends.cudnn.benchmark = True
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-print('Using Torch version: %s' % (torch.__version__))
-print('Using a %s device with %i gpus' % (device, num_gpus))
+    print('Using Torch version: %s' % (torch.__version__))
+    print('Using a %s device' % (device))
 
-# Collect the command line arguments
-args = parseArguments()
-args = args.parse_args()
-model_name = args.model_name
-verbose_iters = args.verbose_iters
-cp_time = args.cp_time
-data_dir = args.data_dir
+    # Directories
+    cur_dir = os.path.dirname(__file__)
+    config_dir = os.path.join(cur_dir, 'configs/')
+    model_dir = os.path.join(cur_dir, 'models/')
+    data_dir = args.data_dir
+    if data_dir is None:
+        data_dir = os.path.join(cur_dir, 'data/')
 
-# Directories
-config_dir = os.path.join(cur_dir, 'configs/')
-model_dir = os.path.join(cur_dir, 'models/')
-if data_dir is None:
-    data_dir = os.path.join(cur_dir, 'data/')
+    # Load model configuration
+    model_name = args.model_name
+    config = configparser.ConfigParser()
+    config.read(config_dir+model_name+'.ini')
 
-# Model configuration
-config = configparser.ConfigParser()
-config.read(config_dir+model_name+'.ini')
+    # Display model configuration
+    print('\nCreating model: %s'%model_name)
+    print('\nConfiguration:')
+    for key_head in config.keys():
+        if key_head=='DEFAULT':
+            continue
+        print('  %s' % key_head)
+        for key in config[key_head].keys():
+            print('    %s: %s'%(key, config[key_head][key]))
 
-# Display model configuration
-print('\nCreating model: %s'%model_name)
-print('\nConfiguration:')
-for key_head in config.keys():
-    if key_head=='DEFAULT':
-        continue
-    print('  %s' % key_head)
-    for key in config[key_head].keys():
-        print('    %s: %s'%(key, config[key_head][key]))
-
-# Training parameters from config file
-train_data_file = os.path.join(data_dir, config['DATA']['train_data_file'])
-#channel_means = eval(config['DATA']['channel_means'])
-#channel_stds = eval(config['DATA']['channel_stds'])
-norm_type = config['DATA']['norm_type']
-pretrained_start = str2bool(config['TRAINING']['pretrained_start'])
-batch_size = int(config['TRAINING']['batch_size'])
-total_batch_iters = int(float(config['TRAINING']['total_batch_iters']))
-mask_ratio = float(config['TRAINING']['mask_ratio'])
-norm_pix_loss = str2bool(config['TRAINING']['norm_pix_loss'])
-weight_decay = float(config['TRAINING']['weight_decay'])
-init_lr = float(config['TRAINING']['init_lr'])
-final_lr_factor = float(config['TRAINING']['final_lr_factor'])
-num_workers = int(config['TRAINING']['num_workers'])
-
-# Model architecture
-img_size = int(config['ARCHITECTURE']['img_size'])
-patch_size = int(config['ARCHITECTURE']['patch_size'])
-model_type = config['ARCHITECTURE']['model_type']
-
-# Construct the model
-if model_type=='base':
-    model = utils.models_mae.mae_vit_base(img_size=img_size,
-                                          patch_size=patch_size,
-                                          norm_pix_loss=norm_pix_loss)
-model.to(device)
-
-# Set weight decay to 0 for bias and norm layers
-param_groups = optim_factory.param_groups_weight_decay(model, weight_decay)
-
-# Optimizer
-optimizer = torch.optim.AdamW(param_groups, lr=init_lr, betas=(0.9, 0.95))
-
-# Learning rate scheduler
-lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, init_lr,
-                                                   total_steps=int(total_batch_iters), 
-                                                   pct_start=0.05, anneal_strategy='cos', 
-                                                   cycle_momentum=True, 
-                                                   base_momentum=0.85, 
-                                                   max_momentum=0.95, div_factor=25.0, 
-                                                   final_div_factor=final_lr_factor, 
-                                                   three_phase=False)
-
-if pretrained_start:
-    # Load pretrained ViT model weights here...
-    pass
-
-# Load model state from previous training (if any)
-model_filename =  os.path.join(model_dir, model_name+'.pth.tar')    
-model, losses, cur_iter = load_model(model, model_filename, optimizer, lr_scheduler)
+    # Construct the model, optimizer, etc.
+    model_filename =  os.path.join(model_dir, model_name+'.pth.tar') 
+    model, losses, cur_iter, optimizer, lr_scheduler = build_model(config, model_filename, 
+                                                                   device, build_optimizer=True)
 
 
-# Data loaders
-'''
-transform_train = transforms.Compose([
-            #transforms.RandomResizedCrop(args.input_size, scale=(0.2, 1.0), interpolation=3),  # 3 is bicubic
-            #transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=channel_means, std=channel_stds)])
-'''
-dataset_train = CutoutDataset(train_data_file, norm=norm_type)
+    # Data loaders
+    dataloader_train = build_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
+                                        config['DATA']['norm_type'], 
+                                        int(config['TRAINING']['batch_size']), 
+                                        int(config['TRAINING']['num_workers']))
 
-dataloader_train = torch.utils.data.DataLoader(dataset_train,
-                                                      batch_size=batch_size, 
-                                                      shuffle=True, 
-                                                      num_workers=num_workers,
-                                                      pin_memory=True)
 
-print('The training set consists of %i cutouts.' % (len(dataset_train)))
+    print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
+    
+    train_network(model, dataloader_train, optimizer, 
+                  lr_scheduler, device,
+                  float(config['TRAINING']['mask_ratio']),
+                  losses, cur_iter, 
+                  int(float(config['TRAINING']['total_batch_iters'])),
+                  args.verbose_iters, args.cp_time)
 
-def train_network(model, optimizer, lr_scheduler, cur_iter):
-    print('Training the network with a batch size of %i ...' % (batch_size))
+def train_network(model, dataloader_train, optimizer, lr_scheduler, device, mask_ratio, losses, 
+                  cur_iter, total_batch_iters, verbose_iters, cp_time):
+    print('Training the network with a batch size of %i ...' % (dataloader_train.batch_size))
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
           (verbose_iters, cp_time))
     
@@ -131,7 +72,7 @@ def train_network(model, optimizer, lr_scheduler, cur_iter):
     losses_cp = defaultdict(list)
     cp_start_time = time.time()
     while cur_iter < (total_batch_iters):
-        # Iterate through both training datasets simultaneously
+        # Iterate through training dataset
         for train_samples, _ in dataloader_train:
             
             # Switch to GPU if available
@@ -160,7 +101,6 @@ def train_network(model, optimizer, lr_scheduler, cur_iter):
 
                 # Reset checkpoint loss dictionary
                 losses_cp = defaultdict(list)
-
 
             # Increase the iteration
             cur_iter += 1
@@ -193,5 +133,8 @@ def train_network(model, optimizer, lr_scheduler, cur_iter):
                 
 # Run the training
 if __name__=="__main__":
-    train_network(model, optimizer, lr_scheduler, cur_iter)
+    args = parseArguments()
+    args = args.parse_args()
+    main(args)
+    
     print('\nTraining complete.')

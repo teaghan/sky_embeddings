@@ -2,6 +2,15 @@ import numpy as np
 import torch
 import h5py
 
+def build_dataloader(filename, norm_type, batch_size, num_workers):
+    
+    # Data loaders
+    dataset = CutoutDataset(filename, norm=norm_type)
+
+    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, 
+                                       shuffle=True, num_workers=num_workers,
+                                       pin_memory=True)
+
 class CutoutDataset(torch.utils.data.Dataset):
     
     """
