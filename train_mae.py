@@ -8,6 +8,7 @@ import torch
 from utils.pretrain import run_iter, parseArguments
 from utils.models_mae import build_model
 from utils.dataloader import build_dataloader
+from utils.analysis_fns import plot_progress, mae_predict, plot_batch
 
 def main(args):
 
@@ -23,6 +24,11 @@ def main(args):
     data_dir = args.data_dir
     if data_dir is None:
         data_dir = os.path.join(cur_dir, 'data/')
+    fig_dir = os.path.join(cur_dir, 'figures/')
+    if not os.path.exists(model_dir):
+        os.mkdir(model_dir)
+    if not os.path.exists(fig_dir):
+        os.mkdir(fig_dir)
 
     # Load model configuration
     model_name = args.model_name
@@ -52,18 +58,24 @@ def main(args):
                                         int(config['TRAINING']['num_workers']), 
                                         shuffle=True)
 
+    dataloader_val = build_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
+                                        config['DATA']['norm_type'], 
+                                        int(config['TRAINING']['batch_size']), 
+                                        int(config['TRAINING']['num_workers']), 
+                                        shuffle=True)
+
 
     print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
     
-    train_network(model, dataloader_train, optimizer, 
-                  lr_scheduler, device,
+    train_network(model, dataloader_train, dataloader_val, 
+                  optimizer, lr_scheduler, device,
                   float(config['TRAINING']['mask_ratio']),
                   losses, cur_iter, 
                   int(float(config['TRAINING']['total_batch_iters'])),
-                  args.verbose_iters, args.cp_time, model_filename)
+                  args.verbose_iters, args.cp_time, model_filename, fig_dir)
 
-def train_network(model, dataloader_train, optimizer, lr_scheduler, device, mask_ratio, losses, 
-                  cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename):
+def train_network(model, dataloader_train, dataloader_val, optimizer, lr_scheduler, device, mask_ratio, 
+                  losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir):
     print('Training the network with a batch size of %i ...' % (dataloader_train.batch_size))
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
           (verbose_iters, cp_time))
@@ -88,6 +100,20 @@ def train_network(model, dataloader_train, optimizer, lr_scheduler, device, mask
             # Evaluate validation set and display losses
             if cur_iter % verbose_iters == 0:
 
+                with torch.no_grad():
+                    for i, (val_samples, _) in enumerate(dataloader_val):
+                        # Switch to GPU if available
+                        val_samples = val_samples.to(device, non_blocking=True)
+
+                        # Run an iteration
+                        model, optimizer, lr_scheduler, losses_cp = run_iter(model, val_samples, 
+                                                                             mask_ratio, optimizer, 
+                                                                             lr_scheduler, 
+                                                                             losses_cp, mode='val')
+                        # Don't bother with the whole dataset
+                        if i>=100:
+                            break
+                
                 # Calculate averages
                 for k in losses_cp.keys():
                     losses[k].append(np.mean(np.array(losses_cp[k]), axis=0))
@@ -98,9 +124,24 @@ def train_network(model, dataloader_train, optimizer, lr_scheduler, device, mask
                 print('Losses:')
                 print('\tTraining Dataset')
                 print('\t\tTotal Loss: %0.3f'% (losses['train_loss'][-1]))
+                print('\tValidation Dataset')
+                print('\t\tTotal Loss: %0.3f'% (losses['val_loss'][-1]))
 
                 # Reset checkpoint loss dictionary
                 losses_cp = defaultdict(list)
+                
+                # Plot progress
+                plot_progress(losses, y_lims=[(0,1.1)], 
+                              savename=os.path.join(fig_dir, 
+                                                    f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
+                # Plot 5 validation samples
+                pred_imgs, mask_imgs, orig_imgs = mae_predict(model, dataloader_val, 
+                                                              device, 
+                                                              mask_ratio, 
+                                                              single_batch=True)
+                plot_batch(orig_imgs, mask_imgs, pred_imgs, n_samples=5, channel_index=0,
+                           savename=os.path.join(fig_dir, 
+                                                 f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters.png'))
 
             # Increase the iteration
             cur_iter += 1

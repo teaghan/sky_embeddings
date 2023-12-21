@@ -56,7 +56,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
         
         return model, losses, cur_iter, optimizer, lr_scheduler
     else:
-        model, losses, cur_iter = load_model(model, model_filename, optimizer, lr_scheduler)
+        model, losses, cur_iter = load_model(model, model_filename)
         return model, losses, cur_iter
     
 
@@ -179,8 +179,8 @@ class MaskedAutoencoderViT(nn.Module):
 
     def unpatchify(self, x):
         """
-        x: (N, L, patch_size**2 *3)
-        imgs: (N, 3, H, W)
+        x: (N, L, patch_size**2 *C)
+        imgs: (N, C, H, W)
         """
         p = self.patch_embed.patch_size[0]
         h = w = int(x.shape[1]**.5)
