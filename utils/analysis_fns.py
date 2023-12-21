@@ -74,13 +74,13 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
             loss, pred, mask = model(samples, mask_ratio=mask_ratio)
 
             pred = model.unpatchify(pred)
-            pred = torch.einsum('nchw->nhwc', pred).detach().cpu()
+            pred = torch.einsum('nchw->nhwc', pred).detach()
 
             # Unpatchify the mask
             mask = mask.detach()
             mask = mask.unsqueeze(-1).repeat(1, 1, model.patch_embed.patch_size[0]**2 * model.in_chans)  # (N, H*W, p*p*3)
             mask = model.unpatchify(mask)  # 1 is removing, 0 is keeping
-            mask = torch.einsum('nchw->nhwc', mask).detach().cpu()
+            mask = torch.einsum('nchw->nhwc', mask).detach()
 
             samples = torch.einsum('nchw->nhwc', samples)
 
