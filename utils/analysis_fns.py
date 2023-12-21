@@ -88,7 +88,7 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
             pred[mask==0] = samples[mask==0]
 
             # Masked inputs
-            masked_samples = torch.copy(samples)
+            masked_samples = samples.detach().clone()
             masked_samples[mask==1] = torch.nan
 
             samples = samples.data.cpu().numpy()
