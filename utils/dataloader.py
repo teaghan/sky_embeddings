@@ -36,6 +36,9 @@ class CutoutDataset(torch.utils.data.Dataset):
         with h5py.File(self.data_file, "r") as f: 
             # Load cutout
             cutout = f['cutouts'][idx].transpose(1,2,0)
+            cutout[np.isnan(cutout)] = 0.
+
+            # Load RA and Dec
             labels = torch.from_numpy(np.asarray([f['ra'][idx], f['dec'][idx]]).astype(np.float32))
 
         if self.transform:
