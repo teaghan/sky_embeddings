@@ -29,6 +29,9 @@ class CutoutDataset(torch.utils.data.Dataset):
         return num_samples
     
     def __getitem__(self, idx):
+
+        if idx in [1369092, 4428633, 5527470]:
+            idx = idx+1
         
         with h5py.File(self.data_file, "r") as f: 
             # Load cutout
