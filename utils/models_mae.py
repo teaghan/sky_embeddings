@@ -29,6 +29,16 @@ def build_model(config, model_filename, device, build_optimizer=False):
                              in_chans=num_channels,
                              patch_size=patch_size,
                              norm_pix_loss=norm_pix_loss)
+    elif model_type=='large':
+        model = mae_vit_large(img_size=img_size,
+                             in_chans=num_channels,
+                             patch_size=patch_size,
+                             norm_pix_loss=norm_pix_loss)
+    elif model_type=='huge':
+        model = mae_vit_huge(img_size=img_size,
+                             in_chans=num_channels,
+                             patch_size=patch_size,
+                             norm_pix_loss=norm_pix_loss)
     model.to(device)
 
     if build_optimizer:
