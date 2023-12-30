@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import math
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -166,3 +167,56 @@ def plot_batch(orig_imgs, mask_imgs, pred_imgs,
                     bbox_inches='tight', pad_inches=0.05)
     
     plt.show()
+
+def display_images(images, vmin=0., vmax=1.):
+    """
+    Display a list of images in a 2D grid using matplotlib.
+
+    :param images: A list of images (each image should be a numpy array).
+    """
+
+    # Number of images
+    num_images = len(images)
+
+    # Calculate the grid size
+    grid_size = math.ceil(math.sqrt(num_images))
+
+    # Create a figure with subplots
+    fig, axes = plt.subplots(grid_size, grid_size, figsize=(12, 12))
+
+    # Flatten the array of axes
+    axes = axes.flatten()
+    
+    # Normalize images
+    images[images<vmin] = vmin
+    images[images>vmax] = vmax
+    images = normalize_images(images)
+    
+    # Loop through the images and display each one
+    for i, img in enumerate(images):
+        axes[i].imshow(img)
+        axes[i].axis('off')  # Hide the axes
+        axes[i].set_title(str(i))
+    # Hide any unused axes
+    for j in range(i + 1, len(axes)):
+        axes[j].axis('off')
+
+    plt.tight_layout()
+    plt.show()
+    
+def normalize_images(images):
+    """
+    Normalize each channel of an array of images to be in the range 0 to 1.
+
+    :param images: An array of images with shape (b, h, w, c), where c is the number of channels.
+    :return: Normalized array of images.
+    """
+    
+    if images.ndim==4:
+        min_ = np.min(images, axis=(0,1,2))
+        max_ = np.max(images, axis=(0,1,2))
+    else:
+        min_ = np.min(images)
+        max_ = np.max(images)
+    
+    return (images - min_) / (max_ - min_)
