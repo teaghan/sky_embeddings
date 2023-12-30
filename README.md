@@ -16,10 +16,6 @@ So far, we are using the [MAE developed by facebook](https://github.com/facebook
 
 - h5py: `pip install h5py`
 
-## Data download
-
-(still to come)
-
 ## Hyper Suprime-Cam (HSC) - Subaru Telescope
 
 The work in this repo shows an application to images taken by the HSC on the Subaru Telescope.
@@ -27,6 +23,10 @@ The work in this repo shows an application to images taken by the HSC on the Sub
 <p align="left">
   <img width="1000" height="1000" src="./figures/hsc_subaru.jpg">
 </p>
+
+## Data download
+
+(still to come)
 
 ## Training the Network
 
