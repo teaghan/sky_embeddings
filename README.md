@@ -1,50 +1,63 @@
 # Sky Embeddings
 
-Using self-supervised learning to create embeddings of images of the sky.
+Welcome to the Sky Embeddings repository, where we leverage self-supervised learning to generate and utilize embeddings from sky images for tasks such as classification, redshift estimation, and similarity searches.
 
-These embeddings can then be used for down-stream tasks such as classification, estimating redshifts, and performing similarity searches.
+## Overview
 
-## Masked Autoencoders
+This repository hosts code and methodologies for applying Masked Autoencoders (MAEs) to astronomical images, focusing on producing high-quality embeddings that capture the rich, underlying structures of the universe.
 
-So far, we are using the [MAE developed by facebook](https://github.com/facebookresearch/mae) as our ML framework.
+### Using Masked Autoencoders
 
-## Dependencies
+We employ the [MAE architecture developed by Facebook AI](https://github.com/facebookresearch/mae) as our primary machine learning framework. This allows us to create meaningful embeddings from partial observations of the sky.
+
+### Dependencies
+
+Ensure you have the following installed:
 
 - Python 3.11.5
-
-- [PyTorch](http://pytorch.org/): `pip install torch==2.0.1`
-
+- PyTorch: `pip install torch==2.0.1`
 - h5py: `pip install h5py`
 
-## Hyper Suprime-Cam (HSC) - Subaru Telescope
+## Dataset: Hyper Suprime-Cam (HSC) - Subaru Telescope
 
-The work in this repo shows an application to images taken by the HSC on the Subaru Telescope.
+Our primary dataset comes from the Hyper Suprime-Cam (HSC) on the Subaru Telescope. Below is an example image from the HSC:
 
 <p align="center">
   <img width="600" height="600" src="./figures/hsc_subaru.jpg"><br>
   <span style="display: block; text-align: right;"><a href="https://subarutelescope.org/en/news/topics/2017/02/27/2459.html">subarutelescope.org</a></span>
 </p>
 
-## Data download
+### Data Download
 
-(still to come)
+Details on how to access and prepare the HSC data will be provided soon.
 
 ## Training the Network
 
-### Option 1
+You can train the network using one of the following methods:
 
-1. The model architecture and training parameters are set within configuration file in [the config directory](./configs). For instance, I have already created the [original configuration file](./configs/mae_1.ini). You can copy this file under a new name and change whichever parameters you choose.
-  
-2. If you were to create a config file called `mae_2.ini` in Step 1, this model could be trained by running `python train_mae.py mae_2 -v 5000 -ct 10.00` which will train your model displaying the progress every 5000 batch iterations and the model would be saved every 10 minutes. This same command will continue training the network if you already have the model saved in the [model directory](./models) from previous training iterations. 
+### Option 1: Local Training
 
-### Option 2
+1. Set model architecture and parameters using a configuration file in [the config directory](./configs). Duplicate the [original configuration file](./configs/mae_1.ini) and modify as needed.
+2. To train a model with a new config file named `mae_2.ini`, use `python train_mae.py mae_2 -v 5000 -ct 10.00`, which will train your model displaying the progress every 5000 batch iterations and the model would be saved every 10 minutes. The script will also continue training from the last save point.
 
-Alternatively, if operating on compute-canada, you can use the `cc/launch_mae.py` script to simultaneously create a new configuration file and launch a bunch of jobs to train your model. 
+### Option 2: Compute Canada Cluster
 
-1. Change the [load modules file](./cc/module_loads.txt) to include the lines necessary to load your own environment with pytorch, etc. 
-2. Then, to copy the [original configuration](./configs/mae_1.ini), but use, say, a batch size of 32 images, you could use the command `python cc/launch_mae.py mae_2 -bs 32`. This will launch five 3-hour jobs on the GPU nodes to complete the training. You can checkout the other parameters that can be changed with the command `python cc/launch_mae.py -h`.
+For those with access to Compute Canada:
 
-## Analysis notebooks
+1. Modify [load modules file](./cc/module_loads.txt) to load the necessary environment.
+2. To launch training with a modified batch size or other parameters, use `python cc/launch_mae.py mae_2 -bs 32`. This script automatically creates a new configuration and initiates multiple training jobs.
 
-1. Checkout the [test notebook](./test_mae.ipynb) to evaluate the trained MAE.
-2. Checkout the [similarity search notebook](./latent_similarity.ipynb) for our developing work on using the embeddings to do similarity searches against images of known object classes.
+## Analysis Notebooks
+
+Explore the following Jupyter notebooks for analysis:
+
+1. [Test Notebook](./test_mae.ipynb): Evaluate the trained MAE's performance.
+2. [Similarity Search Notebook](./latent_similarity.ipynb): Experiment with similarity searches using embeddings against known object classes.
+
+### Contribution and Support
+
+We welcome contributions and suggestions! Please raise issues or submit pull requests on GitHub for any features or problems. For support, refer to the repository's issues section or contact the maintainers directly.
+
+---
+
+Embark on a journey of exploring the universe with machine learning through Sky Embeddings!
