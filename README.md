@@ -21,7 +21,7 @@ So far, we are using the [MAE developed by facebook](https://github.com/facebook
 The work in this repo shows an application to images taken by the HSC on the Subaru Telescope.
 
 <p align="center">
-  <img width="800" height="800" src="./figures/hsc_subaru.jpg">
+  <img width="700" height="700" src="./figures/hsc_subaru.jpg">
 </p>
 
 ## Data download
