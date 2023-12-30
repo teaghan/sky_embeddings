@@ -22,7 +22,7 @@ The work in this repo shows an application to images taken by the HSC on the Sub
 
 <p align="center">
   <img width="600" height="600" src="./figures/hsc_subaru.jpg"><br>
-  <span style="display: block; text-align: right;"><a href="https://subarutelescope.org/en/news/topics/2017/02/27/2459.html">subarutelescope.org/</a></span>
+  <span style="display: block; text-align: right;"><a href="https://subarutelescope.org/en/news/topics/2017/02/27/2459.html">subarutelescope.org</a></span>
 </p>
 
 ## Data download
