@@ -204,19 +204,3 @@ def display_images(images, vmin=0., vmax=1.):
     plt.tight_layout()
     plt.show()
     
-def normalize_images(images):
-    """
-    Normalize each channel of an array of images to be in the range 0 to 1.
-
-    :param images: An array of images with shape (b, h, w, c), where c is the number of channels.
-    :return: Normalized array of images.
-    """
-    
-    if images.ndim==4:
-        min_ = np.min(images, axis=(0,1,2))
-        max_ = np.max(images, axis=(0,1,2))
-    else:
-        min_ = np.min(images)
-        max_ = np.max(images)
-    
-    return (images - min_) / (max_ - min_)
