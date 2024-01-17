@@ -44,8 +44,8 @@ You can train the network using one of the following methods:
 
 For those with access to Compute Canada:
 
-1. Modify [load modules file](./cc/module_loads.txt) to load the necessary environment.
-2. To launch training with a modified batch size or other parameters, use `python cc/launch_mae.py mae_2 -bs 32`. This script automatically creates a new configuration and initiates multiple training jobs.
+1. Modify the [load modules file](./cc/module_loads.txt) to load the necessary environment.
+2. To launch training with a modified batch size or other parameters, use `python cc/launch_mae.py mae_2 -bs 32`. This script automatically creates a new configuration and initiates multiple training jobs. You can checkout the other parameters that can be changed using the command `python cc/launch_mae.py -h`.
 
 ## Analysis Notebooks
 
