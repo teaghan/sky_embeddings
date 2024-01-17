@@ -56,9 +56,10 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
 
     if build_optimizer:
         total_batch_iters = int(float(config['TRAINING']['total_batch_iters']))
-        weight_decay = float(config['TRAINING']['weight_decay'])
-        head_init_lr = float(config['TRAINING']['head_init_lr'])
         enc_init_lr = float(config['TRAINING']['enc_init_lr'])
+        head_init_lr = float(config['TRAINING']['head_init_lr'])
+        enc_weight_decay = float(config['TRAINING']['enc_weight_decay'])
+        head_weight_decay = float(config['TRAINING']['head_weight_decay'])
         final_lr_factor = float(config['TRAINING']['final_lr_factor'])
         '''
         # Set weight decay to 0 for bias and norm layers
@@ -77,8 +78,8 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
         enc_params = filter(lambda p: id(p) not in map(id, model.head.parameters()), model.parameters())
         
         # Create the optimizer with two parameter groups
-        optimizer = torch.optim.AdamW([{'params': enc_params, 'lr': enc_init_lr, 'weight_decay': weight_decay},
-                                       {'params': head_params, 'lr': head_init_lr, 'weight_decay': weight_decay}])
+        optimizer = torch.optim.AdamW([{'params': enc_params, 'lr': enc_init_lr, 'enc_weight_decay': enc_weight_decay},
+                                       {'params': head_params, 'lr': head_init_lr, 'head_weight_decay': head_weight_decay}])
         
         # Learning rate scheduler for the two learning rates
         lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=[enc_init_lr, head_init_lr],
