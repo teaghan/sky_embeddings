@@ -66,7 +66,7 @@ def main(args):
     plot_resid_hexbin([r'$z$'], tgt_labels, pred_labels,
                       x_label='Target', y_lims=[1], 
                       gridsize=(80,40), max_counts=30, cmap='ocean_r', n_std=4,
-                      f'{model_name}_predictions.png'))
+                      savename=f'{model_name}_predictions.png'))
 
 # Run the testing
 if __name__=="__main__":
