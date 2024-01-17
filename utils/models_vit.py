@@ -14,6 +14,7 @@ cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)
 from pos_embed import interpolate_pos_embed
 from pretrain import str2bool
+from lr_decay import param_groups_lrd
 
 def build_model(config, mae_config, model_filename, mae_filename, device, build_optimizer=False):
 
@@ -61,28 +62,28 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
         enc_weight_decay = float(config['TRAINING']['enc_weight_decay'])
         head_weight_decay = float(config['TRAINING']['head_weight_decay'])
         final_lr_factor = float(config['TRAINING']['final_lr_factor'])
-        '''
-        # Set weight decay to 0 for bias and norm layers
-        param_groups = optim_factory.param_groups_weight_decay(model, weight_decay)
-
-        #param_groups = lrd.param_groups_lrd(model, weight_decay,
-        #                                    no_weight_decay_list=model.no_weight_decay(),
-        #                                    layer_decay=layer_decay)
+        lw_lrd = str2bool(config['TRAINING']['layerwise_lr_decay'])
+        layer_decay = float(config['TRAINING']['layer_decay'])
         
-        # Optimizer
-        optimizer = torch.optim.AdamW(param_groups, lr=head_init_lr)
-        '''
-
-        # Separate the head parameters from the rest of the model
-        head_params = model.head.parameters()
-        enc_params = filter(lambda p: id(p) not in map(id, model.head.parameters()), model.parameters())
-        
-        # Create the optimizer with two parameter groups
-        optimizer = torch.optim.AdamW([{'params': enc_params, 'lr': enc_init_lr, 'enc_weight_decay': enc_weight_decay},
-                                       {'params': head_params, 'lr': head_init_lr, 'head_weight_decay': head_weight_decay}])
-        
+        if lw_lrd:
+            # Build optimizer with layer-wise lr decay
+            param_groups = param_groups_lrd(model, enc_weight_decay,
+                                            no_weight_decay_list=model.no_weight_decay(),
+                                            layer_decay=layer_decay)
+            optimizer = torch.optim.AdamW(param_groups, lr=enc_init_lr)
+            max_lr = enc_init_lr
+        else:
+            # Separate the head parameters from the rest of the model
+            head_params = model.head.parameters()
+            enc_params = filter(lambda p: id(p) not in map(id, model.head.parameters()), model.parameters())
+            
+            # Create the optimizer with two parameter groups
+            optimizer = torch.optim.AdamW([{'params': enc_params, 'lr': enc_init_lr, 'enc_weight_decay': enc_weight_decay},
+                                           {'params': head_params, 'lr': head_init_lr, 'head_weight_decay': head_weight_decay}])
+            max_lr = [enc_init_lr, head_init_lr]
+            
         # Learning rate scheduler for the two learning rates
-        lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=[enc_init_lr, head_init_lr],
+        lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=max_lr,
                                                            total_steps=int(total_batch_iters), 
                                                            pct_start=0.05, anneal_strategy='cos', 
                                                            cycle_momentum=True, 
