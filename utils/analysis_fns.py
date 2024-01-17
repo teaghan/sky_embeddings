@@ -7,6 +7,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.lines as lines
 from string import ascii_lowercase
 
+
 plt.rcParams.update({
     "text.usetex": True,
     "font.family": "serif",
@@ -53,8 +54,9 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
     if savename is not None:
         plt.savefig(savename, facecolor='white', transparent=False, dpi=100,
                     bbox_inches='tight', pad_inches=0.05)
-        
-    plt.show()
+
+    else:
+        plt.show()
     
 def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
     if not single_batch:
@@ -166,7 +168,8 @@ def plot_batch(orig_imgs, mask_imgs, pred_imgs,
         plt.savefig(savename, facecolor='white', transparent=False, dpi=100,
                     bbox_inches='tight', pad_inches=0.05)
     
-    plt.show()
+    else:
+        plt.show()
 
 def display_images(images, vmin=0., vmax=1.):
     """
@@ -203,4 +206,87 @@ def display_images(images, vmin=0., vmax=1.):
 
     plt.tight_layout()
     plt.show()
+
+def ft_predict(model, dataloader, device):
+    model.eval()
     
+    tgt_labels = []
+    pred_labels = []
+
+    print(f'Running predictions on {len(dataloader)} batches...')
+    
+    for samples, labels in dataloader:
+        
+        # Switch to GPU if available
+        samples = samples.to(device, non_blocking=True)
+        labels = labels.to(device, non_blocking=True)
+    
+        # Run predictions
+        model_outputs = model(samples)
+        
+        # Rescale back to original scale
+        model_outputs = model.denormalize_labels(model_outputs)
+    
+        # Save data
+        tgt_labels.append(labels.data.cpu().numpy())
+        pred_labels.append(model_outputs.data.cpu().numpy())
+    
+    tgt_labels = np.concatenate(tgt_labels)
+    pred_labels = np.concatenate(pred_labels)
+    
+    return tgt_labels, pred_labels
+    
+def plot_resid_hexbin(label_keys, tgt_stellar_labels, pred_stellar_labels,
+                      y_lims=[2], 
+                      gridsize=(100,50), max_counts=30, cmap='ocean_r', n_std=3,
+                      savename=None):
+    
+    fig, axes = plt.subplots(len(label_keys), 1, 
+                             figsize=(10, len(label_keys)*2.5))
+
+    if not hasattr(axes, 'len'):
+        axes = [axes]
+
+    bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=1)
+    for i, ax in enumerate(axes):
+        label_key = label_keys[i]
+            
+        # Calculate residual
+        diff = pred_stellar_labels[:,i] - tgt_stellar_labels[:,i]
+        
+        # Plot
+        tgts = tgt_stellar_labels[:,i]
+        x_range = [np.max([np.min(tgts), np.median(tgts)-n_std*np.std(tgts)]),
+                   np.min([np.max(tgts), np.median(tgts)+n_std*np.std(tgts)])]
+        
+        hex_data = ax.hexbin(tgt_stellar_labels[:,i], diff, gridsize=gridsize, cmap=cmap,
+                                 extent=(x_range[0], x_range[1], -y_lims[i], y_lims[i]), 
+                                 bins=None, vmax=max_counts) 
+        
+        # Annotate with statistics
+        ax.annotate('$\widetilde{m}$=%0.2f $s$=%0.2f'% (np.mean(diff), np.std(diff)),
+                    (0.7,0.8), size=15, xycoords='axes fraction', 
+                    bbox=bbox_props)
+            
+        # Axis params
+        ax.set_xlabel('%s$_{tgt}$' % (label_key), size=15)
+        ax.set_ylabel(r'%s$_{pred}$ - %s$_{tgt}$' % (label_key, label_key), size=15)
+        ax.axhline(0, linewidth=2, c='black', linestyle='--')
+        ax.set_xlim(x_range[0], x_range[1])
+        ax.set_ylim(-y_lims[i], y_lims[i])
+        ax.set_yticks([-y_lims[i], -0.5*y_lims[i], 0, 0.5*y_lims[i], y_lims[i]])
+
+        ax.tick_params(labelsize=12)
+        ax.grid()
+    
+    # Colorbar
+    fig.subplots_adjust(right=0.8, hspace=0.5)
+    cbar_ax = fig.add_axes([0.81, 0.15, 0.02, 0.7])
+    cbar = fig.colorbar(hex_data, cax=cbar_ax)
+    cbar.set_label('Counts', size=15)
+            
+    if savename is not None:
+        plt.savefig(savename, facecolor='white', transparent=False, dpi=100,
+                    bbox_inches='tight', pad_inches=0.05)
+    else:
+        plt.show()
