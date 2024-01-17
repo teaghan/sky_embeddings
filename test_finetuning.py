@@ -63,8 +63,7 @@ def main(args):
 
     tgt_labels, pred_labels = ft_predict(model, dataloader_val, device)
     
-    plot_resid_hexbin([r'$z$'], tgt_labels, pred_labels,
-                      x_label='Target', y_lims=[1], 
+    plot_resid_hexbin([r'$\mathcal{z}$'], tgt_labels, pred_labels, y_lims=[1], 
                       gridsize=(80,40), max_counts=30, cmap='ocean_r', n_std=4,
                       savename=f'{model_name}_predictions.png')
 
