@@ -23,6 +23,7 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
     num_channels = int(mae_config['ARCHITECTURE']['num_channels'])
     patch_size = int(mae_config['ARCHITECTURE']['patch_size'])
     model_type = mae_config['ARCHITECTURE']['model_type']
+    global_pool = str2bool(config['ARCHITECTURE']['global_pool'])
     num_labels = len(eval(config['DATA']['label_keys']))
     label_means = len(eval(config['DATA']['label_means']))
     label_stds = len(eval(config['DATA']['label_stds']))
@@ -34,8 +35,8 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                          img_size=img_size,
                          in_chans=num_channels,
                          patch_size=patch_size,
-                         num_classes=num_labels)
-                        #global_pool=global_pool)
+                         num_classes=num_labels,
+                        global_pool=global_pool)
 
     elif model_type=='large':
         model = vit_large(label_means=label_means,
@@ -43,16 +44,16 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                          img_size=img_size,
                          in_chans=num_channels,
                          patch_size=patch_size,
-                         num_classes=num_labels)
-                        #global_pool=global_pool)
+                         num_classes=num_labels,
+                        global_pool=global_pool)
     elif model_type=='huge':
         model = vit_huge(label_means=label_means,
                          label_stds=label_stds,
                          img_size=img_size,
                          in_chans=num_channels,
                          patch_size=patch_size,
-                         num_classes=num_labels)
-                        #global_pool=global_pool)
+                         num_classes=num_labels,
+                        global_pool=global_pool)
     model.to(device)
 
     if build_optimizer:
@@ -141,12 +142,12 @@ def load_model(model, model_filename, mae_filename, optimizer=None, lr_scheduler
         # load pre-trained model
         msg = model.load_state_dict(checkpoint_model, strict=False)
         #print(msg)
-
+        
         if model.global_pool:
             assert set(msg.missing_keys) == {'head.weight', 'head.bias', 'fc_norm.weight', 'fc_norm.bias'}
         else:
             assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
-
+        
         # manually initialize fc layer
         trunc_normal_(model.head.weight, std=2e-5)
         
@@ -158,13 +159,14 @@ def load_model(model, model_filename, mae_filename, optimizer=None, lr_scheduler
 class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
     """ Vision Transformer with support for global average pooling
     """
-    def __init__(self, label_means, label_stds, global_pool=False, **kwargs):
+    def __init__(self, label_means, label_stds, global_pool=False, 
+                 **kwargs):
         super(VisionTransformer, self).__init__(**kwargs)
 
         # Label normalization values
-        self.label_means = torch.tensor(label_means)#.to(device)
-        self.label_stds = torch.tensor(label_stds)#.to(device)
-        
+        self.label_means = torch.tensor(label_means)
+        self.label_stds = torch.tensor(label_stds)
+
         self.global_pool = global_pool
         if self.global_pool:
             norm_layer = kwargs['norm_layer']
@@ -172,6 +174,7 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             self.fc_norm = norm_layer(embed_dim)
 
             del self.norm  # remove the original norm
+        
 
     def normalize_labels(self, labels):
         '''Normalize each label to have zero-mean and unit-variance.'''
@@ -194,7 +197,7 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             x = blk(x)
 
         if self.global_pool:
-            x = x[:, 1:, :].mean(dim=1)  # global pool without cls token
+            x = x[:, 1:, :].mean(dim=1).unsqueeze(1)  # global pool without cls token
             outcome = self.fc_norm(x)
         else:
             #x = self.norm(x)
