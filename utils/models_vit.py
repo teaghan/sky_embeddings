@@ -59,36 +59,49 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
 
     if build_optimizer:
         total_batch_iters = int(float(config['TRAINING']['total_batch_iters']))
-        enc_init_lr = float(config['TRAINING']['enc_init_lr'])
-        head_init_lr = float(config['TRAINING']['head_init_lr'])
-        enc_weight_decay = float(config['TRAINING']['enc_weight_decay'])
-        head_weight_decay = float(config['TRAINING']['head_weight_decay'])
+        init_lr = float(config['TRAINING']['init_lr'])
+        weight_decay = float(config['TRAINING']['weight_decay'])
         final_lr_factor = float(config['TRAINING']['final_lr_factor'])
-        lw_lrd = str2bool(config['TRAINING']['layerwise_lr_decay'])
+        train_method = config['TRAINING']['train_method']
         layer_decay = float(config['TRAINING']['layer_decay'])
         
-        if lw_lrd:
+        if train_method=='finetune' or train_method=='ft':
+            print('Using the fine-tuning training method...')
             # Build optimizer with layer-wise lr decay
-            param_groups = param_groups_lrd(model, enc_weight_decay,
+            param_groups = param_groups_lrd(model, weight_decay,
                                             no_weight_decay_list=model.no_weight_decay(),
                                             layer_decay=layer_decay)
-            optimizer = torch.optim.AdamW(param_groups, lr=enc_init_lr)
-            max_lr = enc_init_lr
+            optimizer = torch.optim.AdamW(param_groups, lr=init_lr)
+            
+        elif train_method=='linearprobe' or train_method=='lp':
+            print('Using the linear probing training method...')
+            # Only train the head parameters of the model
+            components_to_train = [model.norm, model.fc_norm, model.head]
+            if global_pool=='map':
+                components_to_train.append(model.attn_pool)
+
+            param_groups = [{'params': m.parameters()} for m in components_to_train]
+            optimizer = torch.optim.AdamW(param_groups, lr=init_lr, weight_decay=weight_decay)
+
+            # Freeze all other parameters
+            for param in model.parameters():
+                param.requires_grad = False
+            for component in components_to_train:
+                for param in component.parameters():
+                    param.requires_grad = True
+
         else:
-            # Separate the head parameters from the rest of the model
-            # If global_pool=='map' then have to include model.attn_pool
-            # otherwise, just model.norm, model.fc_norm, model.head
+            print('Using the fully supervised training method...')
+            # Train all model parameters equally
             
-            head_params = model.head.parameters()
-            enc_params = filter(lambda p: id(p) not in map(id, model.head.parameters()), model.parameters())
-            
-            # Create the optimizer with two parameter groups
-            optimizer = torch.optim.AdamW([{'params': enc_params, 'lr': enc_init_lr, 'enc_weight_decay': enc_weight_decay},
-                                           {'params': head_params, 'lr': head_init_lr, 'head_weight_decay': head_weight_decay}])
-            max_lr = [enc_init_lr, head_init_lr]
+            # Set weight decay to 0 for bias and norm layers
+            param_groups = optim_factory.param_groups_weight_decay(model, weight_decay)
+    
+            # Optimizer
+            optimizer = torch.optim.AdamW(param_groups, lr=init_lr)
             
         # Learning rate scheduler for the two learning rates
-        lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=max_lr,
+        lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=init_lr,
                                                            total_steps=int(total_batch_iters), 
                                                            pct_start=0.05, anneal_strategy='cos', 
                                                            cycle_momentum=True, 
@@ -107,7 +120,7 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
         return model, losses, cur_iter
     
 
-def load_model(model, model_filename, mae_filename, optimizer=None, lr_scheduler=None):
+def load_model(model, model_filename, mae_filename='None', optimizer=None, lr_scheduler=None):
     
     # Check for pre-trained weights
     if os.path.exists(model_filename):
@@ -129,7 +142,7 @@ def load_model(model, model_filename, mae_filename, optimizer=None, lr_scheduler
         # Load model weights
         model.load_state_dict(checkpoint['model'])
         
-    else:
+    elif mae_filename!='None':
         print('\nLoading pre-trained MAE model weights...')
 
         checkpoint = torch.load(mae_filename, map_location='cpu')
@@ -145,12 +158,17 @@ def load_model(model, model_filename, mae_filename, optimizer=None, lr_scheduler
 
         # Load the pre-trained model weights
         msg = model.load_state_dict(checkpoint_model, strict=False)
-        
-        assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
+        #print(msg)
+        #assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
         
         # Manually initialize the head layer weights
         trunc_normal_(model.head.weight, std=2e-5)
         
+        losses = defaultdict(list)
+        cur_iter = 1
+
+    else:
+        print('\nStarting fresh model to train...')
         losses = defaultdict(list)
         cur_iter = 1
         
@@ -166,8 +184,6 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
         # Label normalization values
         self.label_means = torch.tensor(label_means)
         self.label_stds = torch.tensor(label_stds)
-
-        print(kwargs['global_pool'])
 
         '''
         self.global_pool = global_pool
