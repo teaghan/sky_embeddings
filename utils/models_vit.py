@@ -23,7 +23,8 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
     num_channels = int(mae_config['ARCHITECTURE']['num_channels'])
     patch_size = int(mae_config['ARCHITECTURE']['patch_size'])
     model_type = mae_config['ARCHITECTURE']['model_type']
-    global_pool = str2bool(config['ARCHITECTURE']['global_pool'])
+    #global_pool = str2bool(config['ARCHITECTURE']['global_pool'])
+    global_pool = config['ARCHITECTURE']['global_pool']
     num_labels = len(eval(config['DATA']['label_keys']))
     label_means = len(eval(config['DATA']['label_means']))
     label_stds = len(eval(config['DATA']['label_stds']))
@@ -75,6 +76,9 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
             max_lr = enc_init_lr
         else:
             # Separate the head parameters from the rest of the model
+            # If global_pool=='map' then have to include model.attn_pool
+            # otherwise, just model.norm, model.fc_norm, model.head
+            
             head_params = model.head.parameters()
             enc_params = filter(lambda p: id(p) not in map(id, model.head.parameters()), model.parameters())
             
@@ -136,19 +140,15 @@ def load_model(model, model_filename, mae_filename, optimizer=None, lr_scheduler
                 print(f"Removing key {k} from pretrained checkpoint")
                 del checkpoint_model[k]
 
-        # interpolate position embedding
+        # Interpolate the position embedding matrix
         interpolate_pos_embed(model, checkpoint_model)
 
-        # load pre-trained model
+        # Load the pre-trained model weights
         msg = model.load_state_dict(checkpoint_model, strict=False)
-        #print(msg)
         
-        if model.global_pool:
-            assert set(msg.missing_keys) == {'head.weight', 'head.bias', 'fc_norm.weight', 'fc_norm.bias'}
-        else:
-            assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
+        assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
         
-        # manually initialize fc layer
+        # Manually initialize the head layer weights
         trunc_normal_(model.head.weight, std=2e-5)
         
         losses = defaultdict(list)
@@ -159,7 +159,7 @@ def load_model(model, model_filename, mae_filename, optimizer=None, lr_scheduler
 class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
     """ Vision Transformer with support for global average pooling
     """
-    def __init__(self, label_means, label_stds, global_pool=False, 
+    def __init__(self, label_means, label_stds,# global_pool=False, 
                  **kwargs):
         super(VisionTransformer, self).__init__(**kwargs)
 
@@ -167,6 +167,9 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
         self.label_means = torch.tensor(label_means)
         self.label_stds = torch.tensor(label_stds)
 
+        print(kwargs['global_pool'])
+
+        '''
         self.global_pool = global_pool
         if self.global_pool:
             norm_layer = kwargs['norm_layer']
@@ -174,7 +177,7 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             self.fc_norm = norm_layer(embed_dim)
 
             del self.norm  # remove the original norm
-        
+        '''
 
     def normalize_labels(self, labels):
         '''Normalize each label to have zero-mean and unit-variance.'''
@@ -183,7 +186,7 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
     def denormalize_labels(self, labels):
         '''Rescale the labels back to their original units.'''
         return labels * self.label_stds + self.label_means
-    
+    '''
     def forward_features(self, x):
         B = x.shape[0]
         x = self.patch_embed(x)
@@ -204,6 +207,7 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             outcome = x[:, 0]
 
         return outcome
+    '''
 
 def vit_base(label_means, label_stds, **kwargs):
     model = VisionTransformer(label_means, label_stds,

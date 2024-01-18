@@ -7,7 +7,6 @@ import matplotlib.gridspec as gridspec
 import matplotlib.lines as lines
 from string import ascii_lowercase
 
-
 plt.rcParams.update({
     "text.usetex": True,
     "font.family": "serif",
@@ -57,6 +56,8 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
 
     else:
         plt.show()
+
+    plt.close()
     
 def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
     if not single_batch:
@@ -170,6 +171,8 @@ def plot_batch(orig_imgs, mask_imgs, pred_imgs,
     
     else:
         plt.show()
+
+    plt.close()
 
 def display_images(images, vmin=0., vmax=1.):
     """
