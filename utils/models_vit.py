@@ -12,7 +12,7 @@ import os
 import sys
 cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)
-from pos_embed import interpolate_pos_embed
+from pos_embed import interpolate_pos_embed, crop_pos_embed
 from pretrain import str2bool
 from lr_decay import param_groups_lrd
 
@@ -66,7 +66,7 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
         layer_decay = float(config['TRAINING']['layer_decay'])
         
         if train_method=='finetune' or train_method=='ft':
-            print('Using the fine-tuning training method...')
+            print('\nUsing the fine-tuning training method...')
             # Build optimizer with layer-wise lr decay
             param_groups = param_groups_lrd(model, weight_decay,
                                             no_weight_decay_list=model.no_weight_decay(),
@@ -74,7 +74,7 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
             optimizer = torch.optim.AdamW(param_groups, lr=init_lr)
             
         elif train_method=='linearprobe' or train_method=='lp':
-            print('Using the linear probing training method...')
+            print('\nUsing the linear probing training method...')
             # Only train the head parameters of the model
             components_to_train = [model.norm, model.fc_norm, model.head]
             if global_pool=='map':
@@ -91,7 +91,7 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                     param.requires_grad = True
 
         else:
-            print('Using the fully supervised training method...')
+            print('\nUsing the fully supervised training method...')
             # Train all model parameters equally
             
             # Set weight decay to 0 for bias and norm layers
@@ -153,8 +153,10 @@ def load_model(model, model_filename, mae_filename='None', optimizer=None, lr_sc
                 print(f"Removing key {k} from pretrained checkpoint")
                 del checkpoint_model[k]
 
+        # Crop the central positional embedding matrix
+        crop_pos_embed(model, checkpoint_model)
         # Interpolate the position embedding matrix
-        interpolate_pos_embed(model, checkpoint_model)
+        #interpolate_pos_embed(model, checkpoint_model)
 
         # Load the pre-trained model weights
         msg = model.load_state_dict(checkpoint_model, strict=False)

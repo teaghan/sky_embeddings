@@ -67,6 +67,35 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
     return emb
 
 
+def crop_pos_embed(model, checkpoint_model):
+    pos_embed_checkpoint = checkpoint_model['pos_embed']
+    embedding_size = pos_embed_checkpoint.shape[-1]
+    new_num_patches = model.patch_embed.num_patches
+    num_extra_tokens = model.pos_embed.shape[-2] - new_num_patches
+    # height (== width) for the checkpoint position embedding
+    orig_size = int((pos_embed_checkpoint.shape[-2] - num_extra_tokens) ** 0.5)
+    # height (== width) for the new position embedding
+    new_size = int(new_num_patches ** 0.5)
+    
+    if orig_size != new_size:
+        print("Cropping the central %dx%d positional embeddings from the original %dx%d." % (new_size, new_size, orig_size, orig_size))
+        extra_tokens = pos_embed_checkpoint[:, :num_extra_tokens]
+        pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
+    
+        # Patch indices ordered in image shape
+        patch_indices = np.arange(pos_tokens.shape[-2])
+        patch_indices = patch_indices.reshape((orig_size, orig_size))
+        
+        # Select central crop of patches
+        crop_border_size = int((orig_size - new_size) / 2)
+        patch_indices = patch_indices[crop_border_size:-crop_border_size,crop_border_size:-crop_border_size].flatten()
+        pos_tokens = pos_tokens[:,patch_indices]
+    
+        # Combine with extra tokens and assign to model checkpoint for transfer
+        new_pos_embed = torch.cat((extra_tokens, pos_tokens), dim=1)
+        checkpoint_model['pos_embed'] = new_pos_embed
+
+
 # --------------------------------------------------------
 # Interpolate position embeddings for high-resolution
 # References:
