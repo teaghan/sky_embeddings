@@ -67,6 +67,8 @@ def main(args):
                       gridsize=(80,40), max_counts=30, cmap='ocean_r', n_std=4,
                       savename=os.path.join(fig_dir, 
                                             f'{model_name}_predictions.png'))
+    evaluate_z(pred_labels, tgt_labels, n_bins=8, z_range=(0.2,2), threshold=0.15, 
+               savename=os.path.join(fig_dir, f'{model_name}_redshift.png'))
 
 # Run the testing
 if __name__=="__main__":

@@ -4,8 +4,6 @@ import math
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import matplotlib.lines as lines
-from string import ascii_lowercase
 
 plt.rcParams.update({
     "text.usetex": True,
@@ -210,15 +208,18 @@ def display_images(images, vmin=0., vmax=1.):
     plt.tight_layout()
     plt.show()
 
-def ft_predict(model, dataloader, device):
+def ft_predict(model, dataloader, device, num_batches=None):
     model.eval()
     
     tgt_labels = []
     pred_labels = []
 
-    print(f'Running predictions on {len(dataloader)} batches...')
+    if num_batches is None:
+        num_batches = len(dataloader)
+
+    print(f'Running predictions on {num_batches} batches...')
     
-    for samples, labels in dataloader:
+    for i, (samples, labels) in enumerate(dataloader):
         
         # Switch to GPU if available
         samples = samples.to(device, non_blocking=True)
@@ -233,6 +234,9 @@ def ft_predict(model, dataloader, device):
         # Save data
         tgt_labels.append(labels.data.cpu().numpy())
         pred_labels.append(model_outputs.data.cpu().numpy())
+
+        if i==num_batches:
+            break
     
     tgt_labels = np.concatenate(tgt_labels)
     pred_labels = np.concatenate(pred_labels)
@@ -293,3 +297,142 @@ def plot_resid_hexbin(label_keys, tgt_stellar_labels, pred_stellar_labels,
                     bbox_inches='tight', pad_inches=0.05)
     else:
         plt.show()
+
+def photoz_prediction_metrics(z_pred, z_true, threshold=0.15):
+
+    resid = (z_pred - z_true) / (1 + z_true)
+    bias = np.mean(resid)
+    mae_bias = np.median(resid)
+    mad = 1.4826 * np.median(np.abs(resid - mae_bias))
+    frac_out =  np.sum(np.abs(resid)>threshold) / z_pred.size
+
+    return resid, bias, mad, frac_out
+
+def plot_z_resid(fig, ax, cax, z_true, resid, bias, mad, frac_out, y_lims=1, 
+                 gridsize=(100,50), max_counts=30, cmap='ocean_r', n_std=3, x_range=None,
+                fontsize=12):
+    
+    if x_range is None:
+        x_range = [np.max([np.min(z_true), np.median(z_true)-n_std*np.std(z_true)]),
+                   np.min([np.max(z_true), np.median(z_true)+n_std*np.std(z_true)])]
+
+    # Plot
+    hex_data = ax.hexbin(z_true, resid, gridsize=gridsize, cmap=cmap,
+                         extent=(x_range[0], x_range[1], -y_lims, y_lims), 
+                         bins=None, vmax=max_counts) 
+    
+    # Annotate with statistics
+    bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=1)
+    ax.annotate(f'bias={bias:.2f}, MAD={mad:.2f}, frac={frac_out:.2f}',
+                (0.6,0.8), size=fontsize, xycoords='axes fraction', 
+                bbox=bbox_props)
+        
+    # Axis params
+    #ax.set_xlabel(r'$Z_{tgt}$', size=15)
+    ax.set_ylabel('Normalized\nResidual', size=fontsize)
+    ax.axhline(0, linewidth=2, c='black', linestyle='--')
+    ax.set_xlim(x_range[0], x_range[1])
+    ax.set_ylim(-y_lims, y_lims)
+    ax.set_yticks([-y_lims, -0.5*y_lims, 0, 0.5*y_lims, y_lims])
+    
+    #ax.grid()
+    
+    # Colorbar
+    cbar = fig.colorbar(hex_data, cax=cax)
+    cbar.set_label('Counts', size=fontsize)
+
+def z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
+            bin_mids, bin_bias, bin_mad, bin_frac_out, z_range, fontsize=12,
+           savename=None):
+
+    # Create a figure
+    fig = plt.figure(figsize=(10,10))
+    
+    # Define a GridSpec layout
+    gs = gridspec.GridSpec(5, 2, figure=fig, width_ratios=[1,0.02], wspace=0.02)
+    
+    # Plot distribution
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax1.hist(z_true, bins=100, range=z_range)
+    ax1.set_ylabel('N', size=fontsize)
+    ax1.set_xlim(*z_range)
+    
+    # Plot resid
+    ax2 = fig.add_subplot(gs[1, 0])#, sharex=ax1)
+    cax2 = fig.add_subplot(gs[1, 1])
+    plot_z_resid(fig, ax2, cax2, z_true, full_resid, full_bias, full_mad, full_frac_out, 
+                 y_lims=0.3, gridsize=(100,50), max_counts=30, cmap='ocean_r', n_std=3,
+                 x_range=z_range, fontsize=fontsize)
+
+    # Plot bias
+    ax3 = fig.add_subplot(gs[2, 0])#, sharex=ax1)
+    ax3.scatter(bin_mids, bin_bias, s=10)
+    ax3.plot(bin_mids, bin_bias, linestyle='--')
+    ax3.set_ylim(-0.14,0.14)
+    ax3.axhline(0, linewidth=1, c='black', linestyle='--')
+    ax3.set_ylabel('Bias', size=fontsize)
+
+    # Plot MAD
+    ax4 = fig.add_subplot(gs[3, 0])#, sharex=ax1)
+    ax4.scatter(bin_mids, bin_mad, s=10)
+    ax4.plot(bin_mids, bin_mad, linestyle='--')
+    ax4.set_ylim(0,0.2)
+    ax4.set_ylabel('MAD', size=fontsize)
+
+    # Plot frac out
+    ax5 = fig.add_subplot(gs[4, 0])#, sharex=ax1)
+    ax5.scatter(bin_mids, bin_frac_out, s=10)
+    ax5.plot(bin_mids, bin_frac_out, linestyle='--')
+    ax5.set_ylim(0,0.5)
+    ax5.set_ylabel('Fraction Out', size=fontsize)
+
+    for i, ax in enumerate([ax1, ax2, ax3, ax4, ax5]):
+        ax.tick_params(labelsize=10)
+        ax.set_xlim(ax1.get_xlim())
+        if i<4:
+            ax.set_xticklabels([])
+        else:
+            #x_ticks = np.round(ax.get_xticks(),1)
+            #ax.set_xticks(x_ticks)
+            #ax.set_xticklabels(x_ticks)
+            ax.set_xlabel('Spectroscopic Redshift', size=fontsize)
+        #ax.grid()
+    
+    if savename is not None:
+        plt.savefig(savename, facecolor='white', transparent=False, dpi=100,
+                    bbox_inches='tight', pad_inches=0.05)
+    else:
+        plt.show()
+
+def evaluate_z(z_pred, z_true, n_bins=8, z_range=(0.2,2), threshold=0.15, savename=None):
+
+    # Calculate metrics on entire dataset
+    full_resid, full_bias, full_mad, full_frac_out = photoz_prediction_metrics(pred_labels, tgt_labels, threshold=0.15)
+    
+    # Split z into bins and calculate metrics
+    bins = np.linspace(z_range[0], z_range[1], n_bins+1)
+    bin_indices = []
+    bin_mids = np.zeros((n_bins,))
+    for i in range(n_bins):
+        bin_indices.append(np.where((bins[i]<=z_true) & (z_true<bins[i+1]))[0])
+        bin_mids[i] = np.mean([bins[i], bins[i+1]])
+    
+    # Each bin should have the same number of samples
+    n_samples = min([len(b) for b in bin_indices])
+    print(f'Using {n_samples} from each bin')
+    #bin_indices = [b[:n_samples] for b in bin_indices]
+    
+    # Calculate metrics for each bin
+    bin_bias = np.zeros((n_bins,))
+    bin_mad = np.zeros((n_bins,))
+    bin_frac_out = np.zeros((n_bins,))
+    for i, b in enumerate(bin_indices):
+        resid, bias, mad, frac_out = photoz_prediction_metrics(z_pred[b], z_true[b], threshold=threshold)
+        bin_bias[i] = bias
+        bin_mad[i] = mad
+        bin_frac_out[i] = frac_out
+
+    # Create metric plot
+    z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
+            bin_mids, bin_bias, bin_mad, bin_frac_out, z_range,
+           savename=savename)
