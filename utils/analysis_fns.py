@@ -407,7 +407,7 @@ def z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
 def evaluate_z(z_pred, z_true, n_bins=8, z_range=(0.2,2), threshold=0.15, savename=None):
 
     # Calculate metrics on entire dataset
-    full_resid, full_bias, full_mad, full_frac_out = photoz_prediction_metrics(pred_labels, tgt_labels, threshold=0.15)
+    full_resid, full_bias, full_mad, full_frac_out = photoz_prediction_metrics(z_pred, z_true, threshold=0.15)
     
     # Split z into bins and calculate metrics
     bins = np.linspace(z_range[0], z_range[1], n_bins+1)
