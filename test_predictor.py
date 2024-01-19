@@ -6,7 +6,7 @@ import torch
 from utils.finetune import parseArguments
 from utils.models_vit import build_model
 from utils.dataloader import build_dataloader
-from utils.analysis_fns import plot_progress, ft_predict, plot_resid_hexbin
+from utils.analysis_fns import plot_progress, ft_predict, plot_resid_hexbin, evaluate_z
 
 def main(args):
     
