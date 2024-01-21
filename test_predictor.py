@@ -45,7 +45,10 @@ def main(args):
     
     # Construct the model, optimizer, etc.
     model_filename =  os.path.join(model_dir, model_name+'.pth.tar') 
-    mae_filename =  os.path.join(model_dir, mae_name+'.pth.tar') 
+    if mae_name!='None':
+        mae_filename =  os.path.join(model_dir, mae_name+'.pth.tar')
+    else:
+        mae_filename = 'None'
     model, losses, cur_iter = build_model(config, mae_config, 
                                           model_filename, mae_filename,
                                           device, build_optimizer=False)
