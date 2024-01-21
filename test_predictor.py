@@ -28,11 +28,6 @@ def main(args):
     config = configparser.ConfigParser()
     config.read(config_dir+model_name+'.ini')
 
-    # ... and pretrained MAE configuration
-    mae_name = config['TRAINING']['pretained_mae']
-    mae_config = configparser.ConfigParser()
-    mae_config.read(config_dir+mae_name+'.ini')
-
     # Display model configuration
     print('\nCreating model: %s'%model_name)
     print('\nConfiguration:')
@@ -43,12 +38,15 @@ def main(args):
         for key in config[key_head].keys():
             print('    %s: %s'%(key, config[key_head][key]))
     
-    # Construct the model, optimizer, etc.
-    model_filename =  os.path.join(model_dir, model_name+'.pth.tar') 
-    if mae_name!='None':
-        mae_filename =  os.path.join(model_dir, mae_name+'.pth.tar')
-    else:
+    if mae_name=='None':
         mae_filename = 'None'
+        mae_config = config
+    else:
+        # Load pretrained MAE configuration
+        mae_name = config['TRAINING']['pretained_mae']
+        mae_config = configparser.ConfigParser()
+        mae_config.read(config_dir+mae_name+'.ini')
+        mae_filename =  os.path.join(model_dir, mae_name+'.pth.tar')
     model, losses, cur_iter = build_model(config, mae_config, 
                                           model_filename, mae_filename,
                                           device, build_optimizer=False)

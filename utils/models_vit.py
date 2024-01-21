@@ -20,14 +20,9 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
 
     # Model architecture
     img_size = int(config['ARCHITECTURE']['img_size'])
-    if mae_filename=='None':
-        num_channels = int(config['ARCHITECTURE']['num_channels'])
-        patch_size = int(config['ARCHITECTURE']['patch_size'])
-        model_type = config['ARCHITECTURE']['model_type']
-    else:
-        num_channels = int(mae_config['ARCHITECTURE']['num_channels'])
-        patch_size = int(mae_config['ARCHITECTURE']['patch_size'])
-        model_type = mae_config['ARCHITECTURE']['model_type']
+    num_channels = int(mae_config['ARCHITECTURE']['num_channels'])
+    patch_size = int(mae_config['ARCHITECTURE']['patch_size'])
+    model_type = mae_config['ARCHITECTURE']['model_type']
     #global_pool = str2bool(config['ARCHITECTURE']['global_pool'])
     global_pool = config['ARCHITECTURE']['global_pool']
     num_labels = len(eval(config['DATA']['label_keys']))
