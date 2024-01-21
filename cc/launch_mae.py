@@ -22,7 +22,7 @@ def parseArguments():
                         type=float, default=10)
     parser.add_argument("-n", "--num_runs", 
                         help="Number of jobs to run for this simulation.", 
-                        type=int, default=1)
+                        type=int, default=8)
     parser.add_argument("-acc", "--account", 
                         help="Compute Canada account to run jobs under.", 
                         type=str, default='def-sfabbro')
@@ -31,7 +31,7 @@ def parseArguments():
                         type=int, default=32)
     parser.add_argument("-ncp", "--num_cpu", 
                         help="Number of CPU cores per job.", 
-                        type=int, default=12)
+                        type=int, default=48)
     parser.add_argument("-ngpu", "--num_gpu", 
                         help="Number of GPUs per job.", 
                         type=int, default=4)
