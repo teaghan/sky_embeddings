@@ -47,7 +47,7 @@ def run_iter(model, samples, mask_ratio, optimizer, lr_scheduler,
     loss, _, _ = model(samples, mask_ratio=mask_ratio)
     if loss.numel()>1:
         # In case of multiple GPUs
-        loss = loss.mean()
+        loss = loss.unsqueeze(0).mean()
     
     if 'train' in mode:
         
