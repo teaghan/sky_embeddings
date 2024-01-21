@@ -56,7 +56,7 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
         plt.show()
 
     plt.close()
-    
+
 def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
     if not single_batch:
         print('Predicting on %i batches...' % (len(dataloader)))
@@ -74,6 +74,9 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
             samples = samples.to(device, non_blocking=True)
 
             loss, pred, mask = model(samples, mask_ratio=mask_ratio)
+
+            if hasattr(model, 'module'):
+                model = model.module
 
             pred = model.unpatchify(pred)
             pred = torch.einsum('nchw->nhwc', pred).detach()
@@ -242,7 +245,7 @@ def ft_predict(model, dataloader, device, num_batches=None):
     pred_labels = np.concatenate(pred_labels)
     
     return tgt_labels, pred_labels
-    
+
 def plot_resid_hexbin(label_keys, tgt_stellar_labels, pred_stellar_labels,
                       y_lims=[2], 
                       gridsize=(100,50), max_counts=30, cmap='ocean_r', n_std=3,

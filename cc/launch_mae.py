@@ -22,16 +22,19 @@ def parseArguments():
                         type=float, default=10)
     parser.add_argument("-n", "--num_runs", 
                         help="Number of jobs to run for this simulation.", 
-                        type=int, default=5)
+                        type=int, default=1)
     parser.add_argument("-acc", "--account", 
                         help="Compute Canada account to run jobs under.", 
                         type=str, default='def-sfabbro')
     parser.add_argument("-mem", "--memory", 
                         help="Memory per job in GB.", 
-                        type=int, default=16)
+                        type=int, default=32)
     parser.add_argument("-ncp", "--num_cpu", 
                         help="Number of CPU cores per job.", 
-                        type=int, default=11)
+                        type=int, default=12)
+    parser.add_argument("-ngpu", "--num_gpu", 
+                        help="Number of GPUs per job.", 
+                        type=int, default=4)
     parser.add_argument("-jt", "--job_time", 
                         help="Number of hours per job.", 
                         type=int, default=3)
@@ -68,9 +71,6 @@ def parseArguments():
     parser.add_argument("-lrf", "--final_lr_factor", 
                         help="Final lr will be lr/lrf.", 
                         type=float, default=1e7)
-    parser.add_argument("-nw", "--num_workers", 
-                        help="Number of cpus for dataloader during training.", 
-                        type=float, default=10)
     
     parser.add_argument("-ims", "--img_size", 
                         help="Number of rows and columns in each image sample.", 
@@ -135,8 +135,7 @@ elif user_input=='o':
                           'norm_pix_loss': args.norm_pix_loss,
                           'weight_decay': args.weight_decay,
                           'init_lr': args.init_lr,
-                          'final_lr_factor': args.final_lr_factor,
-                          'num_workers': args.num_workers}
+                          'final_lr_factor': args.final_lr_factor}
     
     config['ARCHITECTURE'] = {'img_size': args.img_size,
                               'num_channels': args.num_channels,
@@ -197,7 +196,7 @@ with open(script_fn, 'w') as f:
 cmd = 'python %s ' % (os.path.join(cur_dir, 'queue_cc.py'))
 cmd += '--account "%s" --todo_dir "%s" ' % (args.account, todo_dir)
 cmd += '--done_dir "%s" --output_dir "%s" ' % (done_dir, stdout_dir)
-cmd += '--num_jobs 1 --num_runs %i --num_gpu 1 ' % (args.num_runs)
+cmd += '--num_jobs 1 --num_runs %i --num_gpu %i ' % (args.num_runs, args.num_gpu)
 cmd += '--num_cpu %i --mem %sG --time_limit "00-0%i:00"' % (args.num_cpu, args.memory, args.job_time)
 
 # Execute jobs

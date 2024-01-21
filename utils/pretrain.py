@@ -45,8 +45,12 @@ def run_iter(model, samples, mask_ratio, optimizer, lr_scheduler,
         
     # Calculate MAE loss
     loss, _, _ = model(samples, mask_ratio=mask_ratio)
-        
+    if loss.numel()>1:
+        # In case of multiple GPUs
+        loss = loss.mean()
+    
     if 'train' in mode:
+        
         # Update the gradients
         loss.backward()
         # Adjust network weights

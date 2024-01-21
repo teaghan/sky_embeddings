@@ -41,6 +41,9 @@ def build_model(config, model_filename, device, build_optimizer=False):
                              norm_pix_loss=norm_pix_loss)
     model.to(device)
 
+    # Use multiple GPUs if available
+    model = nn.DataParallel(model)
+
     if build_optimizer:
         total_batch_iters = int(float(config['TRAINING']['total_batch_iters']))
         weight_decay = float(config['TRAINING']['weight_decay'])
@@ -68,7 +71,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
     else:
         model, losses, cur_iter = load_model(model, model_filename)
         return model, losses, cur_iter
-    
+
 
 def load_model(model, model_filename, optimizer=None, lr_scheduler=None):
     
@@ -90,7 +93,7 @@ def load_model(model, model_filename, optimizer=None, lr_scheduler=None):
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
         
         # Load model weights
-        model.load_state_dict(checkpoint['model'])
+        model.module.load_state_dict(checkpoint['model'])
         
     else:
         print('\nStarting fresh model to train...')
