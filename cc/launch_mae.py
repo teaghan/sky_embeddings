@@ -31,7 +31,7 @@ def parseArguments():
                         type=int, default=32)
     parser.add_argument("-ncp", "--num_cpu", 
                         help="Number of CPU cores per job.", 
-                        type=int, default=48)
+                        type=int, default=36)
     parser.add_argument("-ngpu", "--num_gpu", 
                         help="Number of GPUs per job.", 
                         type=int, default=4)
