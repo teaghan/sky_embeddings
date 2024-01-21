@@ -52,6 +52,7 @@ def main(args):
     
     # Construct the model, optimizer, etc.
     model_filename =  os.path.join(model_dir, model_name+'.pth.tar')
+    print('AA', mae_name)
     if mae_name!='None':
         mae_filename =  os.path.join(model_dir, mae_name+'.pth.tar')
     else:
