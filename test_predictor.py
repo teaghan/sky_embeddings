@@ -38,12 +38,14 @@ def main(args):
         for key in config[key_head].keys():
             print('    %s: %s'%(key, config[key_head][key]))
     
+    # Construct the model, optimizer, etc.
+    model_filename =  os.path.join(model_dir, model_name+'.pth.tar')
+    mae_name = config['TRAINING']['pretained_mae']
     if mae_name=='None':
         mae_filename = 'None'
         mae_config = config
     else:
         # Load pretrained MAE configuration
-        mae_name = config['TRAINING']['pretained_mae']
         mae_config = configparser.ConfigParser()
         mae_config.read(config_dir+mae_name+'.ini')
         mae_filename =  os.path.join(model_dir, mae_name+'.pth.tar')
