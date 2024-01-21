@@ -29,9 +29,6 @@ def parseArguments():
     parser.add_argument("-mem", "--memory", 
                         help="Memory per job in GB.", 
                         type=int, default=32)
-    parser.add_argument("-ncp", "--num_cpu", 
-                        help="Number of CPU cores per job.", 
-                        type=int, default=36)
     parser.add_argument("-ngpu", "--num_gpu", 
                         help="Number of GPUs per job.", 
                         type=int, default=4)
@@ -197,7 +194,7 @@ cmd = 'python %s ' % (os.path.join(cur_dir, 'queue_cc.py'))
 cmd += '--account "%s" --todo_dir "%s" ' % (args.account, todo_dir)
 cmd += '--done_dir "%s" --output_dir "%s" ' % (done_dir, stdout_dir)
 cmd += '--num_jobs 1 --num_runs %i --num_gpu %i ' % (args.num_runs, args.num_gpu)
-cmd += '--num_cpu %i --mem %sG --time_limit "00-0%i:00"' % (args.num_cpu, args.memory, args.job_time)
+cmd += '--num_cpu "auto" --mem %sG --time_limit "00-0%i:00"' % (args.memory, args.job_time)
 
 # Execute jobs
 os.system(cmd)
