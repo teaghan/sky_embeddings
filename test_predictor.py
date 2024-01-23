@@ -57,12 +57,19 @@ def main(args):
     
     # Data loaders
     num_workers = min([os.cpu_count(),12*n_gpu])
+    if n_gpu>1:
+        batch_size = int(int(config['TRAINING']['batch_size'])/n_gpu)
+    else:
+        batch_size = int(config['TRAINING']['batch_size'])
+    
     dataloader_val = build_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
                                         norm_type=mae_config['DATA']['norm_type'], 
-                                        batch_size=int(int(config['TRAINING']['batch_size'])/n_gpu), 
-                                        num_workers=int(config['TRAINING']['num_workers']),
+                                        batch_size=batch_size, 
+                                        num_workers=num_workers,
                                         label_keys=eval(config['DATA']['label_keys']),
                                         img_size=int(config['ARCHITECTURE']['img_size']),
+                                        pos_channel=str2bool(mae_config['DATA']['pos_channel']), 
+                                        num_patches=model.module.patch_embed.num_patches,
                                         shuffle=True)
     
     print('The validation set consists of %i cutouts.' % (len(dataloader_val.dataset)))
