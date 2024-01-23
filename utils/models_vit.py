@@ -72,22 +72,22 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
             print('\nUsing the fine-tuning training method...')
             # Build optimizer with layer-wise lr decay
             param_groups, init_lr = param_groups_lrd(model, weight_decay,
-                                            no_weight_decay_list=model.no_weight_decay(),
+                                            no_weight_decay_list=model.module.no_weight_decay(),
                                             layer_decay=layer_decay)
             optimizer = torch.optim.AdamW(param_groups)
             
         elif train_method=='linearprobe' or train_method=='lp':
             print('\nUsing the linear probing training method...')
             # Only train the head parameters of the model
-            components_to_train = [model.norm, model.fc_norm, model.head]
+            components_to_train = [model.module.norm, model.module.fc_norm, model.module.head]
             if global_pool=='map':
-                components_to_train.append(model.attn_pool)
+                components_to_train.append(model.module.attn_pool)
 
             param_groups = [{'params': m.parameters()} for m in components_to_train]
             optimizer = torch.optim.AdamW(param_groups, lr=init_lr, weight_decay=weight_decay)
 
             # Freeze all other parameters
-            for param in model.parameters():
+            for param in model.module.parameters():
                 param.requires_grad = False
             for component in components_to_train:
                 for param in component.parameters():
