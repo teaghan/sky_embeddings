@@ -20,7 +20,7 @@ class CutoutDataset(torch.utils.data.Dataset):
     """
 
     def __init__(self, data_file, img_size, pos_channel=False, num_patches=None, label_keys=None, 
-                 norm=None, transform=None, global_mean=0.1, global_std=2.):
+                 norm=None, transform=None, global_mean=0.1, global_std=2., pixel_min=-3, pixel_max=50):
         
         self.data_file = data_file
         self.transform = transform
@@ -31,6 +31,8 @@ class CutoutDataset(torch.utils.data.Dataset):
         self.label_keys = label_keys
         self.global_mean = global_mean
         self.global_std = global_std
+        self.pixel_min = pixel_min
+        self.pixel_max = pixel_max
                         
     def __len__(self):
         with h5py.File(self.data_file, "r") as f:    
@@ -43,6 +45,7 @@ class CutoutDataset(torch.utils.data.Dataset):
             # Load cutout
             cutout = f['cutouts'][idx].transpose(1,2,0)
             cutout[np.isnan(cutout)] = 0.
+            cutout = cutout.clip(self.pixel_min, self.pixel_max)
 
             if (np.array(cutout.shape[:2])>self.img_size).any():
                 # Select central cutout
