@@ -47,8 +47,11 @@ def run_iter(model, samples, labels, optimizer, lr_scheduler,
     model_output = model(samples)
 
     # Compute loss
-    labels = model.normalize_labels(labels)
+    labels = model.module.normalize_labels(labels)
     loss = torch.nn.MSELoss()(model_output, labels)
+    if loss.numel()>1:
+        # In case of multiple GPUs
+        loss = loss.unsqueeze(0).mean()
     
     if 'train' in mode:
         # Update the gradients

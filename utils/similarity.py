@@ -27,8 +27,11 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
-            
-            latent, _, _ = model.forward_encoder(samples, mask_ratio)
+
+            if hasattr(model, 'module'):
+                latent, _, _ = model.module.forward_encoder(samples, mask_ratio)
+            else:
+                latent, _, _ = model.forward_encoder(samples, mask_ratio)
             # Remove cls token
             latent = latent[:,1:]
             

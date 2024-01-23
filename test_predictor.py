@@ -11,8 +11,10 @@ from utils.analysis_fns import plot_progress, ft_predict, plot_resid_hexbin, eva
 def main(args):
     
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    print('Using Torch version: %s' % (torch.__version__))
-    print('Using a %s device' % (device))
+    n_gpu = torch.cuda.device_count()
+
+    print(f'Using Torch version: {torch.__version__}')
+    print(f'Using a {device} device with {n_gpu} GPU(s)')
 
     # Directories
     cur_dir = os.path.dirname(__file__)
@@ -54,9 +56,10 @@ def main(args):
                                           device, build_optimizer=False)
     
     # Data loaders
+    num_workers = min([os.cpu_count(),12*n_gpu])
     dataloader_val = build_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
                                         norm_type=mae_config['DATA']['norm_type'], 
-                                        batch_size=int(config['TRAINING']['batch_size']), 
+                                        batch_size=int(int(config['TRAINING']['batch_size'])/n_gpu), 
                                         num_workers=int(config['TRAINING']['num_workers']),
                                         label_keys=eval(config['DATA']['label_keys']),
                                         img_size=int(config['ARCHITECTURE']['img_size']),

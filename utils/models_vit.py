@@ -57,6 +57,9 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                         global_pool=global_pool)
     model.to(device)
 
+    # Use multiple GPUs if available
+    model = nn.DataParallel(model)
+
     if build_optimizer:
         total_batch_iters = int(float(config['TRAINING']['total_batch_iters']))
         init_lr = float(config['TRAINING']['init_lr'])
@@ -140,31 +143,31 @@ def load_model(model, model_filename, mae_filename='None', optimizer=None, lr_sc
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
         
         # Load model weights
-        model.load_state_dict(checkpoint['model'])
+        model.module.load_state_dict(checkpoint['model'])
         
     elif mae_filename!='None':
         print('\nLoading pre-trained MAE model weights...')
 
         checkpoint = torch.load(mae_filename, map_location='cpu')
         checkpoint_model = checkpoint['model']
-        state_dict = model.state_dict()
+        state_dict = model.module.state_dict()
         for k in ['head.weight', 'head.bias']:
             if k in checkpoint_model and checkpoint_model[k].shape != state_dict[k].shape:
                 print(f"Removing key {k} from pretrained checkpoint")
                 del checkpoint_model[k]
 
         # Crop the central positional embedding matrix
-        crop_pos_embed(model, checkpoint_model)
+        crop_pos_embed(model.module, checkpoint_model)
         # Interpolate the position embedding matrix
         #interpolate_pos_embed(model, checkpoint_model)
 
         # Load the pre-trained model weights
-        msg = model.load_state_dict(checkpoint_model, strict=False)
+        msg = model.module.load_state_dict(checkpoint_model, strict=False)
         #print(msg)
         #assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
         
         # Manually initialize the head layer weights
-        trunc_normal_(model.head.weight, std=2e-5)
+        trunc_normal_(model.module.head.weight, std=2e-5)
         
         losses = defaultdict(list)
         cur_iter = 1

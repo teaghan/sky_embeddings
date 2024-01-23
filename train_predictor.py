@@ -13,9 +13,10 @@ from utils.analysis_fns import plot_progress, mae_predict, plot_batch
 def main(args):
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    
-    print('Using Torch version: %s' % (torch.__version__))
-    print('Using a %s device' % (device))
+    n_gpu = torch.cuda.device_count()
+
+    print(f'Using Torch version: {torch.__version__}')
+    print(f'Using a {device} device with {n_gpu} GPU(s)')
     
     # Directories
     cur_dir = os.path.dirname(__file__)
@@ -61,18 +62,19 @@ def main(args):
                                                                    device, build_optimizer=True)
     
     # Data loaders
+    num_workers = min([os.cpu_count(),12*n_gpu])
     dataloader_train = build_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
                                         norm_type=mae_config['DATA']['norm_type'], 
-                                        batch_size=int(config['TRAINING']['batch_size']), 
-                                        num_workers=int(config['TRAINING']['num_workers']),
+                                        batch_size=int(int(config['TRAINING']['batch_size'])/n_gpu), 
+                                        num_workers=num_workers,
                                         label_keys=eval(config['DATA']['label_keys']),
                                         img_size=int(config['ARCHITECTURE']['img_size']),
                                         shuffle=True)
     
     dataloader_val = build_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
                                         norm_type=mae_config['DATA']['norm_type'], 
-                                        batch_size=int(config['TRAINING']['batch_size']), 
-                                        num_workers=int(config['TRAINING']['num_workers']),
+                                        batch_size=int(int(config['TRAINING']['batch_size'])/n_gpu), 
+                                        num_workers=num_workers,
                                         label_keys=eval(config['DATA']['label_keys']),
                                         img_size=int(config['ARCHITECTURE']['img_size']),
                                         shuffle=True)
@@ -88,7 +90,7 @@ def main(args):
 
 def train_network(model, dataloader_train, dataloader_val, optimizer, lr_scheduler, device, 
                   losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir):
-    print('Training the network with a batch size of %i ...' % (dataloader_train.batch_size))
+    print('Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size))
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
           (verbose_iters, cp_time))
     
@@ -160,7 +162,7 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                                 'losses': losses,
                                 'optimizer' : optimizer.state_dict(),
                                 'lr_scheduler' : lr_scheduler.state_dict(),
-                                'model' : model.state_dict()},
+                                'model' : model.module.state_dict()},
                                 model_filename)
 
                 cp_start_time = time.time()
@@ -173,7 +175,7 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                                 'losses': losses,
                                 'optimizer' : optimizer.state_dict(),
                                 'lr_scheduler' : lr_scheduler.state_dict(),
-                                'model' : model.state_dict()},
+                                'model' : model.module.state_dict()},
                                 model_filename)
                 # Finish training
                 break 

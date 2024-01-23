@@ -211,11 +211,12 @@ def display_images(images, vmin=0., vmax=1.):
     plt.tight_layout()
     plt.show()
 
-def ft_predict(model, dataloader, device, num_batches=None):
+def ft_predict(model, dataloader, device, num_batches=None, return_images=False):
     model.eval()
     
     tgt_labels = []
     pred_labels = []
+    images = []
 
     if num_batches is None:
         num_batches = len(dataloader)
@@ -230,6 +231,9 @@ def ft_predict(model, dataloader, device, num_batches=None):
     
         # Run predictions
         model_outputs = model(samples)
+
+        if hasattr(model, 'module'):
+            model = model.module
         
         # Rescale back to original scale
         model_outputs = model.denormalize_labels(model_outputs)
@@ -238,13 +242,18 @@ def ft_predict(model, dataloader, device, num_batches=None):
         tgt_labels.append(labels.data.cpu().numpy())
         pred_labels.append(model_outputs.data.cpu().numpy())
 
+        if return_images:
+            images.append(samples.detach().data.cpu().numpy())
+
         if i==num_batches:
             break
     
     tgt_labels = np.concatenate(tgt_labels)
     pred_labels = np.concatenate(pred_labels)
-    
-    return tgt_labels, pred_labels
+    if return_images:
+        return tgt_labels, pred_labels, np.concatenate(images)
+    else:
+        return tgt_labels, pred_labels
 
 def plot_resid_hexbin(label_keys, tgt_stellar_labels, pred_stellar_labels,
                       y_lims=[2], 
