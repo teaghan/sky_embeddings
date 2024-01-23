@@ -71,9 +71,9 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
         if train_method=='finetune' or train_method=='ft':
             print('\nUsing the fine-tuning training method...')
             # Build optimizer with layer-wise lr decay
-            param_groups, init_lr = param_groups_lrd(model, weight_decay,
-                                            no_weight_decay_list=model.module.no_weight_decay(),
-                                            layer_decay=layer_decay)
+            param_groups, init_lr = param_groups_lrd(model.module, weight_decay,
+                                                     no_weight_decay_list=model.module.no_weight_decay(),
+                                                     layer_decay=layer_decay)
             optimizer = torch.optim.AdamW(param_groups)
             
         elif train_method=='linearprobe' or train_method=='lp':
