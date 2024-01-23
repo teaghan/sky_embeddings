@@ -28,8 +28,7 @@ def param_groups_lrd(model, init_lr, weight_decay=0.05, no_weight_decay_list=[],
             continue
 
         # no decay: all 1D parameters and model specific ones
-        #if p.ndim == 1 or n in no_weight_decay_list:
-        if n in no_weight_decay_list:
+        if p.ndim == 1 or n in no_weight_decay_list:
             g_decay = "no_decay"
             this_decay = 0.
         else:
