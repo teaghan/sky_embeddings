@@ -5,7 +5,7 @@ import configparser
 from collections import defaultdict
 import torch
 
-from utils.pretrain import run_iter, parseArguments
+from utils.pretrain import str2bool, run_iter, parseArguments
 from utils.models_mae import build_model
 from utils.dataloader import build_dataloader
 from utils.analysis_fns import plot_progress, mae_predict, plot_batch
