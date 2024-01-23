@@ -18,13 +18,15 @@ class CutoutDataset(torch.utils.data.Dataset):
     Dataset loader for the cutout datasets.
     """
 
-    def __init__(self, data_file, img_size, label_keys=None, norm=None, transform=None):
+    def __init__(self, data_file, img_size, label_keys=None, norm=None, transform=None, global_mean=0.1, global_std=2.):
         
         self.data_file = data_file
         self.transform = transform
         self.norm = norm
         self.img_size = img_size
         self.label_keys = label_keys
+        self.global_mean = global_mean
+        self.global_std = global_std
                         
     def __len__(self):
         with h5py.File(self.data_file, "r") as f:    
@@ -65,6 +67,8 @@ class CutoutDataset(torch.utils.data.Dataset):
             sample_mean = torch.min(cutout)
             sample_std = torch.std(cutout)
             cutout = (cutout - sample_mean) / sample_std
+        elif self.norm=='global':
+            cutout = (cutout - self.global_mean) / self.global_std
 
         return cutout, labels
 
