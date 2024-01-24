@@ -49,6 +49,8 @@ def run_iter(model, samples, labels, optimizer, lr_scheduler,
     # Compute loss
     labels = model.module.normalize_labels(labels)
     loss = torch.nn.MSELoss()(model_output, labels)
+    if torch.isnan(loss)[0]:
+        print(torch.min(samples), torch.max(samples))
     if loss.numel()>1:
         # In case of multiple GPUs
         loss = loss.unsqueeze(0).mean()
