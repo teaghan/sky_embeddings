@@ -29,10 +29,10 @@ class CutoutDataset(torch.utils.data.Dataset):
         self.pos_channel = pos_channel
         self.num_patches = num_patches
         self.label_keys = label_keys
-        self.global_mean = torch.tensor(global_mean, dtype=torch.float)
-        self.global_std = torch.tensor(global_std, dtype=torch.float)
-        self.pixel_min = torch.tensor(pixel_min, dtype=torch.float)
-        self.pixel_max = torch.tensor(pixel_max, dtype=torch.float)
+        self.global_mean = torch.tensor(global_mean, dtype=torch.float, device='cpu')
+        self.global_std = torch.tensor(global_std, dtype=torch.float, device='cpu')
+        self.pixel_min = torch.tensor(pixel_min, dtype=torch.float, device='cpu')
+        self.pixel_max = torch.tensor(pixel_max, dtype=torch.float, device='cpu')
 
     torch.float
                         
