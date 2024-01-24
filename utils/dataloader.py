@@ -29,10 +29,10 @@ class CutoutDataset(torch.utils.data.Dataset):
         self.pos_channel = pos_channel
         self.num_patches = num_patches
         self.label_keys = label_keys
-        self.global_mean = torch.tensor(global_mean, dtype=torch.float, device='cpu')
-        self.global_std = torch.tensor(global_std, dtype=torch.float, device='cpu')
-        self.pixel_min = torch.tensor(pixel_min, dtype=torch.float, device='cpu')
-        self.pixel_max = torch.tensor(pixel_max, dtype=torch.float, device='cpu')
+        self.global_mean = torch.tensor(global_mean, dtype=torch.float)#, device='cpu')
+        self.global_std = torch.tensor(global_std, dtype=torch.float)#, device='cpu')
+        self.pixel_min = torch.tensor(pixel_min, dtype=torch.float)#, device='cpu')
+        self.pixel_max = torch.tensor(pixel_max, dtype=torch.float)#, device='cpu')
 
     torch.float
                         
@@ -48,6 +48,10 @@ class CutoutDataset(torch.utils.data.Dataset):
             cutout = f['cutouts'][idx].transpose(1,2,0).copy()  
             
             # Remove any NaN value
+            cutout[np.isnan(cutout)] = 0.
+
+            # Clip
+            #cutout[cutout<] = 0.
             #cutout[np.isnan(cutout)] = 0.
 
             if (np.array(cutout.shape[:2])>self.img_size).any():
@@ -78,7 +82,7 @@ class CutoutDataset(torch.utils.data.Dataset):
 
         # Clip values
         #cutout = torch.where(cutout < self.pixel_min, self.pixel_min, cutout)
-        cutout = torch.where(cutout > self.pixel_max, self.pixel_max, cutout)
+        #cutout = torch.where(cutout > self.pixel_max, self.pixel_max, cutout)
 
         # Add position as additional channel
         if self.pos_channel:
