@@ -29,12 +29,10 @@ class CutoutDataset(torch.utils.data.Dataset):
         self.pos_channel = pos_channel
         self.num_patches = num_patches
         self.label_keys = label_keys
-        self.global_mean = torch.tensor(global_mean, dtype=torch.float)#, device='cpu')
-        self.global_std = torch.tensor(global_std, dtype=torch.float)#, device='cpu')
-        self.pixel_min = torch.tensor(pixel_min, dtype=torch.float)#, device='cpu')
-        self.pixel_max = torch.tensor(pixel_max, dtype=torch.float)#, device='cpu')
-
-    torch.float
+        self.global_mean = global_mean
+        self.global_std = global_std 
+        self.pixel_min = pixel_min
+        self.pixel_max = pixel_max
                         
     def __len__(self):
         with h5py.File(self.data_file, "r") as f:    
@@ -51,8 +49,8 @@ class CutoutDataset(torch.utils.data.Dataset):
             cutout[np.isnan(cutout)] = 0.
 
             # Clip
-            #cutout[cutout<] = 0.
-            #cutout[np.isnan(cutout)] = 0.
+            cutout[cutout<self.pixel_min] = self.pixel_min
+            cutout[cutout>self.pixel_max] = self.pixel_max
 
             if (np.array(cutout.shape[:2])>self.img_size).any():
                 # Select central cutout
@@ -80,10 +78,6 @@ class CutoutDataset(torch.utils.data.Dataset):
             cutout = torch.from_numpy(cutout)
             cutout = cutout.permute(2,0,1)
 
-        # Clip values
-        cutout = torch.where(cutout < self.pixel_min, self.pixel_min, cutout)
-        cutout = torch.where(cutout > self.pixel_max, self.pixel_max, cutout)
-
         # Add position as additional channel
         if self.pos_channel:
             pos_channel = celestial_image_channel(central_ra, central_dec, ra_res, dec_res, self.img_size, self.num_patches,
@@ -99,7 +93,7 @@ class CutoutDataset(torch.utils.data.Dataset):
             # Normalize sample to have zero mean and unit variance
             sample_mean = torch.min(cutout)
             sample_std = torch.std(cutout)
-            cutout = (cutout - sample_mean) / sample_std
+            cutout = (cutout - sample_mean) / (sample_std +1e-6)
         elif self.norm=='global':
             # Normalize dataset to have zero mean and unit variance
             cutout = (cutout - self.global_mean) / self.global_std
