@@ -81,8 +81,8 @@ class CutoutDataset(torch.utils.data.Dataset):
             cutout = cutout.permute(2,0,1)
 
         # Clip values
-        #cutout = torch.where(cutout < self.pixel_min, self.pixel_min, cutout)
-        #cutout = torch.where(cutout > self.pixel_max, self.pixel_max, cutout)
+        cutout = torch.where(cutout < self.pixel_min, self.pixel_min, cutout)
+        cutout = torch.where(cutout > self.pixel_max, self.pixel_max, cutout)
 
         # Add position as additional channel
         if self.pos_channel:
