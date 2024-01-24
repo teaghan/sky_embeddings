@@ -44,8 +44,9 @@ class CutoutDataset(torch.utils.data.Dataset):
         with h5py.File(self.data_file, "r") as f: 
             # Load cutout
             cutout = f['cutouts'][idx].transpose(1,2,0)
-            cutout = cutout.clip(self.pixel_min, self.pixel_max)
             cutout[np.isnan(cutout)] = 0.
+            cutout[cutout<self.pixel_min] = self.pixel_min
+            cutout[cutout>self.pixel_max] = self.pixel_max
 
             if (np.array(cutout.shape[:2])>self.img_size).any():
                 # Select central cutout
