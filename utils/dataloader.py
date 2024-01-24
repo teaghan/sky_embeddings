@@ -43,10 +43,10 @@ class CutoutDataset(torch.utils.data.Dataset):
         
         with h5py.File(self.data_file, "r") as f: 
             # Load cutout
-            cutout = f['cutouts'][idx].transpose(1,2,0)   
-            #cutout[np.isnan(cutout)] = 0.
-            cutout[cutout<-3] = -3
-            #cutout[cutout>self.pixel_min] = self.pixel_max
+            cutout = f['cutouts'][idx].transpose(1,2,0).copy()  
+            
+            # Remove any NaN value
+            cutout[np.isnan(cutout)] = 0.
 
             if (np.array(cutout.shape[:2])>self.img_size).any():
                 # Select central cutout
@@ -56,6 +56,7 @@ class CutoutDataset(torch.utils.data.Dataset):
                 # Load RA and Dec
                 labels = torch.from_numpy(np.asarray([f['ra'][idx], f['dec'][idx]]).astype(np.float32))
             else:
+                # or other labels
                 labels = [f[k][idx] for k in self.label_keys]
                 labels = torch.from_numpy(np.asarray(labels).astype(np.float32))
 
@@ -65,13 +66,19 @@ class CutoutDataset(torch.utils.data.Dataset):
                 central_dec = torch.tensor([f['dec'][idx]])
                 # Determine the resolution at these spots
                 ra_res, dec_res = hsc_dud_res(central_ra, central_dec)
-            
+
+        # Apply any augmentations, etc.
         if self.transform:
             cutout = self.transform(cutout)
         else:
             cutout = torch.from_numpy(cutout)
             cutout = cutout.permute(2,0,1)
 
+        # Clip values
+        cutout = torch.where(cutout < self.pixel_min, torch.tensor(self.pixel_min, dtype=cutout.dtype), cutout)
+        cutout = torch.where(cutout > self.pixel_max, torch.tensor(self.pixel_max, dtype=cutout.dtype), cutout)
+
+        # Add position as additional channel
         if self.pos_channel:
             pos_channel = celestial_image_channel(central_ra, central_dec, ra_res, dec_res, self.img_size, self.num_patches,
                                                   ra_range=[0, 360], dec_range=[-90, 90])
@@ -83,11 +90,12 @@ class CutoutDataset(torch.utils.data.Dataset):
             sample_max = torch.max(cutout)
             cutout = (cutout - sample_min) / (sample_max - sample_min)
         elif self.norm=='zscore':
-            # Normalize to have zero mean and unit variance
+            # Normalize sample to have zero mean and unit variance
             sample_mean = torch.min(cutout)
             sample_std = torch.std(cutout)
             cutout = (cutout - sample_mean) / sample_std
         elif self.norm=='global':
+            # Normalize dataset to have zero mean and unit variance
             cutout = (cutout - self.global_mean) / self.global_std
 
         return cutout, labels
