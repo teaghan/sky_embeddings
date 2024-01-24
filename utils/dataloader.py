@@ -44,6 +44,9 @@ class CutoutDataset(torch.utils.data.Dataset):
         with h5py.File(self.data_file, "r") as f: 
             # Load cutout
             cutout = f['cutouts'][idx].transpose(1,2,0)
+
+            dummy = np.copy(cutout)
+            
             cutout[np.isnan(cutout)] = 0.
             cutout[cutout<self.pixel_min] = self.pixel_min
             cutout[cutout>self.pixel_max] = self.pixel_max
@@ -100,7 +103,7 @@ class CutoutDataset(torch.utils.data.Dataset):
 
         isnan = np.where(np.isnan(cutout))[0]
         if len(isnan)>0:
-            print('C', idx, isnan)
+            print('C', idx, dummy[isnan])
 
         return cutout, labels
 
