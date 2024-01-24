@@ -29,10 +29,12 @@ class CutoutDataset(torch.utils.data.Dataset):
         self.pos_channel = pos_channel
         self.num_patches = num_patches
         self.label_keys = label_keys
-        self.global_mean = global_mean
-        self.global_std = global_std
-        self.pixel_min = pixel_min
-        self.pixel_max = pixel_max
+        self.global_mean = torch.tensor(global_mean, dtype=torch.float)
+        self.global_std = torch.tensor(global_std, dtype=torch.float)
+        self.pixel_min = torch.tensor(pixel_min, dtype=torch.float)
+        self.pixel_max = torch.tensor(pixel_max, dtype=torch.float)
+
+    torch.float
                         
     def __len__(self):
         with h5py.File(self.data_file, "r") as f:    
@@ -75,8 +77,8 @@ class CutoutDataset(torch.utils.data.Dataset):
             cutout = cutout.permute(2,0,1)
 
         # Clip values
-        cutout = torch.where(cutout < self.pixel_min, torch.tensor(self.pixel_min, dtype=cutout.dtype), cutout)
-        cutout = torch.where(cutout > self.pixel_max, torch.tensor(self.pixel_max, dtype=cutout.dtype), cutout)
+        cutout = torch.where(cutout < self.pixel_min, self.pixel_min, cutout)
+        cutout = torch.where(cutout > self.pixel_max, self.pixel_max, cutout)
 
         # Add position as additional channel
         if self.pos_channel:
