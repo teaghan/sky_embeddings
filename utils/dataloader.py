@@ -44,8 +44,6 @@ class CutoutDataset(torch.utils.data.Dataset):
         with h5py.File(self.data_file, "r") as f: 
             # Load cutout
             cutout = f['cutouts'][idx].transpose(1,2,0)
-
-            dummy = np.copy(cutout)
             
             cutout[np.isnan(cutout)] = 0.
             cutout[cutout<self.pixel_min] = self.pixel_min
@@ -68,10 +66,6 @@ class CutoutDataset(torch.utils.data.Dataset):
                 central_dec = torch.tensor([f['dec'][idx]])
                 # Determine the resolution at these spots
                 ra_res, dec_res = hsc_dud_res(central_ra, central_dec)
-
-        isnan = np.where(np.isnan(cutout))[0]
-        if len(isnan)>0:
-            print('A', idx, isnan)
             
         if self.transform:
             cutout = self.transform(cutout)
@@ -84,9 +78,7 @@ class CutoutDataset(torch.utils.data.Dataset):
                                                   ra_range=[0, 360], dec_range=[-90, 90])
             cutout = torch.cat((cutout, pos_channel), dim=0)
 
-        isnan = np.where(np.isnan(cutout))[0]
-        if len(isnan)>0:
-            print('B', idx, isnan)
+        dummy = np.copy(cutout)
             
         if self.norm=='minmax':
             # Normalize sample between 0 and 1
