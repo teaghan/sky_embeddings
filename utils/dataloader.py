@@ -66,6 +66,10 @@ class CutoutDataset(torch.utils.data.Dataset):
                 # Determine the resolution at these spots
                 ra_res, dec_res = hsc_dud_res(central_ra, central_dec)
 
+        isnan = np.where(np.isnan(cutout))[0]
+        if len(isnan)>0:
+            print('A', idx, isnan)
+            
         if self.transform:
             cutout = self.transform(cutout)
         else:
@@ -76,7 +80,11 @@ class CutoutDataset(torch.utils.data.Dataset):
             pos_channel = celestial_image_channel(central_ra, central_dec, ra_res, dec_res, self.img_size, self.num_patches,
                                                   ra_range=[0, 360], dec_range=[-90, 90])
             cutout = torch.cat((cutout, pos_channel), dim=0)
-        
+
+        isnan = np.where(np.isnan(cutout))[0]
+        if len(isnan)>0:
+            print('B', idx, isnan)
+            
         if self.norm=='minmax':
             # Normalize sample between 0 and 1
             sample_min = torch.min(cutout)
@@ -92,7 +100,7 @@ class CutoutDataset(torch.utils.data.Dataset):
 
         isnan = np.where(np.isnan(cutout))[0]
         if len(isnan)>0:
-            print(idx, isnan)
+            print('C', idx, isnan)
 
         return cutout, labels
 
