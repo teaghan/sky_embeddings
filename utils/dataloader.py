@@ -20,7 +20,7 @@ class CutoutDataset(torch.utils.data.Dataset):
     """
 
     def __init__(self, data_file, img_size, pos_channel=False, num_patches=None, label_keys=None, 
-                 norm=None, transform=None, global_mean=0.1, global_std=2., pixel_min=-3, pixel_max=50):
+                 norm=None, transform=None, global_mean=0.1, global_std=2., pixel_min=-3., pixel_max=50.):
         
         self.data_file = data_file
         self.transform = transform
@@ -43,11 +43,8 @@ class CutoutDataset(torch.utils.data.Dataset):
         
         with h5py.File(self.data_file, "r") as f: 
             # Load cutout
-            cutout = f['cutouts'][idx].transpose(1,2,0)
-            
+            cutout = f['cutouts'][idx].transpose(1,2,0)   
             cutout[np.isnan(cutout)] = 0.
-            cutout[cutout<self.pixel_min] = self.pixel_min
-            cutout[cutout>self.pixel_max] = self.pixel_max
 
             if (np.array(cutout.shape[:2])>self.img_size).any():
                 # Select central cutout
@@ -77,8 +74,6 @@ class CutoutDataset(torch.utils.data.Dataset):
             pos_channel = celestial_image_channel(central_ra, central_dec, ra_res, dec_res, self.img_size, self.num_patches,
                                                   ra_range=[0, 360], dec_range=[-90, 90])
             cutout = torch.cat((cutout, pos_channel), dim=0)
-
-        dummy = np.copy(cutout)
             
         if self.norm=='minmax':
             # Normalize sample between 0 and 1
@@ -92,10 +87,6 @@ class CutoutDataset(torch.utils.data.Dataset):
             cutout = (cutout - sample_mean) / sample_std
         elif self.norm=='global':
             cutout = (cutout - self.global_mean) / self.global_std
-
-        isnan = np.where(np.isnan(cutout))[0]
-        if len(isnan)>0:
-            print('C', idx, dummy[isnan])
 
         return cutout, labels
 
