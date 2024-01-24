@@ -58,12 +58,20 @@ def main(args):
         batch_size = int(int(config['TRAINING']['batch_size'])/n_gpu)
     else:
         batch_size = int(config['TRAINING']['batch_size'])
+    if config['DATA']['norm_type']=='global':
+        pix_mean = float(config['DATA']['pix_mean'])
+        pix_std = float(config['DATA']['pix_std'])
+    else:
+        pix_mean = None
+        pix_std = None
     dataloader_train = build_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
                                         norm_type=config['DATA']['norm_type'], 
                                         batch_size=batch_size, 
                                         num_workers=num_workers,
                                         img_size=int(config['ARCHITECTURE']['img_size']),
                                         pos_channel=str2bool(config['DATA']['pos_channel']), 
+                                        pix_mean=pix_mean,
+                                        pix_std=pix_std,
                                         num_patches=model.module.patch_embed.num_patches,
                                         shuffle=True)
     
@@ -73,6 +81,8 @@ def main(args):
                                         num_workers=num_workers,
                                         img_size=int(config['ARCHITECTURE']['img_size']),
                                         pos_channel=str2bool(config['DATA']['pos_channel']), 
+                                        pix_mean=pix_mean,
+                                        pix_std=pix_std, 
                                         num_patches=model.module.patch_embed.num_patches,
                                         shuffle=True)
 

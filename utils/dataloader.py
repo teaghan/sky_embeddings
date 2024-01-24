@@ -3,11 +3,12 @@ import torch
 import h5py
 
 def build_dataloader(filename, norm_type, batch_size, num_workers, label_keys=None, 
-                     img_size=64, pos_channel=False, num_patches=None, shuffle=True):
+                     img_size=64, pos_channel=False, pix_mean=None, pix_std=None, num_patches=None, shuffle=True):
     
     # Data loaders
     dataset = CutoutDataset(filename, img_size=img_size, pos_channel=pos_channel, 
-                            num_patches=num_patches, label_keys=label_keys, norm=norm_type)
+                            num_patches=num_patches, label_keys=label_keys, norm=norm_type,
+                            global_mean=pix_mean, global_std=pix_std)
 
     return torch.utils.data.DataLoader(dataset, batch_size=batch_size, 
                                        shuffle=shuffle, num_workers=num_workers,
