@@ -89,6 +89,10 @@ class CutoutDataset(torch.utils.data.Dataset):
         elif self.norm=='global':
             cutout = (cutout - self.global_mean) / self.global_std
 
+        isnan = np.where(np.isnan(cutout))[0]
+        if len(isnan)>0:
+            print(idx, isnan)
+
         return cutout, labels
 
 def extract_center(array, n):
