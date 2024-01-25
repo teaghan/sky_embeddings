@@ -613,12 +613,11 @@ def calculate_snr(images, n_central_pix):
     return snr
 
 def h5_snr(h5_path, n_central_pix=8, batch_size=5000, num_samples=None):
-
-    if num_samples is None:
-        num_samples = len(f['cutouts'])
         
     snr_vals = []
     with h5py.File(h5_path, "r") as f:   
+        if num_samples is None:
+            num_samples = len(f['cutouts'])
         for i in range(0, num_samples, batch_size):
             cutouts = f['cutouts'][i:i+batch_size]
             snr_vals.append(calculate_snr(cutouts, n_central_pix))
