@@ -519,8 +519,10 @@ def snr_plots(z_pred, z_true, snr, n_bins, fontsize=12, cmap=None, snr_lim=(5,25
         ax.grid(alpha=0.2)
     
     if savename is not None:
-        savename = savename.split('.')
+        fig_dir = os.path.dirname(savename)
+        savename = os.path.basename(savename).split('.')
         savename = f'{savename[0]}_snr.{savename[1]}'
+        savename = os.path.join(fig_dir, savename)
         plt.savefig(savename, facecolor='white', transparent=False, dpi=100,
                     bbox_inches='tight', pad_inches=0.05)
     else:
