@@ -6,7 +6,7 @@ import torch
 from utils.finetune import str2bool, parseArguments
 from utils.models_vit import build_model
 from utils.dataloader import build_dataloader
-from utils.analysis_fns import plot_progress, ft_predict, plot_resid_hexbin, evaluate_z
+from utils.analysis_fns import plot_progress, ft_predict, plot_resid_hexbin, evaluate_z, h5_snr
 
 def main(args):
     
@@ -75,12 +75,22 @@ def main(args):
     print('The validation set consists of %i cutouts.' % (len(dataloader_val.dataset)))
 
     tgt_labels, pred_labels = ft_predict(model, dataloader_val, device)
+
+    snr_vals = h5_snr(h5_path=os.path.join(data_dir, config['DATA']['val_data_file']), 
+                      n_central_pix=8, batch_size=5000, num_samples=None)
     
-    plot_resid_hexbin([r'$Z$'], tgt_labels, pred_labels, y_lims=[1], 
+    # Calculate minimum snr of the 5 channels
+    snr = np.min(snr_vals, axis=(1))
+    
+    # Only display objects that are not super noisy
+    snr_indices = snr>5
+    
+    plot_resid_hexbin([r'$Z$'], tgt_labels[snr_indices], pred_labels[snr_indices], y_lims=[1], 
                       gridsize=(80,40), max_counts=30, cmap='ocean_r', n_std=4,
-                      savename=os.path.join(fig_dir, 
-                                            f'{model_name}_predictions.png'))
-    evaluate_z(pred_labels, tgt_labels, n_bins=8, z_range=(0.2,2), threshold=0.15, 
+                      savename=os.path.join(fig_dir, f'{model_name}_predictions.png'))
+    
+    evaluate_z(pred_labels[snr_indices], tgt_labels[snr_indices], n_bins=8, z_range=(0.2,1.6), threshold=0.15, 
+               y_lims=[(-0.15,0.15),(-0.1,0.1),(0,0.07),(0,0.2)], snr=snr[snr_indices],
                savename=os.path.join(fig_dir, f'{model_name}_redshift.png'))
 
 # Run the testing

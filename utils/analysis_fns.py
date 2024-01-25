@@ -342,7 +342,7 @@ def plot_z_resid(fig, ax, cax, z_true, resid, bias, mad, frac_out, y_lims=1,
     # Axis params
     #ax.set_xlabel(r'$Z_{tgt}$', size=15)
     ax.set_ylabel('Normalized\nResidual', size=fontsize)
-    ax.axhline(0, linewidth=2, c='black', linestyle='--')
+    ax.axhline(0, linewidth=1, c='black', linestyle='--')
     ax.set_xlim(x_range[0], x_range[1])
     ax.set_ylim(-y_lims, y_lims)
     ax.set_yticks([-y_lims, -0.5*y_lims, 0, 0.5*y_lims, y_lims])
@@ -353,9 +353,31 @@ def plot_z_resid(fig, ax, cax, z_true, resid, bias, mad, frac_out, y_lims=1,
     cbar = fig.colorbar(hex_data, cax=cax)
     cbar.set_label('Counts', size=fontsize)
 
+def plot_z_scatter(fig, ax, cax, z_pred, z_true, snr, snr_max=20,
+                   y_lims=1, cmap='ocean_r', fontsize=12):
+
+    #resid = (z_pred - z_true)
+    
+    # Plot
+    scatter = ax.scatter(z_true, z_pred, c=snr, cmap=cmap, s=3, vmin=0, vmax=snr_max)     
+        
+    # Axis params
+    ax.set_xlabel('Spectroscopic Redshift', size=fontsize)
+    ax.set_ylabel('Predicted Redshift', size=fontsize)
+    ax.plot([0,2],[0,2], linewidth=1, c='black', linestyle='--')
+    ax.set_xlim(0, 2)
+    ax.set_ylim(0, 2)
+        
+    # Colorbar
+    cbar = fig.colorbar(scatter, cax=cax)
+    cbar.set_label('[S/N]', size=fontsize)
+
+    ax.grid(alpha=0.2)
+
 def z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
             bin_mids, bin_bias, bin_mad, bin_frac_out, z_range, fontsize=12,
-           savename=None):
+            y_lims=[(-0.3,0.3),(-0.14,0.14),(0,0.2),(0,0.4)],
+            savename=None):
 
     # Create a figure
     fig = plt.figure(figsize=(10,10))
@@ -373,14 +395,14 @@ def z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
     ax2 = fig.add_subplot(gs[1, 0])#, sharex=ax1)
     cax2 = fig.add_subplot(gs[1, 1])
     plot_z_resid(fig, ax2, cax2, z_true, full_resid, full_bias, full_mad, full_frac_out, 
-                 y_lims=0.3, gridsize=(100,50), max_counts=30, cmap='ocean_r', n_std=3,
-                 x_range=z_range, fontsize=fontsize)
+                     y_lims=y_lims[0][1], gridsize=(100,50), max_counts=30, cmap='ocean_r', n_std=3,
+                     x_range=z_range, fontsize=fontsize)
 
     # Plot bias
     ax3 = fig.add_subplot(gs[2, 0])#, sharex=ax1)
     ax3.scatter(bin_mids, bin_bias, s=10)
     ax3.plot(bin_mids, bin_bias, linestyle='--')
-    ax3.set_ylim(-0.14,0.14)
+    ax3.set_ylim(*y_lims[1])
     ax3.axhline(0, linewidth=1, c='black', linestyle='--')
     ax3.set_ylabel('Bias', size=fontsize)
 
@@ -388,19 +410,22 @@ def z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
     ax4 = fig.add_subplot(gs[3, 0])#, sharex=ax1)
     ax4.scatter(bin_mids, bin_mad, s=10)
     ax4.plot(bin_mids, bin_mad, linestyle='--')
-    ax4.set_ylim(0,0.2)
+    ax4.set_ylim(*y_lims[2])
     ax4.set_ylabel('MAD', size=fontsize)
 
     # Plot frac out
     ax5 = fig.add_subplot(gs[4, 0])#, sharex=ax1)
     ax5.scatter(bin_mids, bin_frac_out, s=10)
     ax5.plot(bin_mids, bin_frac_out, linestyle='--')
-    ax5.set_ylim(0,0.5)
-    ax5.set_ylabel('Fraction Out', size=fontsize)
+    ax5.set_ylim(*y_lims[3])
+    ax5.set_ylabel('Outlier\nFraction', size=fontsize)
 
+    x_ticks = np.array(bin_mids) - np.diff(bin_mids)[0]/2
+    x_ticks = np.append(x_ticks, x_ticks[-1] + np.diff(bin_mids)[0])
     for i, ax in enumerate([ax1, ax2, ax3, ax4, ax5]):
         ax.tick_params(labelsize=10)
         ax.set_xlim(ax1.get_xlim())
+        ax.set_xticks(x_ticks)
         if i<4:
             ax.set_xticklabels([])
         else:
@@ -408,7 +433,7 @@ def z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
             #ax.set_xticks(x_ticks)
             #ax.set_xticklabels(x_ticks)
             ax.set_xlabel('Spectroscopic Redshift', size=fontsize)
-        #ax.grid()
+        ax.grid(alpha=0.2)
     
     if savename is not None:
         plt.savefig(savename, facecolor='white', transparent=False, dpi=100,
@@ -416,7 +441,93 @@ def z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
     else:
         plt.show()
 
-def evaluate_z(z_pred, z_true, n_bins=8, z_range=(0.2,2), threshold=0.15, savename=None):
+def snr_plots(z_pred, z_true, snr, n_bins, fontsize=12, cmap=None, snr_lim=(5,25),
+              y_lims=[(-0.3,0.3),(-0.14,0.14),(0,0.2),(0,0.4)], threshold=0.15, savename=None):
+
+    # Create a figure
+    fig = plt.figure(figsize=(10,10))
+    
+    # Define a GridSpec layout
+    gs = gridspec.GridSpec(6, 2, figure=fig, width_ratios=[1,0.02],height_ratios=[1,1,0.2,1,1,1], wspace=0.02)
+        
+    # Plot one-to-one
+    ax1 = fig.add_subplot(gs[:2, 0])
+    cax1 = fig.add_subplot(gs[:2, 1])
+    plot_z_scatter(fig, ax1, cax1, z_pred, z_true, snr, 
+                   y_lims=y_lims[0][1], snr_max=snr_lim[1], cmap='ocean_r', fontsize=fontsize)
+
+    # Split snr into bins and calculate metrics
+    bins = np.linspace(snr_lim[0], snr_lim[1], n_bins+1)
+    bin_indices = []
+    bin_mids = np.zeros((n_bins,))
+    for i in range(n_bins):
+        bin_indices.append(np.where((bins[i]<=snr) & (snr<bins[i+1]))[0])
+        bin_mids[i] = np.mean([bins[i], bins[i+1]])
+
+    # Each bin should have the same number of samples
+    n_samples = min([len(b) for b in bin_indices])
+    print(f'Using {n_samples} from each bin')
+    sample_indices = [np.random.choice(np.arange(len(b)), size=n_samples, replace=False) for b in bin_indices]
+    #bin_indices = [b[b_i] for b, b_i in zip(bin_indices,sample_indices)]
+    
+    # Calculate metrics for each bin
+    bin_bias = np.zeros((n_bins,))
+    bin_mad = np.zeros((n_bins,))
+    bin_frac_out = np.zeros((n_bins,))
+    for i, b in enumerate(bin_indices):
+        resid, bias, mad, frac_out = photoz_prediction_metrics(z_pred[b], z_true[b], threshold=threshold)
+        bin_bias[i] = bias
+        bin_mad[i] = mad
+        bin_frac_out[i] = frac_out
+
+    # Plot bias
+    ax3 = fig.add_subplot(gs[3, 0])#, sharex=ax1)
+    ax3.scatter(bin_mids, bin_bias, s=10)
+    ax3.plot(bin_mids, bin_bias, linestyle='--')
+    ax3.set_ylim(*y_lims[1])
+    ax3.axhline(0, linewidth=1, c='black', linestyle='--')
+    ax3.set_ylabel('Bias', size=fontsize)
+
+    # Plot MAD
+    ax4 = fig.add_subplot(gs[4, 0])#, sharex=ax1)
+    ax4.scatter(bin_mids, bin_mad, s=10)
+    ax4.plot(bin_mids, bin_mad, linestyle='--')
+    ax4.set_ylim(*y_lims[2])
+    ax4.set_ylabel('MAD', size=fontsize)
+
+    # Plot frac out
+    ax5 = fig.add_subplot(gs[5, 0])#, sharex=ax1)
+    ax5.scatter(bin_mids, bin_frac_out, s=10)
+    ax5.plot(bin_mids, bin_frac_out, linestyle='--')
+    ax5.set_ylim(*y_lims[3])
+    ax5.set_ylabel('Outlier\nFraction', size=fontsize)
+
+    x_ticks = np.array(bin_mids) - np.diff(bin_mids)[0]/2
+    x_ticks = np.append(x_ticks, x_ticks[-1] + np.diff(bin_mids)[0])
+    for i, ax in enumerate([ax3, ax4, ax5]):
+        ax.tick_params(labelsize=10)
+        ax.set_xlim(x_ticks[0], x_ticks[-1])
+        ax.set_xticks(x_ticks)
+        if i<2:
+            ax.set_xticklabels([])
+        else:
+            #x_ticks = np.round(ax.get_xticks(),1)
+            #ax.set_xticks(x_ticks)
+            #ax.set_xticklabels(x_ticks)
+            ax.set_xlabel('Signal-to-Noise', size=fontsize)
+        ax.grid(alpha=0.2)
+    
+    if savename is not None:
+        savename = savename.split('.')
+        savename = f'{savename[0]}_snr.{savename[1]}'
+        plt.savefig(savename, facecolor='white', transparent=False, dpi=100,
+                    bbox_inches='tight', pad_inches=0.05)
+    else:
+        plt.show()
+
+def evaluate_z(z_pred, z_true, n_bins=8, z_range=(0.2,2),
+               y_lims=[(-0.3,0.3),(-0.14,0.14),(0,0.2),(0,0.4)], threshold=0.15, 
+               snr=None, savename=None):
 
     # Calculate metrics on entire dataset
     full_resid, full_bias, full_mad, full_frac_out = photoz_prediction_metrics(z_pred, z_true, threshold=0.15)
@@ -432,7 +543,8 @@ def evaluate_z(z_pred, z_true, n_bins=8, z_range=(0.2,2), threshold=0.15, savena
     # Each bin should have the same number of samples
     n_samples = min([len(b) for b in bin_indices])
     print(f'Using {n_samples} from each bin')
-    #bin_indices = [b[:n_samples] for b in bin_indices]
+    sample_indices = [np.random.choice(np.arange(len(b)), size=n_samples, replace=False) for b in bin_indices]
+    #bin_indices = [b[b_i] for b, b_i in zip(bin_indices,sample_indices)]
     
     # Calculate metrics for each bin
     bin_bias = np.zeros((n_bins,))
@@ -447,4 +559,68 @@ def evaluate_z(z_pred, z_true, n_bins=8, z_range=(0.2,2), threshold=0.15, savena
     # Create metric plot
     z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
             bin_mids, bin_bias, bin_mad, bin_frac_out, z_range,
+            y_lims=y_lims,
            savename=savename)
+
+    if snr is not None:
+        snr_plots(z_pred, z_true, snr, n_bins, fontsize=12, cmap=snr, threshold=threshold,
+                  y_lims=y_lims, savename=savename)
+
+def calculate_snr(images, n_central_pix):
+    """
+    Calculate the channel-wise Signal-to-Noise Ratio (SNR) for a batch of images.
+
+    This function computes the SNR by measuring the ratio of the mean of the central 
+    `n_central_pix` x `n_central_pix` pixels to the standard deviation of the 
+    surrounding pixels for each channel in each image.
+
+    Parameters:
+    images (numpy.ndarray): A 4D NumPy array with shape (batch_size, n_channels, img_size, img_size).
+                            This array represents the batch of images.
+    n_central_pix (int): The size of the square central region from which the mean will be calculated.
+
+    Returns:
+    numpy.ndarray: A 2D NumPy array with shape (batch_size, n_channels) containing the SNR values for
+                   each channel of each image in the batch.
+
+    Note:
+    - The function assumes that `n_central_pix` is smaller than `img_size`.
+    - A small value (1e-8) is added to the standard deviation to avoid division by zero.
+    """
+    batch_size, n_channels, img_size, _ = images.shape
+
+    # Calculate the start and end indices for the central region
+    start = (img_size - n_central_pix) // 2
+    end = start + n_central_pix
+
+    # Extracting the central region for all images and channels
+    central_region = images[:, :, start:end, start:end]
+
+    # Create a mask for the surrounding region
+    mask = np.ones((img_size, img_size), dtype=bool)
+    mask[start:end, start:end] = False
+
+    # Apply the mask to all images to extract the surrounding region
+    surrounding_region = images[:, :, mask].reshape(batch_size, n_channels, -1)
+
+    # Calculate the mean of the central region and the standard deviation of the surrounding region
+    mean_central = np.mean(central_region, axis=(2, 3))
+    std_surrounding = np.std(surrounding_region, axis=2)
+
+    # Calculate the SNR
+    snr = mean_central / (std_surrounding + 1e-8)  # Added a small value to avoid division by zero
+
+    return snr
+
+def h5_snr(h5_path, n_central_pix=8, batch_size=5000, num_samples=None):
+
+    if num_samples is None:
+        num_samples = len(f['cutouts'])
+        
+    snr_vals = []
+    with h5py.File(h5_path, "r") as f:   
+        for i in range(0, num_samples, batch_size):
+            cutouts = f['cutouts'][i:i+batch_size]
+            snr_vals.append(calculate_snr(cutouts, n_central_pix))
+    
+    return np.concatenate(snr_vals)
