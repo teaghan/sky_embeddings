@@ -16,7 +16,7 @@ def parseArguments():
     # Job params
     parser.add_argument("-v", "--verbose_iters", 
                         help="Number of batch iters after which to evaluate val set and display output.", 
-                        type=int, default=1000)
+                        type=int, default=2000)
     parser.add_argument("-ct", "--cp_time", 
                         help="Number of minutes after which to save a checkpoint.", 
                         type=float, default=10)
@@ -29,9 +29,12 @@ def parseArguments():
     parser.add_argument("-mem", "--memory", 
                         help="Memory per job in GB.", 
                         type=int, default=16)
+    parser.add_argument("-ngpu", "--num_gpu", 
+                        help="Number of GPUs per job.", 
+                        type=int, default=2)
     parser.add_argument("-ncp", "--num_cpu", 
                         help="Number of CPU cores per job.", 
-                        type=int, default=11)
+                        type=int, default=24)
     parser.add_argument("-jt", "--job_time", 
                         help="Number of hours per job.", 
                         type=int, default=3)
@@ -204,7 +207,8 @@ with open(script_fn, 'w') as f:
 cmd = 'python %s ' % (os.path.join(cur_dir, 'queue_cc.py'))
 cmd += '--account "%s" --todo_dir "%s" ' % (args.account, todo_dir)
 cmd += '--done_dir "%s" --output_dir "%s" ' % (done_dir, stdout_dir)
-cmd += '--num_jobs 1 --num_runs %i --num_gpu 1 ' % (args.num_runs)
+cmd += '--num_jobs 1 --num_runs %i --num_gpu %i ' % (args.num_runs, args.num_gpu)
+#cmd += '--num_cpu "auto" --mem %sG --time_limit "00-0%i:00"' % (args.memory, args.job_time)
 cmd += '--num_cpu %i --mem %sG --time_limit "00-0%i:00"' % (args.num_cpu, args.memory, args.job_time)
 
 # Execute jobs
