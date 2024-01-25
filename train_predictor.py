@@ -83,6 +83,7 @@ def main(args):
                                         pix_mean=pix_mean,
                                         pix_std=pix_std,
                                         num_patches=model.module.patch_embed.num_patches,
+                                        augment=str2bool(config['TRAINING']['augment']),
                                         shuffle=True)
     
     dataloader_val = build_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 

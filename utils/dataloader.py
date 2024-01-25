@@ -1,13 +1,24 @@
 import numpy as np
 import torch
 import h5py
+from torchvision.transforms import v2
 
 def build_dataloader(filename, norm_type, batch_size, num_workers, label_keys=None, 
-                     img_size=64, pos_channel=False, pix_mean=None, pix_std=None, num_patches=None, shuffle=True):
+                     img_size=64, pos_channel=False, pix_mean=None, pix_std=None, num_patches=None, 
+                     augment=False, shuffle=True):
+
+    if augment:
+        transforms = v2.Compose([v2.GaussianBlur(kernel_size=5, sigma=(0.1,1.5)),
+                                 v2.RandomResizedCrop(size=(img_size, img_size), scale=(0.8,1), antialias=True),
+                                 v2.RandomHorizontalFlip(p=0.5),
+                                 v2.RandomVerticalFlip(p=0.5)])
+    else:
+        transforms = None
     
     # Data loaders
     dataset = CutoutDataset(filename, img_size=img_size, pos_channel=pos_channel, 
                             num_patches=num_patches, label_keys=label_keys, norm=norm_type,
+                            transform=transforms,
                             global_mean=pix_mean, global_std=pix_std)
 
     return torch.utils.data.DataLoader(dataset, batch_size=batch_size, 
@@ -44,8 +55,8 @@ class CutoutDataset(torch.utils.data.Dataset):
         
         with h5py.File(self.data_file, "r") as f: 
             # Load cutout
-            cutout = f['cutouts'][idx].transpose(1,2,0).copy()  
-            
+            cutout = f['cutouts'][idx]
+
             # Remove any NaN value
             cutout[np.isnan(cutout)] = 0.
 
@@ -53,7 +64,7 @@ class CutoutDataset(torch.utils.data.Dataset):
             cutout[cutout<self.pixel_min] = self.pixel_min
             cutout[cutout>self.pixel_max] = self.pixel_max
 
-            if (np.array(cutout.shape[:2])>self.img_size).any():
+            if (np.array(cutout.shape[1:])>self.img_size).any():
                 # Select central cutout
                 cutout = extract_center(cutout, self.img_size)
 
@@ -72,12 +83,10 @@ class CutoutDataset(torch.utils.data.Dataset):
                 # Determine the resolution at these spots
                 ra_res, dec_res = hsc_dud_res(central_ra, central_dec)
 
+        cutout = torch.from_numpy(cutout)
         # Apply any augmentations, etc.
-        if self.transform:
+        if self.transform is not None:
             cutout = self.transform(cutout)
-        else:
-            cutout = torch.from_numpy(cutout)
-            cutout = cutout.permute(2,0,1)
 
         # Add position as additional channel
         if self.pos_channel:
@@ -103,21 +112,21 @@ class CutoutDataset(torch.utils.data.Dataset):
 
 def extract_center(array, n):
     """
-    Extracts the central nxn chunk from a 2D numpy array.
+    Extracts the central nxn chunk from a numpy array.
 
-    :param array: Input 2D numpy array.
+    :param array: Input 3D numpy array (C, H, W)
     :param n: Size of the square chunk to extract.
     :return: nxn central chunk of the array.
     """
     # Dimensions of the input array
-    rows, cols = array.shape[:2]
+    rows, cols = array.shape[1:]
 
     # Calculate the starting indices
     start_row = rows // 2 - n // 2
     start_col = cols // 2 - n // 2
 
     # Extract and return the nxn center
-    return array[start_row:start_row + n, start_col:start_col + n]
+    return array[:,start_row:start_row + n, start_col:start_col + n]
 
 def celestial_image_channel(central_ras, central_decs, ra_res, dec_res, img_size, num_patches,
                                   ra_range=[0, 360], dec_range=[-90, 90]):
