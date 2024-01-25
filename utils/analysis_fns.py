@@ -176,7 +176,7 @@ def plot_batch(orig_imgs, mask_imgs, pred_imgs,
 
     plt.close()
 
-def display_images(images, vmin=0., vmax=1.):
+def display_images(images, vmin=0., vmax=1., show_num=True):
     """
     Display a list of images in a 2D grid using matplotlib.
 
@@ -191,9 +191,11 @@ def display_images(images, vmin=0., vmax=1.):
 
     # Create a figure with subplots
     fig, axes = plt.subplots(grid_size, grid_size, figsize=(12, 12))
-
-    # Flatten the array of axes
-    axes = axes.flatten()
+    if grid_size==1:
+        axes = [axes]
+    else:
+        # Flatten the array of axes
+        axes = axes.flatten()
     
     # Normalize images
     images[images<vmin] = vmin
@@ -204,7 +206,8 @@ def display_images(images, vmin=0., vmax=1.):
     for i, img in enumerate(images):
         axes[i].imshow(img)
         axes[i].axis('off')  # Hide the axes
-        axes[i].set_title(str(i))
+        if show_num:
+            axes[i].set_title(str(i))
     # Hide any unused axes
     for j in range(i + 1, len(axes)):
         axes[j].axis('off')
@@ -621,8 +624,13 @@ def h5_snr(h5_path, n_central_pix=8, batch_size=5000, num_samples=None):
     with h5py.File(h5_path, "r") as f:   
         if num_samples is None:
             num_samples = len(f['cutouts'])
-        for i in range(0, num_samples, batch_size):
-            cutouts = f['cutouts'][i:i+batch_size]
+        if num_samples<batch_size:
+            cutouts = f['cutouts'][:num_samples]
             snr_vals.append(calculate_snr(cutouts, n_central_pix))
+        else:
+            for i in range(0, num_samples, batch_size):
+                end = min([num_samples, i+batch_size])
+                cutouts = f['cutouts'][i:end]
+                snr_vals.append(calculate_snr(cutouts, n_central_pix))
     
     return np.concatenate(snr_vals)
