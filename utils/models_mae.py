@@ -22,23 +22,27 @@ def build_model(config, model_filename, device, build_optimizer=False):
     num_channels = int(config['ARCHITECTURE']['num_channels'])
     patch_size = int(config['ARCHITECTURE']['patch_size'])
     model_type = config['ARCHITECTURE']['model_type']
+    input_norm = config['ARCHITECTURE']['input_norm']
 
     # Construct the model
     if model_type=='base':
         model = mae_vit_base(img_size=img_size,
                              in_chans=num_channels,
                              patch_size=patch_size,
-                             norm_pix_loss=norm_pix_loss)
+                             norm_pix_loss=norm_pix_loss,
+                             input_norm=input_norm)
     elif model_type=='large':
         model = mae_vit_large(img_size=img_size,
                              in_chans=num_channels,
                              patch_size=patch_size,
-                             norm_pix_loss=norm_pix_loss)
+                             norm_pix_loss=norm_pix_loss,
+                             input_norm=input_norm)
     elif model_type=='huge':
         model = mae_vit_huge(img_size=img_size,
                              in_chans=num_channels,
                              patch_size=patch_size,
-                             norm_pix_loss=norm_pix_loss)
+                             norm_pix_loss=norm_pix_loss,
+                             input_norm=input_norm)
     model.to(device)
 
     # Use multiple GPUs if available
@@ -108,9 +112,17 @@ class MaskedAutoencoderViT(nn.Module):
     def __init__(self, img_size=224, patch_size=16, in_chans=3,
                  embed_dim=1024, depth=24, num_heads=16,
                  decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
-                 mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False):
+                 mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False, input_norm=None):
         super().__init__()
 
+        if 'layer' in input_norm.lower():
+            self.input_norm = nn.LayerNorm([in_chans, img_size, img_size], elementwise_affine=True)
+        elif 'batch' in input_norm.lower():
+            self.input_norm = nn.BatchNorm2d(in_chans)
+        elif 'group' in input_norm.lower():
+            self.input_norm = nn.GroupNorm(1, in_chans)
+        else:
+            self.input_norm = None
         # --------------------------------------------------------------------------
         # MAE encoder specifics
         self.patch_embed = PatchEmbed(img_size, patch_size, in_chans, embed_dim)
@@ -298,9 +310,10 @@ class MaskedAutoencoderViT(nn.Module):
         return loss
 
     def forward(self, imgs, mask_ratio=0.75):
+        imgs = self.input_norm(imgs)
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
         pred = self.forward_decoder(latent, ids_restore)  # [N, L, p*p*3]
-        loss = self.forward_loss(imgs, pred, mask)
+        loss = self.forward_loss(imgs.detach(), pred, mask)
         return loss, pred, mask
 
 

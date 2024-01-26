@@ -62,7 +62,7 @@ class CutoutDataset(torch.utils.data.Dataset):
 
             # Clip
             cutout[cutout<self.pixel_min] = self.pixel_min
-            cutout[cutout>self.pixel_max] = self.pixel_max
+            #cutout[cutout>self.pixel_max] = self.pixel_max
 
             if (np.array(cutout.shape[1:])>self.img_size).any():
                 # Select central cutout
