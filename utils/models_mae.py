@@ -43,6 +43,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
                              patch_size=patch_size,
                              norm_pix_loss=norm_pix_loss,
                              input_norm=input_norm)
+    print(model)
     model.to(device)
 
     # Use multiple GPUs if available
@@ -310,7 +311,8 @@ class MaskedAutoencoderViT(nn.Module):
         return loss
 
     def forward(self, imgs, mask_ratio=0.75):
-        imgs = self.input_norm(imgs)
+        if self.input_norm:
+            imgs = self.input_norm(imgs)
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
         pred = self.forward_decoder(latent, ids_restore)  # [N, L, p*p*3]
         loss = self.forward_loss(imgs.detach(), pred, mask)
