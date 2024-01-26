@@ -28,6 +28,7 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
     num_labels = len(eval(config['DATA']['label_keys']))
     label_means = len(eval(config['DATA']['label_means']))
     label_stds = len(eval(config['DATA']['label_stds']))
+    dropout = float(eval(config['ARCHITECTURE']['dropout']))
 
     # Construct the model
     if model_type=='base':
@@ -37,7 +38,8 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                          in_chans=num_channels,
                          patch_size=patch_size,
                          num_classes=num_labels,
-                        global_pool=global_pool)
+                        global_pool=global_pool,
+                        drop_rate=dropout)
 
     elif model_type=='large':
         model = vit_large(label_means=label_means,
@@ -46,7 +48,8 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                          in_chans=num_channels,
                          patch_size=patch_size,
                          num_classes=num_labels,
-                        global_pool=global_pool)
+                        global_pool=global_pool,
+                        drop_rate=dropout)
     elif model_type=='huge':
         model = vit_huge(label_means=label_means,
                          label_stds=label_stds,
@@ -54,7 +57,8 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                          in_chans=num_channels,
                          patch_size=patch_size,
                          num_classes=num_labels,
-                        global_pool=global_pool)
+                        global_pool=global_pool,
+                        drop_rate=dropout)
     model.to(device)
 
     # Use multiple GPUs if available
