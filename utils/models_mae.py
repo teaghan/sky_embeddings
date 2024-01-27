@@ -393,7 +393,7 @@ def undo_group_norm(original_images, normalized_images, group_norm):
     Returns:
     torch.Tensor: The unnormalized images.
     """
-    _, C, H, W = original_images.size()
+    N, C, H, W = original_images.size()
     # Compute original means and variances for each group
     group_size = C // group_norm.num_groups
     original_means = original_images.view(N, num_groups, group_size, H, W).mean(dim=(2, 3, 4), keepdim=True).squeeze(2)
