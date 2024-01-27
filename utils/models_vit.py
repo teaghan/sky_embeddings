@@ -202,7 +202,7 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
         self.label_stds = torch.tensor(label_stds)
 
         if 'layer' in input_norm.lower():
-            self.input_norm = nn.LayerNorm([kwargs['in_chans'], img_size, img_size], elementwise_affine=True)
+            self.input_norm = nn.LayerNorm([kwargs['in_chans'], kwargs['img_size'], kwargs['img_size']], elementwise_affine=True)
         elif 'batch' in input_norm.lower():
             self.input_norm = nn.BatchNorm2d(kwargs['in_chans'])
         elif 'group' in input_norm.lower():
