@@ -43,7 +43,6 @@ def build_model(config, model_filename, device, build_optimizer=False):
                              patch_size=patch_size,
                              norm_pix_loss=norm_pix_loss,
                              input_norm=input_norm)
-    print(model)
     model.to(device)
 
     # Use multiple GPUs if available
@@ -310,7 +309,15 @@ class MaskedAutoencoderViT(nn.Module):
         loss = (loss * mask).sum() / mask.sum()  # mean loss on removed patches
         return loss
 
-    def forward(self, imgs, mask_ratio=0.75):
+    def denorm_imgs(self, orig_imgs, norm_imgs):
+        if type(self.input_norm)==nn.LayerNorm:
+            return undo_layer_norm(orig_imgs, norm_imgs, self.input_norm)
+        elif type(self.input_norm)==nn.GroupNorm:
+            return undo_group_norm(orig_imgs, norm_imgs, self.input_norm)
+        elif type(self.input_norm)==nn.BatchNorm2d:
+            return undo_batch_norm(orig_imgs, norm_imgs, self.input_norm)
+
+    def forward(self, imgs, mask_ratio=0.75, denorm_out=False):
         if self.input_norm:
             imgs = self.input_norm(imgs)
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
@@ -341,3 +348,101 @@ def mae_vit_huge(**kwargs):
         decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
         mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
+
+def undo_layer_norm(original_images, normalized_images, layer_norm):
+    """
+    Undo the normalization by LayerNorm, including the epsilon value.
+
+    Args:
+    normalized_images (torch.Tensor): The normalized images.
+    layer_norm (torch.nn.LayerNorm): The LayerNorm layer used for normalization.
+
+    Returns:
+    torch.Tensor: The unnormalized images.
+    """
+    
+    original_means = torch.mean(original_images, dim=(1,2,3), keepdim=True)
+    original_vars = torch.var(original_images, dim=(1,2,3), keepdim=True)
+    
+    # Get the epsilon value used in LayerNorm
+    epsilon = layer_norm.eps
+
+    if layer_norm.elementwise_affine:
+        # Ensure that bias and weight are not None
+        bias = layer_norm.bias if layer_norm.bias is not None else 0
+        weight = layer_norm.weight if layer_norm.weight is not None else 1
+
+        # Reverse the affine transformation
+        unnormalized = (normalized_images - bias) / weight
+    else:
+        unnormalized = normalized_images
+
+    # Reverse the standard normalization, including epsilon for stability
+    unnormalized = unnormalized * torch.sqrt(original_vars + epsilon) + original_means
+
+    return unnormalized
+
+def undo_group_norm(original_images, normalized_images, group_norm):
+    """
+    Undo the normalization by GroupNorm, including the epsilon value.
+
+    Args:
+    normalized_images (torch.Tensor): The normalized images.
+    group_norm (torch.nn.GroupNorm): The GroupNorm layer used for normalization.
+
+    Returns:
+    torch.Tensor: The unnormalized images.
+    """
+    _, C, H, W = original_images.size()
+    # Compute original means and variances for each group
+    group_size = C // group_norm.num_groups
+    original_means = original_images.view(N, num_groups, group_size, H, W).mean(dim=(2, 3, 4), keepdim=True).squeeze(2)
+    original_vars = original_images.view(N, num_groups, group_size, H, W).var(dim=(2, 3, 4), keepdim=True).squeeze(2)
+    
+    # Get the epsilon value used in GroupNorm
+    epsilon = group_norm.eps
+
+    if group_norm.affine:
+        # Ensure that bias and weight are not None
+        bias = group_norm.bias.view(1,-1,1,1) if group_norm.bias is not None else 0
+        weight = group_norm.weight.view(1,-1,1,1) if group_norm.weight is not None else 1            
+        
+        # Reverse the affine transformation
+        unnormalized = (normalized_images - bias.unsqueeze(0)) / weight.unsqueeze(0)
+    else:
+        unnormalized = normalized_images
+
+    # Reverse the standard normalization, including epsilon for stability
+    unnormalized = unnormalized * torch.sqrt(original_vars + epsilon) + original_means
+
+    return unnormalized
+
+def undo_batch_norm(original_images, normalized_images, batch_norm):
+    """
+    Attempt to undo the normalization by BatchNorm2d.
+
+    Args:
+    normalized_images (torch.Tensor): The normalized images.
+    batch_norm (torch.nn.BatchNorm2d): The BatchNorm2d layer used for normalization.
+
+    Returns:
+    torch.Tensor: The unnormalized images.
+    """
+    # Compute original means and variances per channel
+    original_means = original_images.mean(dim=(0, 2, 3))
+    original_vars = original_images.var(dim=(0, 2, 3), unbiased=False)
+    
+    if batch_norm.affine:
+        # Ensure that bias and weight are not None
+        bias = batch_norm.bias if batch_norm.bias is not None else 0
+        weight = batch_norm.weight if batch_norm.weight is not None else 1
+
+        # Reverse the affine transformation
+        unnormalized = (normalized_images - bias[None, :, None, None]) / weight[None, :, None, None]
+    else:
+        unnormalized = normalized_images
+
+    # Reverse the standard normalization
+    unnormalized = unnormalized * torch.sqrt(original_vars[None, :, None, None] + batch_norm.eps) + original_means[None, :, None, None]
+
+    return unnormalized
