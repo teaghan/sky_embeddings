@@ -82,7 +82,7 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
 
             # Put patches back in order
             pred = model.unpatchify(pred)
-            if model.input_norm is not None:
+            if (model.input_norm is not None) or model.norm_pix_loss:
                 # Return back to original scale
                 pred = model.denorm_imgs(samples, pred)
             pred = torch.einsum('nchw->nhwc', pred).detach()

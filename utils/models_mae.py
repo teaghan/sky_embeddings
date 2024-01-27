@@ -310,6 +310,8 @@ class MaskedAutoencoderViT(nn.Module):
         return loss
 
     def denorm_imgs(self, orig_imgs, norm_imgs):
+        if self.norm_pix_loss:
+            return undo_pixel_norm(orig_imgs, norm_imgs, self)
         if type(self.input_norm)==nn.LayerNorm:
             return undo_layer_norm(orig_imgs, norm_imgs, self.input_norm)
         elif type(self.input_norm)==nn.GroupNorm:
@@ -348,6 +350,27 @@ def mae_vit_huge(**kwargs):
         decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
         mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
+
+def undo_pixel_norm(original_images, normalized_images, model):
+    """
+    Undo the normalization used in the pixel norm loss.
+
+    Args:
+    normalized_images (torch.Tensor): The normalized images.
+
+    Returns:
+    torch.Tensor: The unnormalized images.
+    """
+    
+    original_images = model.patchify(original_images)
+    normalized_images = model.patchify(normalized_images)
+    
+    mean = original_images.mean(dim=-1, keepdim=True)
+    var = original_images.var(dim=-1, keepdim=True)
+
+    unnormalized = normalized_images * (var + 1.e-6)**.5 + mean
+    
+    return model.unpatchify(unnormalized)
 
 def undo_layer_norm(original_images, normalized_images, layer_norm):
     """
