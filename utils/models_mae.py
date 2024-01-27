@@ -409,8 +409,7 @@ def undo_group_norm(original_images, normalized_images, group_norm):
         weight = group_norm.weight.view(1,-1,1,1) if group_norm.weight is not None else 1            
         
         # Reverse the affine transformation
-        print(normalized_images.shape,bias.unsqueeze(0).shape, weight.unsqueeze(0).shape)
-        unnormalized = (normalized_images - bias.unsqueeze(0)) / weight.unsqueeze(0)
+        unnormalized = (normalized_images - bias) / weight
     else:
         unnormalized = normalized_images
 
