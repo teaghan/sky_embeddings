@@ -385,7 +385,7 @@ def undo_layer_norm(original_images, normalized_images, layer_norm):
     """
     
     original_means = torch.mean(original_images, dim=(1,2,3), keepdim=True)
-    original_vars = torch.var(original_images, dim=(1,2,3), keepdim=True)
+    original_vars = torch.var(original_images, dim=(1,2,3), keepdim=True, unbiased=False)
     
     # Get the epsilon value used in LayerNorm
     epsilon = layer_norm.eps
@@ -421,7 +421,7 @@ def undo_group_norm(original_images, normalized_images, group_norm):
     # Compute original means and variances for each group
     group_size = C // num_groups
     original_means = original_images.view(N, num_groups, group_size, H, W).mean(dim=(2, 3, 4), keepdim=True).squeeze(2)
-    original_vars = original_images.view(N, num_groups, group_size, H, W).var(dim=(2, 3, 4), keepdim=True).squeeze(2)
+    original_vars = original_images.view(N, num_groups, group_size, H, W).var(dim=(2, 3, 4), keepdim=True, unbiased=False).squeeze(2)
     
     # Get the epsilon value used in GroupNorm
     epsilon = group_norm.eps
