@@ -20,30 +20,35 @@ def build_model(config, model_filename, device, build_optimizer=False):
     norm_pix_loss = str2bool(config['TRAINING']['norm_pix_loss'])
     img_size = int(config['ARCHITECTURE']['img_size'])
     num_channels = int(config['ARCHITECTURE']['num_channels'])
+    embed_dim = int(config['ARCHITECTURE']['embed_dim'])
     patch_size = int(config['ARCHITECTURE']['patch_size'])
     model_type = config['ARCHITECTURE']['model_type']
     input_norm = config['ARCHITECTURE']['input_norm']
 
     # Construct the model
     if model_type=='base':
-        model = mae_vit_base(img_size=img_size,
+        model = mae_vit_base(embed_dim=embed_dim, 
+                             img_size=img_size,
                              in_chans=num_channels,
                              patch_size=patch_size,
                              norm_pix_loss=norm_pix_loss,
                              input_norm=input_norm)
     elif model_type=='large':
-        model = mae_vit_large(img_size=img_size,
+        model = mae_vit_large(embed_dim=embed_dim,
+                              img_size=img_size,
                              in_chans=num_channels,
                              patch_size=patch_size,
                              norm_pix_loss=norm_pix_loss,
                              input_norm=input_norm)
     elif model_type=='huge':
-        model = mae_vit_huge(img_size=img_size,
+        model = mae_vit_huge(embed_dim=embed_dim,
+                             img_size=img_size,
                              in_chans=num_channels,
                              patch_size=patch_size,
                              norm_pix_loss=norm_pix_loss,
                              input_norm=input_norm)
     model.to(device)
+    print(model)
 
     # Use multiple GPUs if available
     model = nn.DataParallel(model)
@@ -330,7 +335,7 @@ class MaskedAutoencoderViT(nn.Module):
 
 def mae_vit_base(**kwargs):
     model = MaskedAutoencoderViT(
-        embed_dim=768, depth=12, num_heads=12,
+        depth=12, num_heads=12,
         decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
         mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
