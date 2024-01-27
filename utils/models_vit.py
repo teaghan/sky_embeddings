@@ -21,9 +21,10 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
     # Model architecture
     img_size = int(config['ARCHITECTURE']['img_size'])
     num_channels = int(mae_config['ARCHITECTURE']['num_channels'])
+    embed_dim = int(mae_config['ARCHITECTURE']['embed_dim'])
     patch_size = int(mae_config['ARCHITECTURE']['patch_size'])
     model_type = mae_config['ARCHITECTURE']['model_type']
-    #global_pool = str2bool(config['ARCHITECTURE']['global_pool'])
+    input_norm = mae_config['ARCHITECTURE']['input_norm']
     global_pool = config['ARCHITECTURE']['global_pool']
     num_labels = len(eval(config['DATA']['label_keys']))
     label_means = len(eval(config['DATA']['label_means']))
@@ -34,8 +35,10 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
     if model_type=='base':
         model = vit_base(label_means=label_means,
                          label_stds=label_stds,
+                         input_norm=input_norm,
                          img_size=img_size,
                          in_chans=num_channels,
+                         embed_dim=embed_dim,
                          patch_size=patch_size,
                          num_classes=num_labels,
                         global_pool=global_pool,
@@ -44,8 +47,10 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
     elif model_type=='large':
         model = vit_large(label_means=label_means,
                          label_stds=label_stds,
+                         input_norm=input_norm,
                          img_size=img_size,
                          in_chans=num_channels,
+                          embed_dim=embed_dim,
                          patch_size=patch_size,
                          num_classes=num_labels,
                         global_pool=global_pool,
@@ -53,8 +58,10 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
     elif model_type=='huge':
         model = vit_huge(label_means=label_means,
                          label_stds=label_stds,
+                         input_norm=input_norm,
                          img_size=img_size,
                          in_chans=num_channels,
+                         embed_dim=embed_dim,
                          patch_size=patch_size,
                          num_classes=num_labels,
                         global_pool=global_pool,
@@ -186,7 +193,7 @@ def load_model(model, model_filename, mae_filename='None', optimizer=None, lr_sc
 class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
     """ Vision Transformer with support for global average pooling
     """
-    def __init__(self, label_means, label_stds,# global_pool=False, 
+    def __init__(self, label_means, label_stds, input_norm=None,
                  **kwargs):
         super(VisionTransformer, self).__init__(**kwargs)
 
@@ -194,15 +201,14 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
         self.label_means = torch.tensor(label_means)
         self.label_stds = torch.tensor(label_stds)
 
-        '''
-        self.global_pool = global_pool
-        if self.global_pool:
-            norm_layer = kwargs['norm_layer']
-            embed_dim = kwargs['embed_dim']
-            self.fc_norm = norm_layer(embed_dim)
-
-            del self.norm  # remove the original norm
-        '''
+        if 'layer' in input_norm.lower():
+            self.input_norm = nn.LayerNorm([in_chans, img_size, img_size], elementwise_affine=True)
+        elif 'batch' in input_norm.lower():
+            self.input_norm = nn.BatchNorm2d(in_chans)
+        elif 'group' in input_norm.lower():
+            self.input_norm = nn.GroupNorm(1, in_chans)
+        else:
+            self.input_norm = None
 
     def normalize_labels(self, labels):
         '''Normalize each label to have zero-mean and unit-variance.'''
@@ -211,43 +217,28 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
     def denormalize_labels(self, labels):
         '''Rescale the labels back to their original units.'''
         return labels * self.label_stds + self.label_means
-    '''
-    def forward_features(self, x):
-        B = x.shape[0]
-        x = self.patch_embed(x)
+        
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if self.input_norm:
+            x = self.input_norm(x)
+        x = self.forward_features(x)
+        x = self.forward_head(x)
+        return x
 
-        cls_tokens = self.cls_token.expand(B, -1, -1)  # stole cls_tokens impl from Phil Wang, thanks
-        x = torch.cat((cls_tokens, x), dim=1)
-        x = x + self.pos_embed
-        x = self.pos_drop(x)
-
-        for blk in self.blocks:
-            x = blk(x)
-
-        if self.global_pool:
-            x = x[:, 1:, :].mean(dim=1).unsqueeze(1)  # global pool without cls token
-            outcome = self.fc_norm(x)
-        else:
-            #x = self.norm(x)
-            outcome = x[:, 0]
-
-        return outcome
-    '''
-
-def vit_base(label_means, label_stds, **kwargs):
-    model = VisionTransformer(label_means, label_stds,
-        embed_dim=768, depth=12, num_heads=12, mlp_ratio=4, qkv_bias=True,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
+def vit_base(label_means, label_stds, input_norm, **kwargs):
+    model = VisionTransformer(label_means, label_stds, input_norm,
+                              depth=12, num_heads=12, mlp_ratio=4, qkv_bias=True,
+                              norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
 
-def vit_large(label_means, label_stds, **kwargs):
-    model = VisionTransformer(label_means, label_stds,
-        embed_dim=1024, depth=24, num_heads=16, mlp_ratio=4, qkv_bias=True,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
+def vit_large(label_means, label_stds, input_norm, **kwargs):
+    model = VisionTransformer(label_means, label_stds, input_norm,
+                              depth=24, num_heads=16, mlp_ratio=4, qkv_bias=True,
+                              norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
 
-def vit_huge(label_means, label_stds, **kwargs):
-    model = VisionTransformer(label_means, label_stds,
-        embed_dim=1280, depth=32, num_heads=16, mlp_ratio=4, qkv_bias=True,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
+def vit_huge(label_means, label_stds, input_norm, **kwargs):
+    model = VisionTransformer(label_means, label_stds, input_norm,
+                              depth=32, num_heads=16, mlp_ratio=4, qkv_bias=True,
+                              norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model

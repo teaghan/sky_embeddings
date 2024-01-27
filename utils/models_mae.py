@@ -343,7 +343,7 @@ def mae_vit_base(**kwargs):
 
 def mae_vit_large(**kwargs):
     model = MaskedAutoencoderViT(
-        embed_dim=1024, depth=24, num_heads=16,
+        depth=24, num_heads=16,
         decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
         mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
@@ -351,7 +351,7 @@ def mae_vit_large(**kwargs):
 
 def mae_vit_huge(**kwargs):
     model = MaskedAutoencoderViT(
-        embed_dim=1280, depth=32, num_heads=16,
+        depth=32, num_heads=16,
         decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
         mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
