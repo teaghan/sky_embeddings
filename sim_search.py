@@ -3,6 +3,7 @@ import os
 import configparser
 import torch
 import numpy as np
+import ast
 
 from utils.pretrain import str2bool
 from utils.models_mae import build_model
@@ -53,8 +54,8 @@ args = args.parse_args()
 model_name = args.model_name
 target_fn = args.target_fn
 test_fn = args.test_fn
-target_indices = args.target_indices
-snr_range = args.snr_range
+target_indices = ast.literal_eval(args.target_indices)
+snr_range = ast.literal_eval(args.snr_range)
 batch_size = args.batch_size
 metric = args.metric
 combine = args.combine
