@@ -137,7 +137,7 @@ if target_indices is not None:
     target_images = target_images[target_indices]
 
 # Plot targets
-display_images(normalize_images(target_images[:,display_channel,:,:].data.numpy()), 
+display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().numpy()), 
                                 vmin=0., vmax=1, savename=os.path.join(fig_dir, f'{model_name}_simsearch_target.png'))
 
 # Compute similarity score for all test samples
@@ -168,10 +168,10 @@ test_dataloader = build_dataloader(os.path.join(data_dir, test_fn),
 test_latent, test_images = mae_latent(model, test_dataloader, device, return_images=True)
 
 # Display top n_plot candidates
-display_images(normalize_images(test_images[:n_plot,display_channel,:,:].data.numpy()), 
+display_images(normalize_images(test_images[:n_plot,display_channel,:,:].data.cpu().numpy()), 
                                 vmin=0., vmax=1, savename=os.path.join(fig_dir, f'{model_name}_simsearch_results.png'))
 
 # Save results
 np.savez(os.path.join(results_dir, f'{model_name}_simsearch_results.npz'), indices=save_indices,
-        target_images=target_images.data.numpy(), target_features=target_latent.data.numpy(), 
-        test_images=test_images.data.numpy(), test_features=test_latent.data.numpy())
+        target_images=target_images.data.cpu().numpy(), target_features=target_latent.data.cpu().numpy(), 
+        test_images=test_images.data.cpu().numpy(), test_features=test_latent.data.cpu().numpy())
