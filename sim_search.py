@@ -144,7 +144,7 @@ display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().
 test_similarity = mae_simsearch(model, target_latent, test_dataloader, device, metric=metric, combine=combine, use_weights=True)
 
 # Sort by similarity score
-sim_order = torch.argsort(test_similarity)
+sim_order = torch.argsort(test_similarity).cpu()
 if metric=='cosine':
     sim_order = reversed(sim_order)
 
