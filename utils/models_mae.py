@@ -48,7 +48,6 @@ def build_model(config, model_filename, device, build_optimizer=False):
                              norm_pix_loss=norm_pix_loss,
                              input_norm=input_norm)
     model.to(device)
-    print(model)
 
     # Use multiple GPUs if available
     model = nn.DataParallel(model)
@@ -316,13 +315,21 @@ class MaskedAutoencoderViT(nn.Module):
 
     def denorm_imgs(self, orig_imgs, norm_imgs):
         if self.norm_pix_loss:
-            return undo_pixel_norm(orig_imgs, norm_imgs, self)
+            # First apply input norm to get correct normed statistics
+            orig_imgs_normed = self.input_norm(orig_imgs)
+            # Undo pixel norm
+            norm_imgs = undo_pixel_norm(orig_imgs_normed, norm_imgs, self)
+            
+        # Now undo input norm with orig images
         if type(self.input_norm)==nn.LayerNorm:
             return undo_layer_norm(orig_imgs, norm_imgs, self.input_norm)
         elif type(self.input_norm)==nn.GroupNorm:
             return undo_group_norm(orig_imgs, norm_imgs, self.input_norm)
         elif type(self.input_norm)==nn.BatchNorm2d:
             return undo_batch_norm(orig_imgs, norm_imgs, self.input_norm)
+        else:
+            return norm_imgs
+        
 
     def forward(self, imgs, mask_ratio=0.75, denorm_out=False):
         if self.input_norm:

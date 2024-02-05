@@ -5,7 +5,7 @@ from torchvision.transforms import v2
 
 def build_dataloader(filename, norm_type, batch_size, num_workers, label_keys=None, 
                      img_size=64, pos_channel=False, pix_mean=None, pix_std=None, num_patches=None, 
-                     augment=False, shuffle=True):
+                     augment=False, shuffle=True, indices=None):
 
     if augment:
         transforms = v2.Compose([v2.GaussianBlur(kernel_size=5, sigma=(0.1,1.5)),
@@ -18,8 +18,8 @@ def build_dataloader(filename, norm_type, batch_size, num_workers, label_keys=No
     # Data loaders
     dataset = CutoutDataset(filename, img_size=img_size, pos_channel=pos_channel, 
                             num_patches=num_patches, label_keys=label_keys, norm=norm_type,
-                            transform=transforms,
-                            global_mean=pix_mean, global_std=pix_std)
+                            transform=transforms, global_mean=pix_mean, global_std=pix_std,
+                           indices=indices)
 
     return torch.utils.data.DataLoader(dataset, batch_size=batch_size, 
                                        shuffle=shuffle, num_workers=num_workers,
@@ -32,7 +32,8 @@ class CutoutDataset(torch.utils.data.Dataset):
     """
 
     def __init__(self, data_file, img_size, pos_channel=False, num_patches=None, label_keys=None, 
-                 norm=None, transform=None, global_mean=0.1, global_std=2., pixel_min=-3., pixel_max=50.):
+                 norm=None, transform=None, global_mean=0.1, global_std=2., pixel_min=-3., pixel_max=50.,
+                indices=None):
         
         self.data_file = data_file
         self.transform = transform
@@ -45,14 +46,21 @@ class CutoutDataset(torch.utils.data.Dataset):
         self.global_std = global_std 
         self.pixel_min = pixel_min
         self.pixel_max = pixel_max
+        self.indices = indices
                         
     def __len__(self):
-        with h5py.File(self.data_file, "r") as f:    
-            num_samples = len(f['cutouts'])
-        return num_samples
+        if self.indices is not None:
+            # Custom set of indices
+            return len(self.indices)
+        else:
+            with h5py.File(self.data_file, "r") as f:    
+                num_samples = len(f['cutouts'])
+            return num_samples
     
     def __getitem__(self, idx):
-        
+        if self.indices is not None:
+            # Custom set of indices
+            idx = self.indices[idx]
         with h5py.File(self.data_file, "r") as f: 
             # Load cutout
             cutout = f['cutouts'][idx]
@@ -101,7 +109,7 @@ class CutoutDataset(torch.utils.data.Dataset):
             cutout = (cutout - sample_min) / (sample_max - sample_min)
         elif self.norm=='zscore':
             # Normalize sample to have zero mean and unit variance
-            sample_mean = torch.min(cutout)
+            sample_mean = torch.mean(cutout)
             sample_std = torch.std(cutout)
             cutout = (cutout - sample_mean) / (sample_std +1e-6)
         elif self.norm=='global':

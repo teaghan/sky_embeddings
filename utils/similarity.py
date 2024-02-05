@@ -45,6 +45,47 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
     else:
         return torch.cat(latents)
 
+def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metric='cosine', combine='min', use_weights=True):
+    
+    if n_batches is None:
+        n_batches = len(dataloader)
+    print(f'Performing similarity search on {min(len(dataloader), n_batches)} batches...')
+    model.eval()
+
+    sim_scores = []
+    with torch.no_grad():
+        # Loop through spectra in dataset
+        for i, (samples, _) in enumerate(dataloader):
+            
+            # Switch to GPU if available
+            samples = samples.to(device, non_blocking=True)
+
+            if hasattr(model, 'module'):
+                test_latent, _, _ = model.module.forward_encoder(samples, mask_ratio=0.)
+            else:
+                test_latent, _, _ = model.forward_encoder(samples, mask_ratio=0.)
+            # Remove cls token
+            test_latent = test_latent[:,1:]
+
+            # Normalize each feature between 0 and 1
+            if i==0:
+                min_feats = torch.min(torch.cat((target_latent,test_latent)).view(-1,target_latent.shape[-1]), dim=0).values
+                max_feats = torch.max(torch.cat((target_latent,test_latent)).view(-1,target_latent.shape[-1]), dim=0).values
+                target_latent = (target_latent - min_feats) / (max_feats - min_feats)
+            
+            test_latent = (test_latent - min_feats) / (max_feats - min_feats)
+            
+
+            # Compute similarity score for each sample
+            test_similarity = compute_similarity(target_latent, test_latent, 
+                                                 metric='cosine', combine='min', use_weights=True)
+            sim_scores.append(test_similarity)
+            
+            if len(sim_scores)>=n_batches:
+                break
+    
+    return torch.cat(sim_scores)
+
 def normalize_latents(*latent):
     '''Normalize each feature to have a min of 0 and max of 1.'''
     
@@ -56,7 +97,7 @@ def normalize_latents(*latent):
     latent = list(latent)
     for i in range(len(latent)):
         latent[i] = (latent[i] - min_) / (max_ - min_)
-    
+
     return tuple(latent)
 
 def determine_target_features(target_latent):

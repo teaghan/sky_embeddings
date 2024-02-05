@@ -191,16 +191,14 @@ def load_model(model, model_filename, mae_filename='None', optimizer=None, lr_sc
     return model, losses, cur_iter
 
 class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
-    """ Vision Transformer with support for global average pooling
-    """
+    """Vision Transformer with the option of an additional input norm layer."""
+    
     def __init__(self, label_means, label_stds, input_norm=None,
                  **kwargs):
+        # Call the superclass constructor
         super(VisionTransformer, self).__init__(**kwargs)
-
-        # Label normalization values
-        self.label_means = torch.tensor(label_means)
-        self.label_stds = torch.tensor(label_stds)
-
+        
+        # Define the input normalization layer
         if 'layer' in input_norm.lower():
             self.input_norm = nn.LayerNorm([kwargs['in_chans'], kwargs['img_size'], kwargs['img_size']], elementwise_affine=True)
         elif 'batch' in input_norm.lower():
@@ -209,6 +207,10 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             self.input_norm = nn.GroupNorm(1, kwargs['in_chans'])
         else:
             self.input_norm = None
+
+        # Label normalization values
+        self.label_means = torch.tensor(label_means)
+        self.label_stds = torch.tensor(label_stds)
 
     def normalize_labels(self, labels):
         '''Normalize each label to have zero-mean and unit-variance.'''

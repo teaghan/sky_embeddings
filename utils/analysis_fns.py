@@ -181,7 +181,7 @@ def plot_batch(orig_imgs, mask_imgs, pred_imgs,
 
     plt.close()
 
-def display_images(images, vmin=0., vmax=1., show_num=True):
+def display_images(images, vmin=0., vmax=1., show_num=True, savename=None):
     """
     Display a list of images in a 2D grid using matplotlib.
 
@@ -218,7 +218,12 @@ def display_images(images, vmin=0., vmax=1., show_num=True):
         axes[j].axis('off')
 
     plt.tight_layout()
-    plt.show()
+    if savename is not None:
+        plt.savefig(savename, facecolor='white', transparent=False, dpi=100,
+                    bbox_inches='tight', pad_inches=0.05)
+    
+    else:
+        plt.show()
 
 def ft_predict(model, dataloader, device, num_batches=None, return_images=False):
     model.eval()
