@@ -8,6 +8,7 @@ import torch
 from utils.pretrain import str2bool, run_iter, parseArguments
 from utils.models_mae import build_model
 from utils.dataloader import build_dataloader
+from utils.fits_dataloader import build_fits_dataloader
 from utils.analysis_fns import plot_progress, mae_predict, plot_batch
 
 def main(args):
@@ -64,16 +65,35 @@ def main(args):
     else:
         pix_mean = None
         pix_std = None
-    dataloader_train = build_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
-                                        norm_type=config['DATA']['norm_type'], 
-                                        batch_size=batch_size, 
-                                        num_workers=num_workers,
-                                        img_size=int(config['ARCHITECTURE']['img_size']),
-                                        pos_channel=str2bool(config['DATA']['pos_channel']), 
-                                        pix_mean=pix_mean,
-                                        pix_std=pix_std,
-                                        num_patches=model.module.patch_embed.num_patches,
-                                        shuffle=True)
+    if 'train_data_file' in config['DATA']:
+        # Using .h5 training file
+        dataloader_train = build_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
+                                            norm_type=config['DATA']['norm_type'], 
+                                            batch_size=batch_size, 
+                                            num_workers=num_workers,
+                                            img_size=int(config['ARCHITECTURE']['img_size']),
+                                            pos_channel=str2bool(config['DATA']['pos_channel']), 
+                                            pix_mean=pix_mean,
+                                            pix_std=pix_std,
+                                            num_patches=model.module.patch_embed.num_patches,
+                                            shuffle=True)
+        print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
+        train_nested_batches = False
+    else:
+        # Using fits files in training directory
+        # Might need to decrease num_workers and increase cutouts_per_tile
+        dataloader_train =  build_fits_dataloader(eval(config['DATA']['train_data_paths']), 
+                                                  bands=eval(config['DATA']['bands']), 
+                                                  norm_type=config['DATA']['norm_type'], 
+                                                  batch_size=batch_size,
+                                                  num_workers=num_workers,
+                                                  img_size=int(config['ARCHITECTURE']['img_size']), 
+                                                  cutouts_per_tile=int(config['DATA']['cutouts_per_tile']), 
+                                                  pix_mean=pix_mean, 
+                                                  pix_std=pix_std, 
+                                                  augment=False, 
+                                                  shuffle=True)
+        train_nested_batches = True
     
     dataloader_val = build_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
                                         norm_type=config['DATA']['norm_type'], 
@@ -85,17 +105,27 @@ def main(args):
                                         pix_std=pix_std, 
                                         num_patches=model.module.patch_embed.num_patches,
                                         shuffle=True)
-
-    print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
     
-    train_network(model, dataloader_train, dataloader_val, 
+    train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                   optimizer, lr_scheduler, device,
                   float(config['TRAINING']['mask_ratio']),
                   losses, cur_iter, 
                   int(float(config['TRAINING']['total_batch_iters'])),
                   args.verbose_iters, args.cp_time, model_filename, fig_dir)
 
-def train_network(model, dataloader_train, dataloader_val, optimizer, lr_scheduler, device, mask_ratio, 
+def get_train_samples(dataloader, train_nested_batches):
+    '''Accomodates both dataloaders.'''
+    if train_nested_batches:
+        # Iterate through all of the tiles
+        for sample_batches in dataloader:
+            # Iterate through each batch of images in this tile of the sky
+            for train_samples in sample_batches[0]:
+                yield train_samples
+    else:
+        for train_samples, _ in dataloader:
+            yield train_samples
+
+def train_network(model, dataloader_train, dataloader_val, train_nested_batches, optimizer, lr_scheduler, device, mask_ratio, 
                   losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir):
     print('Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size))
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
@@ -105,8 +135,9 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
     losses_cp = defaultdict(list)
     cp_start_time = time.time()
     while cur_iter < (total_batch_iters):
+
         # Iterate through training dataset
-        for train_samples, _ in dataloader_train:
+        for train_samples in get_train_samples(dataloader_train, train_nested_batches):
             
             # Switch to GPU if available
             train_samples = train_samples.to(device, non_blocking=True)

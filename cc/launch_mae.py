@@ -158,7 +158,10 @@ elif user_input=='o':
 elif user_input=='r':
     config = configparser.ConfigParser()
     config.read(config_fn)
-    train_data_file = os.path.join(data_dir, config['DATA']['train_data_file'])
+    if 'train_data_file' in config['DATA']:
+        train_data_file = os.path.join(data_dir, config['DATA']['train_data_file'])
+    else:
+        train_data_file = None
     val_data_file = os.path.join(data_dir, config['DATA']['val_data_file'])
 
 todo_dir = os.path.join(cur_dir, '../scripts/todo')
@@ -184,7 +187,8 @@ with open(script_fn, 'w') as f:
         f.write(line)
     f.write('\n\n')
     f.write('# Copy files to slurm directory\n')
-    f.write('cp %s $SLURM_TMPDIR\n' % (os.path.join(data_dir, train_data_file)))
+    if train_data_file is not None:
+        f.write('cp %s $SLURM_TMPDIR\n' % (os.path.join(data_dir, train_data_file)))
     f.write('cp %s $SLURM_TMPDIR\n\n' % (os.path.join(data_dir, val_data_file)))
     f.write('# Run MAE training\n')
     f.write('python %s %s -v %i -ct %0.2f -dd $SLURM_TMPDIR/\n' % (training_script, 
