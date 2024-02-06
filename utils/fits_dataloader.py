@@ -92,7 +92,7 @@ class FitsDataset(torch.utils.data.Dataset):
 
     def __init__(self, fits_paths, bands=['G','R','I','Z','Y'], img_size=64, cutouts_per_tile=1024,
                  batch_size=64, shuffle=True, norm=None, transform=None, 
-                 global_mean=0.1, global_std=2., pixel_min=None, pixel_max=None):
+                 global_mean=0.1, global_std=2., pixel_min=-3., pixel_max=None):
         
         self.fits_paths = fits_paths
         self.img_size = img_size
