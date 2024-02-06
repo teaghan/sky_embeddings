@@ -32,7 +32,7 @@ class CutoutDataset(torch.utils.data.Dataset):
     """
 
     def __init__(self, data_file, img_size, pos_channel=False, num_patches=None, label_keys=None, 
-                 norm=None, transform=None, global_mean=0.1, global_std=2., pixel_min=-3., pixel_max=None.,
+                 norm=None, transform=None, global_mean=0.1, global_std=2., pixel_min=-3., pixel_max=None,
                 indices=None):
         
         self.data_file = data_file
