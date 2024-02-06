@@ -121,7 +121,7 @@ class FitsDataset(torch.utils.data.Dataset):
         # Load all channels of the patch of sky
         cutouts = []
         for fn in patch_filenames:
-            cutouts.append(fits.open(fn, mode='readonly')[1].data)
+            cutouts.append(fits.open(fn, mode='readonly', ignore_missing_simple=True)[1].data)
         # Organize into (C, H, W)
         cutouts = np.array(cutouts)
 
