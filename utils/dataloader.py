@@ -32,7 +32,7 @@ class CutoutDataset(torch.utils.data.Dataset):
     """
 
     def __init__(self, data_file, img_size, pos_channel=False, num_patches=None, label_keys=None, 
-                 norm=None, transform=None, global_mean=0.1, global_std=2., pixel_min=-3., pixel_max=50.,
+                 norm=None, transform=None, global_mean=0.1, global_std=2., pixel_min=-3., pixel_max=None.,
                 indices=None):
         
         self.data_file = data_file
@@ -68,9 +68,11 @@ class CutoutDataset(torch.utils.data.Dataset):
             # Remove any NaN value
             cutout[np.isnan(cutout)] = 0.
 
-            # Clip
-            cutout[cutout<self.pixel_min] = self.pixel_min
-            #cutout[cutout>self.pixel_max] = self.pixel_max
+            # Clip pixel values
+            if self.pixel_min is not None:
+                cutout[cutout<self.pixel_min] = self.pixel_min
+            if self.pixel_max is not None:
+                cutout[cutout>self.pixel_max] = self.pixel_max
 
             if (np.array(cutout.shape[1:])>self.img_size).any():
                 # Select central cutout
