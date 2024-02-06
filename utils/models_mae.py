@@ -315,8 +315,11 @@ class MaskedAutoencoderViT(nn.Module):
 
     def denorm_imgs(self, orig_imgs, norm_imgs):
         if self.norm_pix_loss:
-            # First apply input norm to get correct normed statistics
-            orig_imgs_normed = self.input_norm(orig_imgs)
+            if self.input_norm:
+                # First apply input norm to get correct normed statistics
+                orig_imgs_normed = self.input_norm(orig_imgs)
+            else:
+                orig_imgs_normed = orig_imgs
             # Undo pixel norm
             norm_imgs = undo_pixel_norm(orig_imgs_normed, norm_imgs, self)
             
