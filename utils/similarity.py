@@ -29,9 +29,9 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             samples = samples.to(device, non_blocking=True)
 
             if hasattr(model, 'module'):
-                latent, _, _ = model.module.forward_encoder(samples, mask_ratio)
+                latent, _, _ = model.module.forward_encoder(samples, mask_ratio, reshape_out=False)
             else:
-                latent, _, _ = model.forward_encoder(samples, mask_ratio)
+                latent, _, _ = model.forward_encoder(samples, mask_ratio, reshape_out=False)
             # Remove cls token
             latent = latent[:,1:]
             
@@ -61,9 +61,9 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
             samples = samples.to(device, non_blocking=True)
 
             if hasattr(model, 'module'):
-                test_latent, _, _ = model.module.forward_encoder(samples, mask_ratio=0.)
+                test_latent, _, _ = model.module.forward_encoder(samples, mask_ratio=0., reshape_out=False)
             else:
-                test_latent, _, _ = model.forward_encoder(samples, mask_ratio=0.)
+                test_latent, _, _ = model.forward_encoder(samples, mask_ratio=0., reshape_out=False)
             # Remove cls token
             test_latent = test_latent[:,1:]
             print(test_latent.shape, target_latent.shape)

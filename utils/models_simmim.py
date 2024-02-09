@@ -273,7 +273,7 @@ class MaskedAutoencoderViT(nn.Module):
 
         return x_masked, mask, ids_restore
             
-    def forward_encoder(self, x, mask_ratio=0, mask=None):
+    def forward_encoder(self, x, mask_ratio=0, mask=None, reshape_out=True):
         if self.simmim:
             ids_restore = None
             if mask is not None:
@@ -309,7 +309,7 @@ class MaskedAutoencoderViT(nn.Module):
 
         x = self.norm(x)
 
-        if self.simmim:
+        if self.simmim and reshape_out:
             x = x[:, 1:]
             B, L, C = x.shape
             H = W = int(L ** 0.5)
