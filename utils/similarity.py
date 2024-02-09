@@ -66,6 +66,7 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
                 test_latent, _, _ = model.forward_encoder(samples, mask_ratio=0.)
             # Remove cls token
             test_latent = test_latent[:,1:]
+            print(test_latent.shape, target_latent.shape)
 
             # Normalize each feature between 0 and 1
             if i==0:
