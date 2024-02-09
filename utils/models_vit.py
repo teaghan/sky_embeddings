@@ -32,7 +32,7 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
     dropout = float(eval(config['ARCHITECTURE']['dropout']))
 
     # Construct the model
-    if model_type=='base':
+    if model_type=='base' or model_type=='simmim':
         model = vit_base(label_means=label_means,
                          label_stds=label_stds,
                          input_norm=input_norm,
