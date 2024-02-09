@@ -54,7 +54,7 @@ args = args.parse_args()
 model_name = args.model_name
 target_fn = args.target_fn
 test_fn = args.test_fn
-if args.target_indices is not 'None':
+if args.target_indices!='None':
     target_indices = ast.literal_eval(args.target_indices)
 else:
     target_indices = None
