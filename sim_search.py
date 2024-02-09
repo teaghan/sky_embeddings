@@ -25,9 +25,9 @@ def parseArguments():
     parser.add_argument("-tst_fn", "--test_fn", 
                         type=str, default='HSC_unkown_GRIZY_64_new.h5')
     parser.add_argument("-tgt_i", "--target_indices", 
-                        default=[12])
+                        default='[12]')
     parser.add_argument("-snr", "--snr_range", 
-                        default=[2,7])
+                        default='[2,7]')
     parser.add_argument("-bs", "--batch_size", 
                         type=int, default=64)
     parser.add_argument("-m", "--metric", 
@@ -54,7 +54,10 @@ args = args.parse_args()
 model_name = args.model_name
 target_fn = args.target_fn
 test_fn = args.test_fn
-target_indices = ast.literal_eval(args.target_indices)
+if args.target_indices is not 'None':
+    target_indices = ast.literal_eval(args.target_indices)
+else:
+    target_indices = None
 snr_range = ast.literal_eval(args.snr_range)
 batch_size = args.batch_size
 metric = args.metric
