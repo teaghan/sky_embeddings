@@ -121,7 +121,7 @@ target_dataloader = build_dataloader(os.path.join(data_dir, target_fn),
                                      num_patches=model.module.patch_embed.num_patches,
                                      patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                      num_channels=int(config['ARCHITECTURE']['num_channels']), 
-                                     max_mask_ratio=max_mask_ratio,
+                                     max_mask_ratio=None,
                                      shuffle=False)
 
 test_dataloader = build_dataloader(os.path.join(data_dir, test_fn), 
@@ -135,7 +135,7 @@ test_dataloader = build_dataloader(os.path.join(data_dir, test_fn),
                                    num_patches=model.module.patch_embed.num_patches,
                                    patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                    num_channels=int(config['ARCHITECTURE']['num_channels']), 
-                                   max_mask_ratio=max_mask_ratio,
+                                   max_mask_ratio=None,
                                    shuffle=False,
                                    indices=test_indices)
 
@@ -173,7 +173,7 @@ test_dataloader = build_dataloader(os.path.join(data_dir, test_fn),
                                    num_patches=model.module.patch_embed.num_patches,
                                    patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                    num_channels=int(config['ARCHITECTURE']['num_channels']), 
-                                   max_mask_ratio=max_mask_ratio,
+                                   max_mask_ratio=None,
                                    shuffle=False,
                                    indices=save_indices)
 
