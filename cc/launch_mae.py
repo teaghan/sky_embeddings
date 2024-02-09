@@ -28,7 +28,7 @@ def parseArguments():
                         type=str, default='def-sfabbro')
     parser.add_argument("-mem", "--memory", 
                         help="Memory per job in GB.", 
-                        type=int, default=16)
+                        type=int, default=60)
     parser.add_argument("-ngpu", "--num_gpu", 
                         help="Number of GPUs per job.", 
                         type=int, default=2)
@@ -98,7 +98,7 @@ def parseArguments():
 cur_dir = os.path.dirname(os.path.realpath(__file__))
 data_dir = os.path.join(cur_dir, '../data')
 model_dir = os.path.join(cur_dir, '../models/')
-training_script = os.path.join(cur_dir, '../train_mae.py')
+training_script = os.path.join(cur_dir, '../train_mim.py')
 
 # Read command line arguments
 args = parseArguments()
