@@ -6,8 +6,8 @@ import numpy as np
 import ast
 
 from utils.pretrain import str2bool
-from utils.models_mae import build_model
-from utils.dataloader import build_dataloader
+from utils.models_simmim import build_model
+from utils.dataloader_simmim import build_dataloader
 from utils.analysis_fns import display_images, normalize_images, h5_snr
 from utils.similarity import (mae_latent, mae_simsearch, compute_similarity, plot_dual_histogram)
 
@@ -119,6 +119,9 @@ target_dataloader = build_dataloader(os.path.join(data_dir, target_fn),
                                      pix_mean=pix_mean,
                                      pix_std=pix_std,
                                      num_patches=model.module.patch_embed.num_patches,
+                                     patch_size=int(config['ARCHITECTURE']['patch_size']), 
+                                     num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                     max_mask_ratio=max_mask_ratio,
                                      shuffle=False)
 
 test_dataloader = build_dataloader(os.path.join(data_dir, test_fn), 
@@ -130,6 +133,9 @@ test_dataloader = build_dataloader(os.path.join(data_dir, test_fn),
                                    pix_mean=pix_mean,
                                    pix_std=pix_std,
                                    num_patches=model.module.patch_embed.num_patches,
+                                   patch_size=int(config['ARCHITECTURE']['patch_size']), 
+                                   num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                   max_mask_ratio=max_mask_ratio,
                                    shuffle=False,
                                    indices=test_indices)
 
@@ -165,6 +171,9 @@ test_dataloader = build_dataloader(os.path.join(data_dir, test_fn),
                                    pix_mean=pix_mean,
                                    pix_std=pix_std,
                                    num_patches=model.module.patch_embed.num_patches,
+                                   patch_size=int(config['ARCHITECTURE']['patch_size']), 
+                                   num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                   max_mask_ratio=max_mask_ratio,
                                    shuffle=False,
                                    indices=save_indices)
 

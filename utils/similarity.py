@@ -23,7 +23,7 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
     images = []
     with torch.no_grad():
         # Loop through spectra in dataset
-        for samples, _ in dataloader:
+        for samples, _, _ in dataloader:
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
@@ -55,7 +55,7 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
     sim_scores = []
     with torch.no_grad():
         # Loop through spectra in dataset
-        for i, (samples, _) in enumerate(dataloader):
+        for i, (samples, _, _) in enumerate(dataloader):
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
