@@ -274,18 +274,19 @@ class MaskedAutoencoderViT(nn.Module):
         return x_masked, mask, ids_restore
             
     def forward_encoder(self, x, mask_ratio=0, mask=None):
-        if self.simmim and (mask is not None):
-            # Mask input image
-            B, C, H, W = x.shape
-
-            # Mask values are the same for every patch. Need to repeat these to create 
-            # an array that is the same size as the image
-            tile_size = (H // self.mask_token.shape[1], W // self.mask_token.shape[2])
-            patch_mask_values = self.mask_token.repeat(1, tile_size[0], tile_size[1])
-            
-            # Image is masked where mask==1 and replaced with the values in patch_mask_values
-            x = x * (1 - mask) + patch_mask_values * mask
+        if self.simmim:
             ids_restore = None
+            if mask is not None:
+                # Mask input image
+                B, C, H, W = x.shape
+    
+                # Mask values are the same for every patch. Need to repeat these to create 
+                # an array that is the same size as the image
+                tile_size = (H // self.mask_token.shape[1], W // self.mask_token.shape[2])
+                patch_mask_values = self.mask_token.repeat(1, tile_size[0], tile_size[1])
+                
+                # Image is masked where mask==1 and replaced with the values in patch_mask_values
+                x = x * (1 - mask) + patch_mask_values * mask
         
         # embed patches
         x = self.patch_embed(x)
