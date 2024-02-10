@@ -114,11 +114,15 @@ for model_name in model_names:
     clf = DecisionTreeClassifier(max_depth=3, random_state=42)
     clf.fit(X_train, y_train)
     
-    # Predicting the class labels of the test set
-    y_pred = clf.predict(X_test)
+    # Predicting the class label
+    y_pred_test = clf.predict(X_test)
+    y_pred_train = clf.predict(X_train)
     
     # Evaluating the classifier
-    accuracy = accuracy_score(y_test, y_pred)
-    print(f"{model_name} accuracy: {accuracy:.4f}")
+    test_accuracy = accuracy_score(y_test, y_pred_test)
+    train_accuracy = accuracy_score(y_train, y_pred_train)
+    print(f'{model_name}:') 
+    print(f'\t Train accuracy: {train_accuracy:.4f}')
+    print(f'\t Test accuracy: {test_accuracy:.4f}')
     scores.append(accuracy)
 print(f'Best model: {model_names[np.argmax(scores)]}')
