@@ -124,5 +124,5 @@ for model_name in model_names:
     print(f'{model_name}:') 
     print(f'\t Train accuracy: {train_accuracy:.4f}')
     print(f'\t Test accuracy: {test_accuracy:.4f}')
-    scores.append(accuracy)
+    scores.append(test_accuracy)
 print(f'Best model: {model_names[np.argmax(scores)]}')
