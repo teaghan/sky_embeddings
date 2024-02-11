@@ -122,7 +122,7 @@ if __name__=="__main__":
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         
         # Creating and training a decision tree classifier
-        clf = DecisionTreeClassifier(max_depth=None, random_state=42) #12
+        clf = DecisionTreeClassifier(max_depth=10, random_state=42) #12
         clf.fit(X_train, y_train)
         
         # Predicting the class label
@@ -146,7 +146,7 @@ if __name__=="__main__":
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         
         # Creating and training a decision tree regressor
-        regressor = DecisionTreeRegressor(max_depth=None, random_state=42) # 6
+        regressor = DecisionTreeRegressor(max_depth=5, random_state=42) # 6
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
@@ -165,3 +165,17 @@ if __name__=="__main__":
         regress_scores.append(mse_test)
     print(f'Best classifier model: {model_names[np.argmax(acc_scores)]}')
     print(f'Best regression model: {model_names[np.argmin(regress_scores)]}')
+
+
+    # Rank models for accuracy and regression scores
+    acc_ranked = sorted(zip(model_names, acc_scores), key=lambda x: x[1], reverse=True)
+    regress_ranked = sorted(zip(model_names, regress_scores), key=lambda x: x[1])
+
+    # Create dictionaries to easily map model names to their rankings
+    acc_rank_dict = {model: rank+1 for rank, (model, score) in enumerate(acc_ranked)}
+    regress_rank_dict = {model: rank+1 for rank, (model, score) in enumerate(regress_ranked)}
+
+    # Print the combined ranking table
+    print(f"{'Model Name':<10} | {'Accuracy Ranking':<17} | {'Regression Ranking':<17} |")
+    for model in model_names:
+        print(f"{model:<10} | {acc_rank_dict[model]:<17} | {regress_rank_dict[model]:<17} |")
