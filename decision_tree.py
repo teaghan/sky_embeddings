@@ -133,7 +133,8 @@ if __name__=="__main__":
         test_accuracy = accuracy_score(y_test, y_pred_test)
         train_accuracy = accuracy_score(y_train, y_pred_train)
         print(f'{model_name}:') 
-        print(f'\t({config['Notes']['comment']})')
+        comment = config['Notes']['comment']
+        print(f'\t {comment}')
         print(f'\t Train accuracy: {train_accuracy:.4f}')
         print(f'\t Test accuracy: {test_accuracy:.4f}')
         acc_scores.append(test_accuracy)
