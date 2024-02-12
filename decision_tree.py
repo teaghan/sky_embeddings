@@ -122,7 +122,7 @@ if __name__=="__main__":
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         
         # Creating and training a decision tree classifier
-        clf = DecisionTreeClassifier(max_depth=None, random_state=42) #12
+        clf = DecisionTreeClassifier(max_depth=10, random_state=42) #12
         clf.fit(X_train, y_train)
         
         # Predicting the class label
@@ -148,7 +148,7 @@ if __name__=="__main__":
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         
         # Creating and training a decision tree regressor
-        regressor = DecisionTreeRegressor(max_depth=None, random_state=42) # 6
+        regressor = DecisionTreeRegressor(max_depth=5, random_state=42) # 6
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
