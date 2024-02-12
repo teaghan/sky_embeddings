@@ -54,7 +54,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            patch_size=patch_size,
                            norm_pix_loss=norm_pix_loss,
                            input_norm=input_norm,
-                           simmim=True)
+                           simmim=True,
+                           max_pool_len=int(config['ARCHITECTURE']['max_pool_len']))
     model.to(device)
 
     # Use multiple GPUs if available
@@ -124,10 +125,12 @@ class MaskedAutoencoderViT(nn.Module):
     def __init__(self, img_size=224, patch_size=16, in_chans=3,
                  embed_dim=1024, depth=24, num_heads=16,
                  decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
-                 mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False, input_norm=None, simmim=False):
+                 mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False, input_norm=None, simmim=False,
+                max_pool_len=1):
         super().__init__()
 
         self.simmim = simmim
+        self.max_pool_len = max_pool_len
         
         if 'layer' in input_norm.lower():
             self.input_norm = nn.LayerNorm([in_chans, img_size, img_size], elementwise_affine=True)
@@ -155,8 +158,11 @@ class MaskedAutoencoderViT(nn.Module):
             # Mask 
             self.mask_token = nn.Parameter(torch.zeros((in_chans, patch_size, patch_size)))
 
+            if self.max_pool_len>1:
+                self.max_pool = nn.MaxPool2d(self.max_pool_len, stride=self.max_pool_len)
+            
             # Simple decoder
-            encoder_stride = img_size//patch_size
+            encoder_stride = (img_size*self.max_pool_len)//(patch_size)
             self.decoder = nn.Sequential(
                 nn.Conv2d(
                     in_channels=embed_dim,
@@ -342,6 +348,8 @@ class MaskedAutoencoderViT(nn.Module):
             # remove cls token
             x = x[:, 1:, :]
         else:
+            if self.max_pool_len>1:
+                x = self.max_pool(x)
             x = self.decoder(x)
 
         return x
