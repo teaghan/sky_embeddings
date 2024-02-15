@@ -25,7 +25,8 @@ def get_augmentations(img_size=64):
         #v2.Lambda(lambda img: img + torch.randn_like(img) * 0.05),
     ])
 
-def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_images=False, verbose=1, apply_augmentations=False):
+def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_images=False, verbose=1, 
+               apply_augmentations=False, num_augmentations=16):
     
     if n_batches is None:
         n_batches = len(dataloader)
