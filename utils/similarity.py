@@ -8,6 +8,9 @@ import matplotlib.lines as lines
 from string import ascii_lowercase
 import random
 
+import torchvision
+torchvision.disable_beta_transforms_warning()
+
 
 plt.rcParams.update({
     "text.usetex": True,
@@ -317,7 +320,7 @@ def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean',
     # Determine target features and feature weighting
     print(target_latent.shape)
     target_latent, feat_weights = determine_target_features(target_latent)
-    print(target_latent.shape, feat_weights.shape))
+    print(target_latent.shape, feat_weights.shape)
     if not use_weights:
         feat_weights = torch.ones_like(feat_weights)
     
