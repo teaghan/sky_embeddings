@@ -59,7 +59,6 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
         # Loop through spectra in dataset
         for batch_idx, (samples, _, _) in enumerate(dataloader):
 
-            print(samples.shape)
             # Apply augmentations if enabled
             augmented_samples = []
             if apply_augmentations:
@@ -74,8 +73,6 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
                 
                 # Concatenate all augmented samples along the batch dimension
                 samples = torch.cat(augmented_samples, dim=0)
-
-            print(samples.shape)
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
@@ -120,9 +117,7 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
             test_latent = test_latent[:,1:]
 
             if max_pool:
-                print(test_latent.shape)
                 test_latent, _ = torch.max(test_latent, dim=1, keepdim=True)
-                print(test_latent.shape)
 
             # Normalize each feature between 0 and 1
             if i==0:
@@ -320,7 +315,9 @@ def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean',
         #test_latent = select_centre(test_latent, n_central_patches)
     
     # Determine target features and feature weighting
+    print(target_latent.shape)
     target_latent, feat_weights = determine_target_features(target_latent)
+    print(target_latent.shape, feat_weights.shape))
     if not use_weights:
         feat_weights = torch.ones_like(feat_weights)
     
