@@ -331,7 +331,7 @@ def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean',
     if n_top_sims is not None:
         # Collect average of the best n_top similarities
         test_similarity = torch.topk(test_similarity, k=n_top_sims, dim=1, largest=largest).values
-    print(test_similarity.shape)
+
     # Combine the similarities to get a single value for each sample
     if combine=='mean':
         test_similarity = torch.mean(test_similarity, dim=1)
@@ -339,7 +339,6 @@ def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean',
         test_similarity = torch.min(test_similarity, dim=1).values
     elif combine=='max':
         test_similarity = torch.max(test_similarity, dim=1).values
-    print(test_similarity.shape)
     return test_similarity
 
 def plot_dual_histogram(data1, data2, bins=30, data1_label='Data 1', data2_label='Data 2', title='Dual Histogram', 
