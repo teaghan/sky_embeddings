@@ -150,7 +150,6 @@ test_dataloader = build_dataloader(os.path.join(data_dir, test_fn),
 target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True, apply_augmentations=augment_targets)
 
 if max_pool:
-    print('Pooling')
     target_latent, _ = torch.max(target_latent, dim=1, keepdim=True)
 
 #if target_indices is not None:
