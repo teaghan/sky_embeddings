@@ -45,8 +45,19 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
 
             print(samples.shape)
             # Apply augmentations if enabled
+            augmented_samples = []
             if apply_augmentations:
-                samples = torch.stack([augmentations(sample) for sample in samples])
+                print('Augmenting')
+                for sample in samples:
+                    # Add the original sample
+                    augmented_samples.append(sample.unsqueeze(0))
+                    # Generate augmented versions of the sample
+                    for _ in range(num_augmentations):
+                        augmented_sample = augmentations(sample)
+                        augmented_samples.append(augmented_sample.unsqueeze(0))
+                
+                # Concatenate all augmented samples along the batch dimension
+                samples = torch.cat(augmented_samples, dim=0)
 
             print(samples.shape)
             
