@@ -1,11 +1,11 @@
 import numpy as np
 import torch
 import h5py
+import torchvision
+torchvision.disable_beta_transforms_warning()
 from torchvision.transforms import v2
 import glob
 from astropy.io import fits
-import torchvision
-torchvision.disable_beta_transforms_warning()
 
 def build_fits_dataloader(fits_paths, bands, norm_type, batch_size, num_workers,
                           patch_size=8, max_mask_ratio=None, 

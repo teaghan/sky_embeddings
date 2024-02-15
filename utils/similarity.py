@@ -1,5 +1,7 @@
 import numpy as np
 import torch
+import torchvision
+torchvision.disable_beta_transforms_warning()
 from torchvision.transforms import v2
 
 import matplotlib.pyplot as plt
@@ -7,9 +9,6 @@ import matplotlib.gridspec as gridspec
 import matplotlib.lines as lines
 from string import ascii_lowercase
 import random
-
-import torchvision
-torchvision.disable_beta_transforms_warning()
 
 
 plt.rcParams.update({
@@ -65,7 +64,6 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             # Apply augmentations if enabled
             augmented_samples = []
             if apply_augmentations:
-                print('Augmenting')
                 for sample in samples:
                     # Add the original sample
                     augmented_samples.append(sample.unsqueeze(0))
