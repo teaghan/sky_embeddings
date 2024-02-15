@@ -13,6 +13,19 @@ plt.rcParams.update({
     "font.serif": ['Times'],
     "font.size": 10})
 
+# Custom brightness adjustment for 5-channel images
+def adjust_brightness(img, brightness_factor):
+    return img * brightness_factor
+
+# Custom transform that applies brightness adjustment with a random factor
+class RandomBrightnessAdjust:
+    def __init__(self, brightness_range=(0.8, 1.2)):
+        self.brightness_range = brightness_range
+
+    def __call__(self, img):
+        brightness_factor = random.uniform(*self.brightness_range)
+        return adjust_brightness(img, brightness_factor)
+
 # Define the augmentation pipeline
 def get_augmentations(img_size=64):
     return v2.Compose([
@@ -20,7 +33,7 @@ def get_augmentations(img_size=64):
         v2.RandomVerticalFlip(),
         v2.RandomRotation(degrees=(0, 360)),
         v2.RandomResizedCrop(size=(img_size, img_size), scale=(0.5, 1.0), ratio=(0.75, 1.33)),
-        v2.ColorJitter(brightness=(0.5, 1.5)),
+        v2.RandomBrightnessAdjust(brightness_range=(0.5, 1.5)),
         #v2.GaussianBlur(kernel_size=(5, 5), sigma=(0.1, 2.0)),
         #v2.Lambda(lambda img: img + torch.randn_like(img) * 0.05),
     ])
