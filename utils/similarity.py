@@ -34,7 +34,7 @@ def get_augmentations(img_size=64):
         v2.RandomHorizontalFlip(),
         v2.RandomVerticalFlip(),
         v2.RandomRotation(degrees=(0, 360)),
-        v2.RandomResizedCrop(size=(img_size, img_size), scale=(0.5, 1.0), ratio=(0.75, 1.33)),
+        v2.RandomResizedCrop(size=(img_size, img_size), scale=(0.5, 1.0), ratio=(0.75, 1.33), antialias=True),
         RandomBrightnessAdjust(brightness_range=(0.5, 1.5)),
         #v2.GaussianBlur(kernel_size=(5, 5), sigma=(0.1, 2.0)),
         #v2.Lambda(lambda img: img + torch.randn_like(img) * 0.05),
@@ -97,7 +97,7 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
     else:
         return torch.cat(latents)
 
-def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metric='cosine', combine='min', use_weights=True):
+def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metric='cosine', combine='min', use_weights=True, max_pool=False):
     
     if n_batches is None:
         n_batches = len(dataloader)
@@ -118,6 +118,11 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
                 test_latent, _, _ = model.forward_encoder(samples, mask_ratio=0., reshape_out=False)
             # Remove cls token
             test_latent = test_latent[:,1:]
+
+            if max_pool:
+                print(test_latent.shape)
+                test_latent, _ = torch.max(test_latent, dim=1, keepdim=True)
+                print(test_latent.shape)
 
             # Normalize each feature between 0 and 1
             if i==0:
