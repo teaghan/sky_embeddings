@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.lines as lines
 from string import ascii_lowercase
+import random
+
 
 plt.rcParams.update({
     "text.usetex": True,
