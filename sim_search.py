@@ -21,11 +21,13 @@ def parseArguments():
     # Optional arguments
     
     parser.add_argument("-tgt_fn", "--target_fn", 
-                        type=str, default='HSC_dwarf_galaxies_GRIZY_64.h5')
+                        type=str, default='HSC_dwarf_galaxies_GRIZY_64_new.h5')
     parser.add_argument("-tst_fn", "--test_fn", 
                         type=str, default='HSC_unkown_GRIZY_64_new.h5')
     parser.add_argument("-tgt_i", "--target_indices", 
-                        default='[12]')
+                        default='[3,4]')
+    parser.add_argument("-aug", "--augment_targets", 
+                        type=bool, default=True)
     parser.add_argument("-snr", "--snr_range", 
                         default='[2,7]')
     parser.add_argument("-bs", "--batch_size", 
@@ -58,6 +60,7 @@ if args.target_indices!='None':
     target_indices = ast.literal_eval(args.target_indices)
 else:
     target_indices = None
+augment_targets = args.augment_targets
 snr_range = ast.literal_eval(args.snr_range)
 batch_size = args.batch_size
 metric = args.metric
@@ -122,7 +125,8 @@ target_dataloader = build_dataloader(os.path.join(data_dir, target_fn),
                                      patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                      num_channels=int(config['ARCHITECTURE']['num_channels']), 
                                      max_mask_ratio=None,
-                                     shuffle=False)
+                                     shuffle=False,
+                                     indices=target_indices)
 
 test_dataloader = build_dataloader(os.path.join(data_dir, test_fn), 
                                    config['DATA']['norm_type'], 
@@ -140,11 +144,11 @@ test_dataloader = build_dataloader(os.path.join(data_dir, test_fn),
                                    indices=test_indices)
 
 # Map target samples to latent-space
-target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True)
-if target_indices is not None:
+target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True, apply_augmentations=augment_targets)
+#if target_indices is not None:
     # Only select hand-chosen sub-sample
-    target_latent = target_latent[target_indices]
-    target_images = target_images[target_indices]
+#    target_latent = target_latent[target_indices]
+#    target_images = target_images[target_indices]
 
 # Plot targets
 display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().numpy()), 

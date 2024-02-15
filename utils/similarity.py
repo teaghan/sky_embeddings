@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from torchvision.transforms import v2
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -12,18 +13,42 @@ plt.rcParams.update({
     "font.serif": ['Times'],
     "font.size": 10})
 
-def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_images=False):
+# Define the augmentation pipeline
+def get_augmentations(img_size=64):
+    return v2.Compose([
+        v2.RandomHorizontalFlip(),
+        v2.RandomVerticalFlip(),
+        v2.RandomRotation(degrees=(0, 360)),
+        v2.RandomResizedCrop(size=(img_size, img_size), scale=(0.5, 1.0), ratio=(0.75, 1.33)),
+        v2.ColorJitter(brightness=(0.5, 1.5)),
+        #v2.GaussianBlur(kernel_size=(5, 5), sigma=(0.1, 2.0)),
+        #v2.Lambda(lambda img: img + torch.randn_like(img) * 0.05),
+    ])
+
+def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_images=False, verbose=1, apply_augmentations=False):
     
     if n_batches is None:
         n_batches = len(dataloader)
-    print(f'Encoding {min(len(dataloader), n_batches)} batches...')
+    if verbose > 0:
+        print(f'Encoding {min(len(dataloader), n_batches)} batches...')
     model.eval()
 
     latents = []
     images = []
+    
+    # Conditional application of augmentations
+    augmentations = get_augmentations() if apply_augmentations else None
+
     with torch.no_grad():
         # Loop through spectra in dataset
-        for samples, _, _ in dataloader:
+        for batch_idx, (samples, _, _) in enumerate(dataloader):
+
+            print(samples.shape)
+            # Apply augmentations if enabled
+            if apply_augmentations:
+                samples = torch.stack([augmentations(sample) for sample in samples])
+
+            print(samples.shape)
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
