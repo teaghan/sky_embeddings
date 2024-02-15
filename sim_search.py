@@ -29,7 +29,7 @@ def parseArguments():
     parser.add_argument("-aug", "--augment_targets", 
                         type=bool, default=True)
     parser.add_argument("-mp", "--max_pool", 
-                        type=bool, default=True)
+                        type=str, default='True')
     parser.add_argument("-snr", "--snr_range", 
                         default='[2,7]')
     parser.add_argument("-bs", "--batch_size", 
@@ -63,7 +63,7 @@ if args.target_indices!='None':
 else:
     target_indices = None
 augment_targets = args.augment_targets
-max_pool = args.max_pool
+max_pool = str2bool(args.max_pool)
 snr_range = ast.literal_eval(args.snr_range)
 batch_size = args.batch_size
 metric = args.metric
