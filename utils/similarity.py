@@ -36,7 +36,7 @@ def get_augmentations(img_size=64):
         v2.RandomHorizontalFlip(),
         v2.RandomVerticalFlip(),
         v2.RandomRotation(degrees=(0, 360)),
-        v2.RandomResizedCrop(size=(img_size, img_size), scale=(0.5, 1.0), ratio=(0.75, 1.33), antialias=True),
+        v2.RandomResizedCrop(size=(img_size, img_size), scale=(0.8, 1.0), ratio=(0.9, 1.1), antialias=True),
         RandomBrightnessAdjust(brightness_range=(0.5, 1.5)),
         #v2.GaussianBlur(kernel_size=(5, 5), sigma=(0.1, 2.0)),
         #v2.Lambda(lambda img: img + torch.randn_like(img) * 0.05),
