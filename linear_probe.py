@@ -122,7 +122,7 @@ if __name__=="__main__":
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         
         # Creating and training a classifier
-        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=1000, random_state=42)
+        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, random_state=42)
         clf.fit(X_train, y_train)
         
         # Predicting the class label
@@ -148,7 +148,7 @@ if __name__=="__main__":
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         
         # Creating and training a linear model for regression
-        regressor = LinearRegression(random_state=42)
+        regressor = LinearRegression()
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
