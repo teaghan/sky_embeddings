@@ -55,7 +55,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            norm_pix_loss=norm_pix_loss,
                            input_norm=input_norm,
                            simmim=True,
-                           max_pool_len=int(config['ARCHITECTURE']['max_pool_len']))
+                           max_pool_len=int(config['ARCHITECTURE']['max_pool_len']),
+                           loss_fn=config['TRAINING']['loss_fn'])
     model.to(device)
 
     # Use multiple GPUs if available
@@ -126,7 +127,7 @@ class MaskedAutoencoderViT(nn.Module):
                  embed_dim=1024, depth=24, num_heads=16,
                  decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
                  mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False, input_norm=None, simmim=False,
-                max_pool_len=1):
+                max_pool_len=1, loss_fn='mse'):
         super().__init__()
 
         self.simmim = simmim
@@ -158,6 +159,7 @@ class MaskedAutoencoderViT(nn.Module):
             # Mask 
             self.mask_token = nn.Parameter(torch.zeros((in_chans, patch_size, patch_size)))
 
+            # Max pooling to combine embeddings from patches
             if self.max_pool_len>1:
                 self.max_pool = nn.MaxPool2d(self.max_pool_len, stride=self.max_pool_len)
             
@@ -169,6 +171,7 @@ class MaskedAutoencoderViT(nn.Module):
                     out_channels=encoder_stride ** 2 * in_chans, kernel_size=1),
                 nn.PixelShuffle(encoder_stride),
             )
+            self.loss_fn = loss_fn
 
         else:
         
@@ -367,8 +370,11 @@ class MaskedAutoencoderViT(nn.Module):
                 var = imgs.var(dim=-1, keepdim=True)
                 imgs = (imgs - mean) / (var + 1.e-6)**.5
                 imgs = self.unpatchify(imgs)
-            
-            loss_recon = torch.nn.functional.l1_loss(imgs, pred, reduction='none')
+
+            if self.loss_fn=='mse':
+                loss_recon = torch.nn.functional.mse_loss(imgs, pred, reduction='none')
+            else:
+                loss_recon = torch.nn.functional.l1_loss(imgs, pred, reduction='none')
             loss = (loss_recon * mask).sum() / (mask.sum() + 1e-5)
             
         else:
