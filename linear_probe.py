@@ -148,7 +148,7 @@ if __name__=="__main__":
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         
         # Creating and training a linear model for regression
-        regressor = LinearRegression(max_iter=1000, random_state=42)
+        regressor = LinearRegression(random_state=42)
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
