@@ -44,6 +44,7 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
     if 'val_loss' in losses.keys():
         ax1.plot(losses['batch_iters'], losses['val_loss'],
                      label=r'Val', c='r')
+        ax1.set_ylabel('Loss',fontsize=fontsize)
 
     if 'train_lp_acc' in losses.keys():
         if len(losses['train_lp_acc'])==len(losses['batch_iters']):
@@ -52,12 +53,14 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
                          label=r'Train', c='k')
             ax2.plot(losses['batch_iters'], losses['val_lp_acc'],
                              label=r'Val', c='r')
+            ax2.set_ylabel('Accuracy',fontsize=fontsize)
     
             ax3.set_title('Linear Probe Regression', fontsize=fontsize)
             ax3.plot(losses['batch_iters'], losses['train_lp_r2'],
                          label=r'Train', c='k')
             ax3.plot(losses['batch_iters'], losses['val_lp_r2'],
                              label=r'Val', c='r')
+            ax3.set_ylabel(r'$R^2$',fontsize=fontsize)
     
     for i, ax in enumerate(axs):
         if x_lim is not None:
