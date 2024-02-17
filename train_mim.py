@@ -5,7 +5,7 @@ import configparser
 from collections import defaultdict
 import torch
 
-from utils.pretrain_simmim import str2bool, run_iter, parseArguments
+from utils.pretrain_simmim import str2bool, run_iter, parseArguments, linear_probe
 from utils.models_simmim import build_model
 from utils.dataloader_simmim import build_dataloader, build_fits_dataloader
 from utils.analysis_fns_simmim import plot_progress, mae_predict, plot_batch
@@ -182,6 +182,9 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                         # Don't bother with the whole dataset
                         if i>=100:
                             break
+
+                # Run Linear Probing tests
+                linear_probe(model, losses_cp, device, dataloader_val)
                 
                 # Calculate averages
                 for k in losses_cp.keys():
@@ -195,6 +198,11 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                 print('\t\tTotal Loss: %0.3f'% (losses['train_loss'][-1]))
                 print('\tValidation Dataset')
                 print('\t\tTotal Loss: %0.3f'% (losses['val_loss'][-1]))
+                print('Linear Probing Results:')
+                print('\tTraining Dataset')
+                print('\t\tAccuracy: %0.3f, R2: %0.3f'% (losses['train_lp_acc'][-1], losses['train_lp_r2'][-1]))
+                print('\tValidation Dataset')
+                print('\t\tAccuracy: %0.3f, R2: %0.3f'% (losses['val_lp_acc'][-1], losses['val_lp_r2'][-1]))
 
                 # Reset checkpoint loss dictionary
                 losses_cp = defaultdict(list)
