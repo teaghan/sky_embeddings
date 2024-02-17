@@ -148,7 +148,7 @@ def get_embeddings(data_path, model, device, dataloader_template, y_label='class
                                          shuffle=False)
 
     # Map target samples to latent-space
-    latent_features = mae_latent(model, dataloader, device)
+    latent_features = mae_latent(model, dataloader, device, verbose=0)
     latent_features = latent_features.data.cpu().numpy()
 
     # Collect targets
