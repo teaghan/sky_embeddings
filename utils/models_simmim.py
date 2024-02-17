@@ -24,6 +24,10 @@ def build_model(config, model_filename, device, build_optimizer=False):
     patch_size = int(config['ARCHITECTURE']['patch_size'])
     model_type = config['ARCHITECTURE']['model_type']
     input_norm = config['ARCHITECTURE']['input_norm']
+    if 'train_input_norm' in config['ARCHITECTURE']:
+        train_input_norm = str2bool(config['ARCHITECTURE']['train_input_norm'])
+    else:
+        train_input_norm = True
 
     # Construct the model
     if model_type=='base':
@@ -32,21 +36,24 @@ def build_model(config, model_filename, device, build_optimizer=False):
                              in_chans=num_channels,
                              patch_size=patch_size,
                              norm_pix_loss=norm_pix_loss,
-                             input_norm=input_norm)
+                             input_norm=input_norm,
+                             train_input_norm=train_input_norm)
     elif model_type=='large':
         model = mae_vit_large(embed_dim=embed_dim,
                               img_size=img_size,
                              in_chans=num_channels,
                              patch_size=patch_size,
                              norm_pix_loss=norm_pix_loss,
-                             input_norm=input_norm)
+                             input_norm=input_norm,
+                             train_input_norm=train_input_norm)
     elif model_type=='huge':
         model = mae_vit_huge(embed_dim=embed_dim,
                              img_size=img_size,
                              in_chans=num_channels,
                              patch_size=patch_size,
                              norm_pix_loss=norm_pix_loss,
-                             input_norm=input_norm)
+                             input_norm=input_norm,
+                             train_input_norm=train_input_norm)
     elif model_type=='simmim':
         model = simmim_vit(embed_dim=embed_dim,
                            img_size=img_size,
@@ -54,6 +61,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            patch_size=patch_size,
                            norm_pix_loss=norm_pix_loss,
                            input_norm=input_norm,
+                           train_input_norm=train_input_norm,
                            simmim=True,
                            max_pool_len=int(config['ARCHITECTURE']['max_pool_len']),
                            loss_fn=config['TRAINING']['loss_fn'])
@@ -126,7 +134,8 @@ class MaskedAutoencoderViT(nn.Module):
     def __init__(self, img_size=224, patch_size=16, in_chans=3,
                  embed_dim=1024, depth=24, num_heads=16,
                  decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
-                 mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False, input_norm=None, simmim=False,
+                 mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False, input_norm=None, 
+                 train_input_norm=True, simmim=False,
                 max_pool_len=1, loss_fn='mse'):
         super().__init__()
 
@@ -134,13 +143,14 @@ class MaskedAutoencoderViT(nn.Module):
         self.max_pool_len = max_pool_len
         
         if 'layer' in input_norm.lower():
-            self.input_norm = nn.LayerNorm([in_chans, img_size, img_size], elementwise_affine=True)
+            self.input_norm = nn.LayerNorm([in_chans, img_size, img_size], elementwise_affine=train_input_norm)
         elif 'batch' in input_norm.lower():
             self.input_norm = nn.BatchNorm2d(in_chans)
         elif 'group' in input_norm.lower():
-            self.input_norm = nn.GroupNorm(1, in_chans)
+            self.input_norm = nn.GroupNorm(1, in_chans, affine=train_input_norm)
         else:
             self.input_norm = None
+        self.train_input_norm = train_input_norm
         # --------------------------------------------------------------------------
         # MAE encoder specifics
         self.patch_embed = PatchEmbed(img_size, patch_size, in_chans, embed_dim)
