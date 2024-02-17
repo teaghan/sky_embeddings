@@ -130,8 +130,10 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
             '''
             
             if i==0:
-                mean_feats = torch.mean(torch.cat((target_latent,test_latent)).view(-1,target_latent.shape[-1]), dim=0)
-                std_feats = torch.std(torch.cat((target_latent,test_latent)).view(-1,target_latent.shape[-1]), dim=0)
+                #mean_feats = torch.mean(torch.cat((target_latent,test_latent)).view(-1,target_latent.shape[-1]), dim=0)
+                #std_feats = torch.std(torch.cat((target_latent,test_latent)).view(-1,target_latent.shape[-1]), dim=0)
+                mean_feats = torch.mean(test_latent.view(-1,test_latent.shape[-1]), dim=0)
+                std_feats = torch.std(test_latent.view(-1,test_latent.shape[-1]), dim=0)
                 target_latent = (target_latent - mean_feats) / (std_feats + 1e-8)
             
             test_latent = (test_latent - mean_feats) / (std_feats + 1e-8)
