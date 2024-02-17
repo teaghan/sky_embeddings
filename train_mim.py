@@ -4,6 +4,8 @@ import time
 import configparser
 from collections import defaultdict
 import torch
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning) 
 
 from utils.pretrain_simmim import str2bool, run_iter, parseArguments, linear_probe
 from utils.models_simmim import build_model
