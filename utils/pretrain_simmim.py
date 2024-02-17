@@ -1,4 +1,5 @@
 import argparse
+import h5py
 import torch
 import os
 import sys
@@ -83,7 +84,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, combine='pool',
     
     # Classifier task
     x,y = get_embeddings(os.path.join(data_dir, class_data_fn), 
-                         config, model, device, dataloader_template,
+                         model, device, dataloader_template,
                          y_label='class', combine=combine)
     
     # Splitting the dataset into training and testing sets
@@ -106,7 +107,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, combine='pool',
 
     # Regression task
     x,y = get_embeddings(os.path.join(data_dir, regress_data_fn), 
-                         config, model, device, dataloader_template,
+                         model, device, dataloader_template,
                          y_label='zspec', combine=combine)
 
     # Splitting the dataset into training and testing sets
@@ -128,7 +129,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, combine='pool',
     losses_cp['train_lp_r2'].append(float(r2_train))
     losses_cp['val_lp_r2'].append(float(r2_test))
 
-def get_embeddings(data_path, config, model, device, dataloader_template, y_label='class', combine='pool'):
+def get_embeddings(data_path, model, device, dataloader_template, y_label='class', combine='pool'):
 
     # Data loader
     dataloader = build_dataloader(data_path, 
