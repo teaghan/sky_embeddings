@@ -20,7 +20,8 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
 
     num_ax = 1
     if 'train_lp_acc' in losses.keys():
-        num_ax += 2
+        if len(losses['train_lp_acc'])==len(losses['batch_iters']):
+            num_ax += 2
         
     fig = plt.figure(figsize=(9,3*(num_ax)))
     
@@ -32,9 +33,10 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
     
     axs = [ax1]
     if 'train_lp_acc' in losses.keys():
-        ax2 = plt.subplot(gs[1])
-        ax3 = plt.subplot(gs[2])
-        axs = [ax1, ax2, ax3]
+        if len(losses['train_lp_acc'])==len(losses['batch_iters']):
+            ax2 = plt.subplot(gs[1])
+            ax3 = plt.subplot(gs[2])
+            axs = [ax1, ax2, ax3]
     
     ax1.set_title('Objective Function', fontsize=fontsize)
     ax1.plot(losses['batch_iters'], losses['train_loss'],
@@ -44,17 +46,18 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
                      label=r'Val', c='r')
 
     if 'train_lp_acc' in losses.keys():
-        ax2.set_title('Linear Probe Classification', fontsize=fontsize)
-        ax2.plot(losses['batch_iters'], losses['train_lp_acc'],
-                     label=r'Train', c='k')
-        ax2.plot(losses['batch_iters'], losses['val_lp_acc'],
-                         label=r'Val', c='r')
-
-        ax3.set_title('Linear Probe Regression', fontsize=fontsize)
-        ax3.plot(losses['batch_iters'], losses['train_lp_r2'],
-                     label=r'Train', c='k')
-        ax3.plot(losses['batch_iters'], losses['val_lp_r2'],
-                         label=r'Val', c='r')
+        if len(losses['train_lp_acc'])==len(losses['batch_iters']):
+            ax2.set_title('Linear Probe Classification', fontsize=fontsize)
+            ax2.plot(losses['batch_iters'], losses['train_lp_acc'],
+                         label=r'Train', c='k')
+            ax2.plot(losses['batch_iters'], losses['val_lp_acc'],
+                             label=r'Val', c='r')
+    
+            ax3.set_title('Linear Probe Regression', fontsize=fontsize)
+            ax3.plot(losses['batch_iters'], losses['train_lp_r2'],
+                         label=r'Train', c='k')
+            ax3.plot(losses['batch_iters'], losses['val_lp_r2'],
+                             label=r'Val', c='r')
     
     for i, ax in enumerate(axs):
         if x_lim is not None:
