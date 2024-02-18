@@ -89,6 +89,10 @@ def get_embeddings(data_path, config, model, device, y_label='class', combine='p
         pca = PCA(n_components=latent_features.shape[-1])
         x = latent_features.reshape(latent_features.shape[0], -1)
         x = pca.fit_transform(x)
+    elif combine=='centralpoolmean':
+        x = select_centre(latent_features, n_patches=16)
+        x = np.concatenate([np.max(x, axis=1), 
+                            np.mean(x, axis=1)], axis=1)
 
     return x, y
 
