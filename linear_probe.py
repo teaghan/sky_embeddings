@@ -71,15 +71,18 @@ def get_embeddings(data_path, config, model, device, y_label='class', combine='p
 
     if combine=='flatten':
         x = latent_features.reshape(latent_features.shape[0], -1)
-    if combine=='central':
+    elif combine=='central':
         x = select_centre(latent_features, n_patches=16)
         x = x.reshape(x.shape[0], -1)
-    if combine=='centralpool':
+    elif combine=='centralpool':
         x = select_centre(latent_features, n_patches=16)
         x = np.max(x, axis=1)
+    elif combine=='centralmean':
+        x = select_centre(latent_features, n_patches=16)
+        x = np.mean(x, axis=1)
     elif combine=='pool':
         x = np.max(latent_features, axis=1)
-    else:
+    elif combine=='mean':
         x = np.mean(latent_features, axis=1)
 
     return x, y
