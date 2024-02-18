@@ -74,7 +74,7 @@ def get_embeddings(data_path, config, model, device, y_label='class', combine='p
     if combine=='flatten':
         x = latent_features.reshape(latent_features.shape[0], -1)
     elif combine=='central':
-        x = select_centre(latent_features, n_patches=9)
+        x = select_centre(latent_features, n_patches=4)
         x = x.reshape(x.shape[0], -1)
     elif combine=='centralpool':
         x = select_centre(latent_features, n_patches=16)
@@ -145,7 +145,7 @@ if __name__=="__main__":
         
         # Creating and training a classifier
         #clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=5000, random_state=42)
-        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=5000, C=0.001, random_state=42)
+        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, C=0.001, random_state=42)
         #clf = LogisticRegression(penalty='elasticnet', solver='saga', multi_class='multinomial', 
         #                         C=100, l1_ratio=0.5,
         #                         max_iter=500, random_state=42)
