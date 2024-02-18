@@ -145,7 +145,7 @@ if __name__=="__main__":
         
         # Creating and training a classifier
         #clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=5000, random_state=42)
-        clf = SGDClassifier(loss='log', penalty='elasticnet', alpha=0.0001, l1_ratio=0.5,
+        clf = SGDClassifier(loss='log_loss', penalty='elasticnet', alpha=0.001, l1_ratio=0.5,
                             max_iter=5000, tol=1e-3, random_state=42)
         clf.fit(X_train, y_train)
         
@@ -173,7 +173,7 @@ if __name__=="__main__":
         
         # Creating and training a linear model for regression
         #regressor = LinearRegression()
-        regressor = ElasticNet(alpha=0.0001, l1_ratio=0.5, max_iter=5000, random_state=42)
+        regressor = ElasticNet(alpha=0.001, l1_ratio=0.5, max_iter=5000, random_state=42)
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
