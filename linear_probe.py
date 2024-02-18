@@ -162,12 +162,15 @@ if __name__=="__main__":
         x,y = get_embeddings(os.path.join(data_dir, regress_data_fn), 
                              config, model, device, y_label='zspec', combine=combine)
 
+        scaler = StandardScaler()
+        x = scaler.fit_transform(x)
+        
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         
         # Creating and training a linear model for regression
         #regressor = LinearRegression()
-        regressor = ElasticNet(alpha=1.0, l1_ratio=0.5, max_iter=5000, random_state=42)
+        regressor = ElasticNet(alpha=0.1, l1_ratio=0.9, max_iter=5000, random_state=42)
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
