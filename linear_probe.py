@@ -144,14 +144,7 @@ if __name__=="__main__":
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         
         # Creating and training a classifier
-        #clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=5000, random_state=42)
-        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, C=0.05, random_state=42)
-        #clf = LogisticRegression(penalty='elasticnet', solver='saga', multi_class='multinomial', 
-        #                         C=100, l1_ratio=0.5,
-        #                         max_iter=500, random_state=42)
-        
-        #clf = SGDClassifier(loss='log_loss', penalty='elasticnet', alpha=0.001, l1_ratio=0.5,
-        #                    max_iter=5000, tol=1e-3, random_state=42)
+        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, C=0.01, random_state=42)
         clf.fit(X_train, y_train)
         
         # Predicting the class label
@@ -178,7 +171,7 @@ if __name__=="__main__":
         
         # Creating and training a linear model for regression
         #regressor = LinearRegression()
-        regressor = ElasticNet(alpha=0.001, l1_ratio=0.9, max_iter=10000, random_state=42)
+        regressor = ElasticNet(alpha=0.001, l1_ratio=0.1, max_iter=10000, random_state=42)
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
