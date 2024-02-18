@@ -15,6 +15,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression, LinearRegression, ElasticNet
 from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 def parseArguments():
     # Create argument parser
