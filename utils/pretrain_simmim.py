@@ -7,11 +7,12 @@ import sys
 cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)
 from dataloader_simmim import build_dataloader
-from similarity import mae_latent
+from similarity import mae_latent, select_centre
 
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression, ElasticNet
 from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
+from sklearn.preprocessing import StandardScaler
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
@@ -78,7 +79,7 @@ def run_iter(model, samples, masks, mask_ratio, optimizer, lr_scheduler,
                 
     return model, optimizer, lr_scheduler, losses_cp
 
-def linear_probe(model, losses_cp, device, dataloader_template, combine='pool', 
+def linear_probe(model, losses_cp, device, dataloader_template, combine='central', 
                  class_data_fn='simple_classifier_data.h5', regress_data_fn='simple_regression_data.h5'):
     model.train(False)
     data_dir = os.path.join(cur_dir, '../data/')
@@ -92,7 +93,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, combine='pool',
     X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
     
     # Creating and training a classifier
-    clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, random_state=42)
+    clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, C=0.01, random_state=42)
     clf.fit(X_train, y_train)
     
     # Predicting the class label
@@ -115,7 +116,8 @@ def linear_probe(model, losses_cp, device, dataloader_template, combine='pool',
     X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
     
     # Creating and training a linear model for regression
-    regressor = LinearRegression()
+    #regressor = LinearRegression()
+    regressor = ElasticNet(alpha=0.001, l1_ratio=0.9, max_iter=10000, random_state=42)
     regressor.fit(X_train, y_train)
     
     # Predicting the continuous values 
@@ -130,7 +132,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, combine='pool',
     losses_cp['train_lp_r2'].append(float(r2_train))
     losses_cp['val_lp_r2'].append(float(r2_test))
 
-def get_embeddings(data_path, model, device, dataloader_template, y_label='class', combine='pool'):
+def get_embeddings(data_path, model, device, dataloader_template, y_label='class', combine='central'):
 
     # Data loader
     dataloader = build_dataloader(data_path, 
@@ -159,7 +161,16 @@ def get_embeddings(data_path, model, device, dataloader_template, y_label='class
         x = latent_features.reshape(latent_features.shape[0], -1)
     elif combine=='pool':
         x = np.max(latent_features, axis=1)
+    elif combine=='centralpool':
+        x = select_centre(latent_features, n_patches=16)
+        x = np.max(x, axis=1)
+    elif combine=='central':
+        x = select_centre(latent_features, n_patches=4)
+        x = x.reshape(x.shape[0], -1)
     else:
         x = np.mean(latent_features, axis=1)
+
+    scaler = StandardScaler()
+    x = scaler.fit_transform(x)
 
     return x, y
