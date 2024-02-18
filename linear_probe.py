@@ -9,7 +9,7 @@ import ast
 from utils.pretrain_simmim import str2bool
 from utils.models_simmim import build_model
 from utils.dataloader_simmim import build_dataloader
-from utils.similarity import mae_latent
+from utils.similarity import mae_latent, select_centre
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression, LinearRegression
@@ -71,6 +71,9 @@ def get_embeddings(data_path, config, model, device, y_label='class', combine='p
 
     if combine=='flatten':
         x = latent_features.reshape(latent_features.shape[0], -1)
+    if combine=='central':
+        x = select_centre(latent_features, n_patches=4)
+        x = x.reshape(x.shape[0], -1)
     elif combine=='pool':
         x = np.max(latent_features, axis=1)
     else:
