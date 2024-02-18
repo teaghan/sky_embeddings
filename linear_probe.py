@@ -73,7 +73,6 @@ def get_embeddings(data_path, config, model, device, y_label='class', combine='p
         x = latent_features.reshape(latent_features.shape[0], -1)
     if combine=='central':
         x = select_centre(latent_features, n_patches=16)
-        print(x.shape)
         x = x.reshape(x.shape[0], -1)
     elif combine=='pool':
         x = np.max(latent_features, axis=1)
