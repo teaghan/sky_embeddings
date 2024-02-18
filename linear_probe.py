@@ -167,7 +167,7 @@ if __name__=="__main__":
         
         # Creating and training a linear model for regression
         #regressor = LinearRegression()
-        regressor = ElasticNet(alpha=1.0, l1_ratio=0.8, max_iter=1000, random_state=42)
+        regressor = ElasticNet(alpha=1.0, l1_ratio=0.5, max_iter=5000, random_state=42)
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
