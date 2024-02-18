@@ -12,7 +12,7 @@ from utils.dataloader_simmim import build_dataloader
 from utils.similarity import mae_latent, select_centre
 
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression, LinearRegression, ElasticNet
+from sklearn.linear_model import LogisticRegression, LinearRegression, ElasticNet, SGDClassifier
 from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
@@ -144,7 +144,9 @@ if __name__=="__main__":
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         
         # Creating and training a classifier
-        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=5000, random_state=42)
+        #clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=5000, random_state=42)
+        clf = SGDClassifier(loss='log', penalty='elasticnet', alpha=0.0001, l1_ratio=0.5,
+                            max_iter=5000, tol=1e-3, random_state=42)
         clf.fit(X_train, y_train)
         
         # Predicting the class label
