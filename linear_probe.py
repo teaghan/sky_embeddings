@@ -170,7 +170,7 @@ if __name__=="__main__":
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         
         # Creating and training a linear model for regression
-        regressor = ElasticNet(alpha=0.001, l1_ratio=0.1, max_iter=10000, random_state=42)
+        regressor = ElasticNet(alpha=0.001, l1_ratio=0.9, max_iter=10000, random_state=42)
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
