@@ -145,7 +145,7 @@ if __name__=="__main__":
         
         # Creating and training a classifier
         #clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=5000, random_state=42)
-        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, C=0.01, random_state=42)
+        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, C=0.05, random_state=42)
         #clf = LogisticRegression(penalty='elasticnet', solver='saga', multi_class='multinomial', 
         #                         C=100, l1_ratio=0.5,
         #                         max_iter=500, random_state=42)
