@@ -14,6 +14,7 @@ from utils.similarity import mae_latent, select_centre
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
+from sklearn.decomposition import PCA
 
 def parseArguments():
     # Create argument parser
@@ -84,6 +85,10 @@ def get_embeddings(data_path, config, model, device, y_label='class', combine='p
         x = np.max(latent_features, axis=1)
     elif combine=='mean':
         x = np.mean(latent_features, axis=1)
+    elif combine=='pca':
+        pca = PCA(n_components=latent_features.shape[-1])
+        x = latent_features.reshape(latent_features.shape[0], -1)
+        x = pca.fit_transform(x)
 
     return x, y
 
