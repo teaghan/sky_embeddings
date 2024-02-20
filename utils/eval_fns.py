@@ -37,7 +37,7 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
                 mask = mask.unsqueeze(-1).repeat(1, 1, model.patch_embed.patch_size[0]**2 * model.in_chans)  # (N, H*W, p*p*3)
                 mask = model.unpatchify(mask)  # 1 is removing, 0 is keeping
 
-            if (model.input_norm is not None) or model.norm_pix_loss:
+            if model.norm_pix_loss:
                 # Return back to original scale
                 pred = model.denorm_imgs(samples, pred)
             
