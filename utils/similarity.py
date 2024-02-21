@@ -37,6 +37,12 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
     print(f'Performing similarity search on {min(len(dataloader), n_batches)} batches...')
     model.eval()
 
+    if max_pool:
+        # Select max feature across all samples
+        target_latent, _ = torch.max(target_latent, dim=1, keepdim=True)
+
+    print(target_latent.shape)
+
     sim_scores = []
     with torch.no_grad():
         # Loop through spectra in dataset
@@ -54,6 +60,8 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
 
             if max_pool:
                 test_latent, _ = torch.max(test_latent, dim=1, keepdim=True)
+
+            print(test_latent.shape)
 
             '''# Normalize each feature between 0 and 1
             if i==0:
