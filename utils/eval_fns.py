@@ -86,7 +86,7 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
 
     with torch.no_grad():
         # Loop through spectra in dataset
-        for batch_idx, (samples, _, _) in enumerate(dataloader):
+        for batch_idx, (samples, masks, _) in enumerate(dataloader):
 
             # Apply augmentations if enabled
             augmented_samples = []
@@ -106,9 +106,9 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             samples = samples.to(device, non_blocking=True)
 
             if hasattr(model, 'module'):
-                latent, _, _ = model.module.forward_encoder(samples, mask_ratio, reshape_out=False)
+                latent, _, _ = model.module.forward_encoder(samples, mask_ratio, mask=None, reshape_out=False)
             else:
-                latent, _, _ = model.forward_encoder(samples, mask_ratio, reshape_out=False)
+                latent, _, _ = model.forward_encoder(samples, mask_ratio, mask=None, reshape_out=False)
             # Remove cls token
             latent = latent[:,1:]
             
@@ -134,14 +134,15 @@ def ft_predict(model, dataloader, device, num_batches=None, return_images=False)
 
     print(f'Running predictions on {num_batches} batches...')
     
-    for i, (samples, labels) in enumerate(dataloader):
+    for i, (samples, masks, labels) in enumerate(dataloader):
         
         # Switch to GPU if available
         samples = samples.to(device, non_blocking=True)
+        masks = masks.to(device, non_blocking=True)
         labels = labels.to(device, non_blocking=True)
     
         # Run predictions
-        model_outputs = model(samples)
+        model_outputs = model(samples, mask=masks)
 
         if hasattr(model, 'module'):
             model = model.module

@@ -5,10 +5,11 @@ import configparser
 from collections import defaultdict
 import torch
 
-from utils.finetune import str2bool, run_iter, parseArguments
-from utils.models_vit import build_model
-from utils.dataloader import build_dataloader
-from utils.analysis_fns import plot_progress, mae_predict, plot_batch
+from utils.misc import str2bool, parseArguments
+from utils.predictor_training_fns import run_iter
+from utils.vit import build_model
+from utils.dataloaders import build_h5_dataloader
+from utils.plotting_fns import plot_progress
 
 def main(args):
 
@@ -69,34 +70,27 @@ def main(args):
         batch_size = int(int(config['TRAINING']['batch_size'])/n_gpu)
     else:
         batch_size = int(config['TRAINING']['batch_size'])
-    if mae_config['DATA']['norm_type']=='global':
-        pix_mean = float(mae_config['DATA']['pix_mean'])
-        pix_std = float(mae_config['DATA']['pix_std'])
-    else:
-        pix_mean = None
-        pix_std = None
-    dataloader_train = build_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
-                                        norm_type=mae_config['DATA']['norm_type'], 
-                                        batch_size=batch_size, 
-                                        num_workers=num_workers,
-                                        label_keys=eval(config['DATA']['label_keys']),
-                                        img_size=int(config['ARCHITECTURE']['img_size']),
-                                        pos_channel=str2bool(mae_config['DATA']['pos_channel']),  
-                                        pix_mean=pix_mean,
-                                        pix_std=pix_std,
-                                        num_patches=model.module.patch_embed.num_patches,
-                                        augment=str2bool(config['TRAINING']['augment']),
-                                        shuffle=True)
+
+    dataloader_train = build_h5_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
+                                           batch_size=batch_size, 
+                                           num_workers=num_workers,
+                                           label_keys=eval(config['DATA']['label_keys']),
+                                           img_size=int(config['ARCHITECTURE']['img_size']),
+                                           pos_channel=str2bool(mae_config['DATA']['pos_channel']), 
+                                           patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
+                                           num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
+                                           num_patches=model.module.patch_embed.num_patches,
+                                           augment=str2bool(config['TRAINING']['augment']),
+                                           shuffle=True)
     
-    dataloader_val = build_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
-                                        norm_type=mae_config['DATA']['norm_type'], 
+    dataloader_val = build_h5_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
                                         batch_size=batch_size, 
                                         num_workers=num_workers,
                                         label_keys=eval(config['DATA']['label_keys']),
                                         img_size=int(config['ARCHITECTURE']['img_size']),
                                         pos_channel=str2bool(mae_config['DATA']['pos_channel']), 
-                                        pix_mean=pix_mean,
-                                        pix_std=pix_std, 
+                                        patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
+                                         num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
                                         num_patches=model.module.patch_embed.num_patches,
                                         shuffle=True)
     
@@ -120,14 +114,15 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
     cp_start_time = time.time()
     while cur_iter < (total_batch_iters):
         # Iterate through training dataset
-        for train_samples, train_labels in dataloader_train:
+        for input_samples, sample_masks, sample_labels in dataloader_train:
             
             # Switch to GPU if available
-            train_samples = train_samples.to(device, non_blocking=True)
-            train_labels = train_labels.to(device, non_blocking=True)
+            input_samples = input_samples.to(device, non_blocking=True)
+            sample_masks = sample_masks.to(device, non_blocking=True)
+            sample_labels = sample_labels.to(device, non_blocking=True)
             
             # Run an iteration of training
-            model, optimizer, lr_scheduler, losses_cp = run_iter(model, train_samples, train_labels,
+            model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, sample_masks, sample_labels,
                                                                  optimizer, 
                                                                  lr_scheduler, 
                                                                  losses_cp, mode='train')
@@ -136,13 +131,14 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
             if cur_iter % verbose_iters == 0:
 
                 with torch.no_grad():
-                    for i, (val_samples, val_labels) in enumerate(dataloader_val):
+                    for i, (input_samples, sample_masks, sample_labels) in enumerate(dataloader_val):
                         # Switch to GPU if available
-                        val_samples = val_samples.to(device, non_blocking=True)
-                        val_labels = val_labels.to(device, non_blocking=True)
+                        input_samples = input_samples.to(device, non_blocking=True)
+                        sample_masks = sample_masks.to(device, non_blocking=True)
+                        sample_labels = sample_labels.to(device, non_blocking=True)
 
                         # Run an iteration
-                        model, optimizer, lr_scheduler, losses_cp = run_iter(model, val_samples, val_labels,
+                        model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, sample_masks, sample_labels,
                                                                              optimizer, 
                                                                              lr_scheduler, 
                                                                              losses_cp, mode='val')

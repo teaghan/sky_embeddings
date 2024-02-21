@@ -61,22 +61,15 @@ def main(args):
         batch_size = int(int(config['TRAINING']['batch_size'])/n_gpu)
     else:
         batch_size = int(config['TRAINING']['batch_size'])
-    if mae_config['DATA']['norm_type']=='global':
-        pix_mean = float(mae_config['DATA']['pix_mean'])
-        pix_std = float(mae_config['DATA']['pix_std'])
-    else:
-        pix_mean = None
-        pix_std = None
-    
-    dataloader_val = build_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
-                                        norm_type=mae_config['DATA']['norm_type'], 
+
+    dataloader_val = build_h5_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
                                         batch_size=batch_size, 
                                         num_workers=num_workers,
                                         label_keys=eval(config['DATA']['label_keys']),
                                         img_size=int(config['ARCHITECTURE']['img_size']),
                                         pos_channel=str2bool(mae_config['DATA']['pos_channel']), 
-                                        pix_mean=pix_mean,
-                                        pix_std=pix_std, 
+                                        patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
+                                         num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
                                         num_patches=model.module.patch_embed.num_patches,
                                         shuffle=False)
     

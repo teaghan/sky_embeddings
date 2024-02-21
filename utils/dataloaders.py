@@ -241,7 +241,7 @@ class H5Dataset(torch.utils.data.Dataset):
             # Generate random mask
             mask = self.mask_generator()
         else:
-            mask = 0
+            mask = torch.zeros_like(cutout)
 
         return cutout, mask, labels
 

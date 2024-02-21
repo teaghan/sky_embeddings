@@ -8,7 +8,7 @@ def str2bool(v):
 
 def parseArguments():
     # Create argument parser
-    parser = argparse.ArgumentParser('MAE pre-training', add_help=False)
+    parser = argparse.ArgumentParser('Training for Masked Image Modelling', add_help=False)
 
     # Positional mandatory arguments
     parser.add_argument("model_name", help="Name of model.", type=str)

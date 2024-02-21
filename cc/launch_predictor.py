@@ -42,10 +42,10 @@ def parseArguments():
     # Config params
     parser.add_argument("-tfn", "--train_data_file", 
                         help="Filename for training samples.", 
-                        type=str, default='HSC_zspec_GRIZY_64_train.h5') 
+                        type=str, default='HSC_zspec_GRIZY_64_train_new.h5') 
     parser.add_argument("-vfn", "--val_data_file", 
                         help="Filename for validation samples.", 
-                        type=str, default='HSC_zspec_GRIZY_64_val.h5') 
+                        type=str, default='HSC_zspec_GRIZY_64_val_new.h5') 
     parser.add_argument("-lk", "--label_keys", 
                         help="List of label keys in the datasets that will be the target labels.", 
                         type=str, nargs='+', default="['zspec']")
@@ -58,38 +58,41 @@ def parseArguments():
 
     parser.add_argument("-tm", "--train_method", 
                         help="Training method ('ft' for finetuning, 'lp' for linear probing, or 'full' for fully supervised).", 
-                        type=str, default='ft')
+                        type=str, default='lp')
     parser.add_argument("-pt", "--pretained_mae", 
                         help="Name of pretrained MAE model (or 'None' for fresh weights).", 
-                        type=str, default='mae_1')
+                        type=str, default='sim_22')
     parser.add_argument("-bs", "--batch_size", 
                         help="Training batchsize.", 
                         type=int, default=128)
     parser.add_argument("-ti", "--total_batch_iters", 
                         help="Total number of batch iterations for training.", 
-                        type=int, default=1e5)
+                        type=int, default=1.5e5)
     parser.add_argument("-ld", "--layer_decay", 
                         help="Layerwise weight decay parameter for optimizer (only applies when training method is finetuning).", 
-                        type=float, default=0.75)
+                        type=float, default=0.5)
     parser.add_argument("-wd", "--weight_decay", 
                         help="Weight decay for optimizer.", 
-                        type=float, default=0.05)
+                        type=float, default=0.0)
     parser.add_argument("-lr", "--init_lr", 
                         help="Initial learning rate.", 
-                        type=float, default=0.0001)
+                        type=float, default=0.0005)
     parser.add_argument("-lrf", "--final_lr_factor", 
                         help="Final lr will be lr/lrf.", 
-                        type=float, default=1e4)
-    parser.add_argument("-nw", "--num_workers", 
-                        help="Number of cpus for dataloader during training.", 
-                        type=float, default=10)
+                        type=float, default=1e5)
+    parser.add_argument("-aug", "--augment", 
+                        help="Whether or not to apply augmentations during training.", 
+                        type=str, default='True')
     
     parser.add_argument("-ims", "--img_size", 
                         help="Number of rows and columns in each image sample (must be less than or equal to the img_size for the MAE).", 
-                        type=int, default=32)
+                        type=int, default=64)
     parser.add_argument("-gp", "--global_pool", 
                         help="Global pooling method for model head (either 'token', 'avg', or 'map').", 
-                        type=str, default='avg')
+                        type=str, default='map')
+    parser.add_argument("-do", "--dropout", 
+                        help="Amount of dropout to apply before head.", 
+                        type=float, default=0.0)
     
     parser.add_argument("-co", "--comment", 
                         help="Comment for config file.", 
@@ -131,7 +134,7 @@ if user_input=='c':
 elif user_input=='o':
     # Create new configuration file
     config = configparser.ConfigParser()
-    
+
     config['DATA'] = {'train_data_file': args.train_data_file, 
                       'val_data_file': args.val_data_file, 
                       'label_keys': args.label_keys, 
@@ -146,10 +149,11 @@ elif user_input=='o':
                           'weight_decay': args.weight_decay,
                           'init_lr': args.init_lr,
                           'final_lr_factor': args.final_lr_factor,
-                          'num_workers': args.num_workers}
+                          'augment': args.augment}
     
     config['ARCHITECTURE'] = {'img_size': args.img_size,
-                              'global_pool': args.global_pool}
+                              'global_pool': args.global_pool,
+                              'dropout': args.dropout}
         
     config['Notes'] = {'comment': args.comment}
 
