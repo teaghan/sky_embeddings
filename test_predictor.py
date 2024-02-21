@@ -3,10 +3,11 @@ import numpy as np
 import configparser
 import torch
 
-from utils.finetune import str2bool, parseArguments
-from utils.models_vit import build_model
-from utils.dataloader import build_dataloader
-from utils.analysis_fns import plot_progress, ft_predict, plot_resid_hexbin, evaluate_z, h5_snr
+from utils.misc import str2bool, parseArguments, h5_snr
+from utils.vit import build_model
+from utils.dataloaders import build_h5_dataloader
+from utils.eval_fns import ft_predict
+from utils.plotting_fns import plot_resid_hexbin, evaluate_z
 
 def main(args):
     
