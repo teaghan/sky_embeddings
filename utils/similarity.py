@@ -41,8 +41,6 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
         # Select max feature across all samples
         target_latent, _ = torch.max(target_latent, dim=1, keepdim=True)
 
-    print(target_latent.shape)
-
     sim_scores = []
     with torch.no_grad():
         # Loop through spectra in dataset
@@ -61,26 +59,12 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
             if max_pool:
                 test_latent, _ = torch.max(test_latent, dim=1, keepdim=True)
 
-            print(test_latent.shape)
-
-            '''# Normalize each feature between 0 and 1
+            # Try to put all features on the same scale
             if i==0:
-                min_feats = torch.min(torch.cat((target_latent,test_latent)).view(-1,target_latent.shape[-1]), dim=0).values
-                max_feats = torch.max(torch.cat((target_latent,test_latent)).view(-1,target_latent.shape[-1]), dim=0).values
-                target_latent = (target_latent - min_feats) / (max_feats - min_feats)
-            
-            test_latent = (test_latent - min_feats) / (max_feats - min_feats)
-            '''
-            
-            if i==0:
-                #mean_feats = torch.mean(torch.cat((target_latent,test_latent)).view(-1,target_latent.shape[-1]), dim=0)
-                #std_feats = torch.std(torch.cat((target_latent,test_latent)).view(-1,target_latent.shape[-1]), dim=0)
-                mean_feats = test_latent.mean(dim=(0, 1))#torch.mean(test_latent.view(-1,test_latent.shape[-1]), dim=0)
+                mean_feats = test_latent.mean(dim=(0, 1))
                 std_feats = test_latent.std(dim=(0, 1), unbiased=True) 
                 target_latent = (target_latent - mean_feats) / (std_feats + 1e-8)
-            
             test_latent = (test_latent - mean_feats) / (std_feats + 1e-8)
-            
 
             # Compute similarity score for each sample
             test_similarity = compute_similarity(target_latent, test_latent, 
@@ -91,20 +75,6 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
                 break
     
     return torch.cat(sim_scores)
-
-def normalize_latents(*latent):
-    '''Normalize each feature to have a min of 0 and max of 1.'''
-    
-    # Get min and max of features after combining batch and patch dimensions
-    min_ = torch.min(torch.cat(latent).view(-1,latent[0].shape[-1]), dim=0).values
-    max_ = torch.max(torch.cat(latent).view(-1,latent[0].shape[-1]), dim=0).values
-    
-    # Normalize each feature between 0 and 1
-    latent = list(latent)
-    for i in range(len(latent)):
-        latent[i] = (latent[i] - min_) / (max_ - min_)
-
-    return tuple(latent)
 
 def determine_target_features(target_latent):
 
@@ -220,6 +190,7 @@ def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean',
     target_latent, feat_weights = determine_target_features(target_latent)
     if not use_weights:
         feat_weights = torch.ones_like(feat_weights)
+    print(target_latent.shape, feat_weights.shape)
     
     # Compute similarities
     if metric=='MAE':
