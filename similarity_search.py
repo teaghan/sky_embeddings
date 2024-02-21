@@ -136,7 +136,8 @@ test_dataloader = build_h5_dataloader(os.path.join(data_dir, test_fn),
 
 
 # Map target samples to latent-space
-target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True, apply_augmentations=augment_targets)
+target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True, 
+                                          apply_augmentations=augment_targets, num_augmentations=64)
 
 # Plot targets
 display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().numpy()), 
