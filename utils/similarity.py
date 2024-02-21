@@ -190,7 +190,6 @@ def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean',
     target_latent, feat_weights = determine_target_features(target_latent)
     if not use_weights:
         feat_weights = torch.ones_like(feat_weights)
-    print(target_latent.shape, feat_weights.shape)
     
     # Compute similarities
     if metric=='MAE':

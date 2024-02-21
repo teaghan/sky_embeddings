@@ -14,7 +14,7 @@ from utils.similarity import mae_simsearch, compute_similarity
 
 def parseArguments():
     # Create argument parser
-    parser = argparse.ArgumentParser('MAE pre-training', add_help=False)
+    parser = argparse.ArgumentParser('Similarity searching.', add_help=False)
 
     # Positional mandatory arguments
     parser.add_argument("model_name", help="Name of model.", type=str)
@@ -53,9 +53,9 @@ def parseArguments():
     
     return parser
 
+# Load arguments
 args = parseArguments()
 args = args.parse_args()
-
 model_name = args.model_name
 target_fn = args.target_fn
 test_fn = args.test_fn
@@ -84,9 +84,11 @@ fig_dir = os.path.join(cur_dir, 'figures/')
 results_dir = os.path.join(cur_dir, 'results/')
 if not os.path.exists(results_dir):
     os.mkdir(results_dir)
+    
 # Determine device
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 n_gpu = torch.cuda.device_count()
+num_workers = min([os.cpu_count(),12*n_gpu])
 print(f'Using Torch version: {torch.__version__}')
 print(f'Using a {device} device with {n_gpu} GPU(s)')
 
@@ -97,9 +99,6 @@ config.read(config_dir+model_name+'.ini')
 # Construct the model and load pretrained weights
 model_filename =  os.path.join(model_dir, model_name+'.pth.tar') 
 model, losses, cur_iter = build_model(config, model_filename, device, build_optimizer=False)
-
-# Data loader stuff
-num_workers = min([os.cpu_count(),12*n_gpu])
 
 # Calculate S/N of images in test dataset
 print('Estimating S/N for test dataset images...')
@@ -139,14 +138,6 @@ test_dataloader = build_h5_dataloader(os.path.join(data_dir, test_fn),
 # Map target samples to latent-space
 target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True, apply_augmentations=augment_targets)
 
-if max_pool:
-    target_latent, _ = torch.max(target_latent, dim=1, keepdim=True)
-
-#if target_indices is not None:
-    # Only select hand-chosen sub-sample
-#    target_latent = target_latent[target_indices]
-#    target_images = target_images[target_indices]
-
 # Plot targets
 display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().numpy()), 
                                 vmin=0., vmax=1, savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_target.png'))
@@ -164,7 +155,6 @@ if metric=='cosine':
 save_indices = test_indices[sim_order[:n_save]]
 
 # Create a new dataloader for these samples
-
 test_dataloader = build_h5_dataloader(os.path.join(data_dir, test_fn), 
                                           batch_size=batch_size, 
                                           num_workers=num_workers,
