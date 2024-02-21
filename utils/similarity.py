@@ -1,23 +1,11 @@
+import random
 import numpy as np
 import torch
 import torchvision
 torchvision.disable_beta_transforms_warning()
 from torchvision.transforms import v2
 
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-import matplotlib.lines as lines
-from string import ascii_lowercase
-import random
-
-
-plt.rcParams.update({
-    "text.usetex": True,
-    "font.family": "serif",
-    "font.serif": ['Times'],
-    "font.size": 10})
-
-# Custom brightness adjustment for 5-channel images
+# Custom brightness adjustment for images
 def adjust_brightness(img, brightness_factor):
     return img * brightness_factor
 
@@ -41,59 +29,6 @@ def get_augmentations(img_size=64):
         #v2.GaussianBlur(kernel_size=(5, 5), sigma=(0.1, 2.0)),
         #v2.Lambda(lambda img: img + torch.randn_like(img) * 0.05),
     ])
-
-def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_images=False, verbose=1, 
-               apply_augmentations=False, num_augmentations=16):
-    
-    if n_batches is None:
-        n_batches = len(dataloader)
-    if verbose > 0:
-        print(f'Encoding {min(len(dataloader), n_batches)} batches...')
-    model.eval()
-
-    latents = []
-    images = []
-    
-    # Conditional application of augmentations
-    augmentations = get_augmentations() if apply_augmentations else None
-
-    with torch.no_grad():
-        # Loop through spectra in dataset
-        for batch_idx, (samples, _, _) in enumerate(dataloader):
-
-            # Apply augmentations if enabled
-            augmented_samples = []
-            if apply_augmentations:
-                for sample in samples:
-                    # Add the original sample
-                    augmented_samples.append(sample.unsqueeze(0))
-                    # Generate augmented versions of the sample
-                    for _ in range(num_augmentations):
-                        augmented_sample = augmentations(sample)
-                        augmented_samples.append(augmented_sample.unsqueeze(0))
-                
-                # Concatenate all augmented samples along the batch dimension
-                samples = torch.cat(augmented_samples, dim=0)
-            
-            # Switch to GPU if available
-            samples = samples.to(device, non_blocking=True)
-
-            if hasattr(model, 'module'):
-                latent, _, _ = model.module.forward_encoder(samples, mask_ratio, reshape_out=False)
-            else:
-                latent, _, _ = model.forward_encoder(samples, mask_ratio, reshape_out=False)
-            # Remove cls token
-            latent = latent[:,1:]
-            
-            latents.append(latent.detach())
-            if return_images:
-                images.append(samples.detach())
-            if len(latents)>=n_batches:
-                break
-    if return_images:
-        return torch.cat(latents), torch.cat(images)
-    else:
-        return torch.cat(latents)
 
 def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metric='cosine', combine='min', use_weights=True, max_pool=False):
     
@@ -178,57 +113,6 @@ def determine_target_features(target_latent):
     
     return avg_feat, weight_feat
 
-def central_indices(tensor_2d, n):
-    """
-    Returns the indices of the central 'n' pixels of a 2D tensor.
-    
-    Parameters:
-    tensor_2d (Tensor): A 2D tensor from which to find central indices.
-    n (int): Number of central pixels to find.
-
-    Returns:
-    Tensor: Indices of the central 'n' pixels.
-    """
-    # Ensure 'n' is a square number to form a square patch of pixels
-    side_length = int(n ** 0.5)
-    if side_length ** 2 != n:
-        raise ValueError("n must be a perfect square to form a square patch of pixels.")
-    
-    # Calculate the center of the tensor
-    center_y, center_x = tensor_2d.shape[0] // 2, tensor_2d.shape[1] // 2
-    
-    # Calculate start and end indices for the slice
-    start_y = center_y - side_length // 2
-    end_y = start_y + side_length
-    start_x = center_x - side_length // 2
-    end_x = start_x + side_length
-    
-    # Create meshgrid of indices and then flatten
-    yy, xx = torch.meshgrid(torch.arange(start_y, end_y), torch.arange(start_x, end_x), indexing="ij")
-    indices = torch.stack((yy.flatten(), xx.flatten()), dim=1)
-    
-    return indices
-
-def select_centre(latent, n_patches):
-    '''
-    Grab the central n_patches from a set of latent features.
-    
-    Parameters:
-    latent (Tensor): A 3D tensor from which to select the centre from (b, number of original patches, n_features)
-    n_patches (int): Number of central patches to find.
-
-    Returns:
-    Tensor: A 3D tensor of the central latent features (b, n_patches, n_features)
-    '''
-    
-    total_n_patches = latent.shape[1]
-    n_patches_per_side = int(total_n_patches**0.5)
-    patch_indices = torch.arange(total_n_patches).reshape((n_patches_per_side, n_patches_per_side))
-    
-    indices = central_indices(patch_indices, n=n_patches)
-    patch_indices = patch_indices[indices[:,0],indices[:,1]]
-    return latent[:,patch_indices]
-
 def weighted_cosine_similarity(target_feats, test_feats, weights, eps=1e-6):
     """
     Compute the weighted cosine similarity between two batches of latent representations.
@@ -294,7 +178,6 @@ def weighted_MAE(target_feats, test_feats, weights):
     weighted_squared_error = squared_error * weights / torch.sum(weights)
     return torch.mean(weighted_squared_error, dim=-1)
 
-
 def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean', use_weights=True, n_central_patches=None, n_top_sims=None):
 
     '''
@@ -350,37 +233,3 @@ def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean',
     elif combine=='max':
         test_similarity = torch.max(test_similarity, dim=1).values
     return test_similarity
-
-def plot_dual_histogram(data1, data2, bins=30, data1_label='Data 1', data2_label='Data 2', title='Dual Histogram', 
-                        x_label='Similarity Score', y_label='Counts', xlim=None):
-    """
-    Plots two sets of data in a single histogram for easy comparison.
-
-    Parameters:
-    data1 (array-like): The first dataset.
-    data2 (array-like): The second dataset.
-    bins (int): Number of bins for the histogram.
-    data1_label (str): Label for the first dataset.
-    data2_label (str): Label for the second dataset.
-    title (str): Title of the plot.
-    """
-
-    if xlim is None:
-        bins = np.linspace(np.min([data1, data2]), np.max([data1, data2]), bins)
-    else:
-        bins = np.linspace(xlim[0], xlim[1], bins)
-    
-    # Plot histograms
-    plt.hist(data1, bins=bins, alpha=0.5, label=data1_label)
-    plt.hist(data2, bins=bins, alpha=0.5, label=data2_label)
-
-    # Add legend and labels
-    plt.legend()
-    plt.title(title, fontsize=16)
-    plt.xlabel(x_label, fontsize=14)
-    plt.ylabel(y_label, fontsize=14)
-    if xlim is not None:
-        plt.xlim(*xlim)
-
-    # Show the plot
-    plt.show()
