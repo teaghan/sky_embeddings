@@ -295,7 +295,7 @@ def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1):
                     current_patch_files.append('None')
 
             # Only add the patch to the list if it has at least min_bands bands
-            if band_count >= min_bands and band_count<5:
+            if band_count >= min_bands:
                 filenames.append(current_patch_files)
 
     if verbose:
