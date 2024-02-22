@@ -36,7 +36,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                              norm_pix_loss=norm_pix_loss,
                              loss_fn=loss_fn,
                              pixel_mean=pixel_mean,
-                             pixel_std=pixel_std)
+                             pixel_std=pixel_std,
+                             device=device)
     elif model_type=='large':
         model = mae_vit_large(embed_dim=embed_dim,
                               img_size=img_size,
@@ -45,7 +46,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                               norm_pix_loss=norm_pix_loss,
                               loss_fn=loss_fn,
                               pixel_mean=pixel_mean,
-                              pixel_std=pixel_std)
+                              pixel_std=pixel_std,
+                              device=device)
     elif model_type=='huge':
         model = mae_vit_huge(embed_dim=embed_dim,
                              img_size=img_size,
@@ -54,7 +56,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                              norm_pix_loss=norm_pix_loss,
                              loss_fn=loss_fn,
                              pixel_mean=pixel_mean,
-                             pixel_std=pixel_std)
+                             pixel_std=pixel_std,
+                             device=device)
     elif model_type=='simmim':
         model = simmim_vit(embed_dim=embed_dim,
                            img_size=img_size,
@@ -64,7 +67,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            simmim=True,
                            loss_fn=loss_fn,
                            pixel_mean=pixel_mean,
-                           pixel_std=pixel_std)
+                           pixel_std=pixel_std,
+                           device=device)
     model.to(device)
 
     # Use multiple GPUs if available
@@ -134,7 +138,7 @@ class MaskedAutoencoderViT(nn.Module):
                  embed_dim=1024, depth=24, num_heads=16,
                  decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
                  mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False, 
-                 simmim=False, loss_fn='mse', pixel_mean=0, pixel_std=1.):
+                 simmim=False, loss_fn='mse', pixel_mean=0, pixel_std=1., device=torch.device('cpu')):
         super().__init__()
 
         self.simmim = simmim
@@ -164,8 +168,7 @@ class MaskedAutoencoderViT(nn.Module):
             tile_size = (img_size)//(patch_size)
             
             # Pre-compute patch_mask_values for the expected image dimensions
-            self.patch_mask_values = self.mask_token.repeat(1, tile_size, tile_size)
-
+            self.patch_mask_values = self.mask_token.repeat(1, tile_size, tile_size).to(device)
             
             # Simple decoder
             self.decoder = nn.Sequential(
