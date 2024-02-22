@@ -46,6 +46,9 @@ def parseArguments():
     parser.add_argument("-bnd", "--bands", 
                         help="List of fits colour bands.", 
                         default="['G','I','R','Y','Z']") 
+    parser.add_argument("-mbnd", "--min_bands", 
+                        help="The minimum number of bands required to include a given patch of sky in the training.", 
+                        type=int, default="5") 
     parser.add_argument("-cpt", "--cutouts_per_tile", 
                         help="Number of random cutouts to create per fits tile.", 
                         type=int, default=2048)
@@ -145,6 +148,7 @@ elif user_input=='o':
 
     config['DATA'] = {'train_data_paths': args.train_data_paths,
                       'bands': args.bands,
+                      'min_bands': args.min_bands,
                       'cutouts_per_tile': args.cutouts_per_tile,
                       'val_data_file': args.val_data_file, 
                       'pos_channel': args.pos_channel}

@@ -93,6 +93,7 @@ def main(args):
         # Might need to decrease num_workers and increase cutouts_per_tile
         dataloader_train =  build_fits_dataloader(eval(config['DATA']['train_data_paths']), 
                                                   bands=eval(config['DATA']['bands']), 
+                                                  min_bands=int(config['DATA']['min_bands']), 
                                                   batch_size=batch_size,
                                                   num_workers=num_workers,
                                                   patch_size=int(config['ARCHITECTURE']['patch_size']), 

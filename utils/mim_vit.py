@@ -159,14 +159,20 @@ class MaskedAutoencoderViT(nn.Module):
         if self.simmim:
             # Trainable pixel values that replace the masked pixels
             self.mask_token = nn.Parameter(torch.zeros((in_chans, patch_size, patch_size)))
+
+            # Pre-compute the tile size based on expected image dimensions
+            tile_size = (img_size)//(patch_size)
+            
+            # Pre-compute patch_mask_values for the expected image dimensions
+            self.patch_mask_values = self.mask_token.repeat(1, tile_size, tile_size)
+
             
             # Simple decoder
-            encoder_stride = (img_size)//(patch_size)
             self.decoder = nn.Sequential(
                 nn.Conv2d(
                     in_channels=embed_dim,
-                    out_channels=encoder_stride ** 2 * in_chans, kernel_size=1),
-                nn.PixelShuffle(encoder_stride),
+                    out_channels=tile_size ** 2 * in_chans, kernel_size=1),
+                nn.PixelShuffle(tile_size),
             )
 
         else:
@@ -284,13 +290,13 @@ class MaskedAutoencoderViT(nn.Module):
             if mask is not None:
                 # Mask input image
                 B, C, H, W = x.shape
-    
-                # Mask values are the same for every patch. Need to repeat these to create 
-                # an array that is the same size as the image
-                tile_size = (H // self.mask_token.shape[1], W // self.mask_token.shape[2])
-                patch_mask_values = self.mask_token.repeat(1, tile_size[0], tile_size[1])
+
+                # Expand the masking values to accommodate the batch size
+                patch_mask_values = self.patch_mask_values.expand(B, -1, -1, -1)
                 
                 # Image is masked where mask==1 and replaced with the values in patch_mask_values
+                # Additionally, replace NaN values with patch_mask_values
+                x = torch.where(torch.isnan(x), patch_mask_values, x)
                 x = x * (1 - mask) + patch_mask_values * mask
         
         # embed patches
@@ -357,32 +363,48 @@ class MaskedAutoencoderViT(nn.Module):
         pred: [N, L, p*p*3]
         mask: [N, L], 0 is keep, 1 is remove, 
         """
+        # Invert nan_mask because we want 1s where the values are NOT NaN (valid for loss calculation)
+        valid_data_mask = ~torch.isnan(imgs)
+        valid_data_mask = valid_data_mask.to(imgs.dtype)
+
+        # Combine the valid data mask with the existing mask to exclude both NaN values and unseen pixels
+        mask = valid_data_mask * mask
+        
         if self.simmim:
             if self.norm_pix_loss:
                 imgs = self.patchify(imgs)
-                mean = imgs.mean(dim=-1, keepdim=True)
-                var = imgs.var(dim=-1, keepdim=True)
+                # Compute mean and variance of patches in target
+                mean, var = patch_mean_and_var(imgs)
                 imgs = (imgs - mean) / (var + 1.e-6)**.5
                 imgs = self.unpatchify(imgs)
-
+            
             if self.loss_fn=='mse':
                 loss = torch.nn.functional.mse_loss(imgs, pred, reduction='none')
             else:
                 loss = torch.nn.functional.l1_loss(imgs, pred, reduction='none')
+
+            # Replace NaN values in loss with 0
+            loss = torch.nan_to_num(loss, nan=0.0)
+            
             loss = (loss * mask).sum() / (mask.sum() + 1e-5)
             
         else:
             target = self.patchify(imgs)
             if self.norm_pix_loss:
-                mean = target.mean(dim=-1, keepdim=True)
-                var = target.var(dim=-1, keepdim=True)
+                #mean = target.mean(dim=-1, keepdim=True)
+                #var = target.var(dim=-1, keepdim=True)
+                # Compute mean and variance of patches in target
+                mean, var = patch_mean_and_var(imgs)
                 target = (target - mean) / (var + 1.e-6)**.5
     
             if self.loss_fn=='mse':
                 loss = torch.nn.functional.mse_loss(target, pred, reduction='none')
             else:
                 loss = torch.nn.functional.l1_loss(target, pred, reduction='none')
-            loss = loss.mean(dim=-1)  # [N, L], mean loss per patch
+            #loss = loss.mean(dim=-1)  # [N, L], mean loss per patch
+
+            # Replace NaN values in loss with 0
+            loss = torch.nan_to_num(loss, nan=0.0)
     
             loss = (loss * mask).sum() / mask.sum()  # mean loss on removed patches
             
@@ -435,6 +457,21 @@ def simmim_vit(**kwargs):
         decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
         mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
+
+def patch_mean_and_var(imgs):
+    # Create a mask of non-NaN values (True where the data is not NaN)
+    non_nan_mask = ~torch.isnan(imgs)
+    
+    # Calculate the mean of non-NaN values
+    mean = torch.where(non_nan_mask, imgs, torch.tensor(0.0, device=imgs.device)).sum(dim=-1, keepdim=True) / non_nan_mask.sum(dim=-1, keepdim=True)
+    
+    # Calculate the variance of non-NaN values
+    # Subtract the mean from only the non-NaN values and square the result.
+    diff_squared = torch.where(non_nan_mask, imgs - mean, torch.tensor(0.0, device=imgs.device)) ** 2
+    # Sum the squared differences, divide by the count of non-NaN values to get the variance.
+    var = diff_squared.sum(dim=-1, keepdim=True) / non_nan_mask.sum(dim=-1, keepdim=True)
+
+    return mean, var
 
 def undo_pixel_norm(original_images, normalized_images, model):
     """

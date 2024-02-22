@@ -4,10 +4,11 @@ import h5py
 import torchvision
 torchvision.disable_beta_transforms_warning()
 from torchvision.transforms import v2
+import os
 import glob
 from astropy.io import fits
 
-def build_fits_dataloader(fits_paths, bands, batch_size, num_workers,
+def build_fits_dataloader(fits_paths, bands, min_bands, batch_size, num_workers,
                           patch_size=8, max_mask_ratio=None, 
                           img_size=64, cutouts_per_tile=1024,
                           augment=False, shuffle=True):
@@ -25,7 +26,7 @@ def build_fits_dataloader(fits_paths, bands, batch_size, num_workers,
     # Build dataset
     dataset = FitsDataset(fits_paths, patch_size=patch_size, 
                           max_mask_ratio=max_mask_ratio,
-                          bands=bands, img_size=img_size, 
+                          bands=bands, min_bands=min_bands, img_size=img_size, 
                           cutouts_per_tile=cutouts_per_tile,
                           batch_size=batch_size, shuffle=shuffle,
                           transform=transforms)
@@ -199,7 +200,7 @@ class H5Dataset(torch.utils.data.Dataset):
             cutout = f['cutouts'][idx]
 
             # Remove any NaN value
-            cutout[np.isnan(cutout)] = 0.
+            #cutout[np.isnan(cutout)] = 0.
 
             # Clip pixel values
             if self.pixel_min is not None:
@@ -226,7 +227,7 @@ class H5Dataset(torch.utils.data.Dataset):
                 # Determine the resolution at these spots
                 ra_res, dec_res = hsc_dud_res(central_ra, central_dec)
 
-        cutout = torch.from_numpy(cutout)
+        cutout = torch.from_numpy(cutout).to(torch.float32)
         # Apply any augmentations, etc.
         if self.transform is not None:
             cutout = self.transform(cutout)
@@ -245,32 +246,116 @@ class H5Dataset(torch.utils.data.Dataset):
 
         return cutout, mask, labels
 
-def find_HSC_bands(fits_paths, bands):
-    '''An HSC specific function that returns a list of file paths with all of the requested bands.'''
+def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1):
+    '''
+    Searches for HSC (Hyper Suprime-Cam) survey FITS files across specified paths and returns a nested list of filenames 
+    that contain at least a minimum number of color bands per sky patch.
+
+    Parameters:
+    - fits_paths (list of str): Paths to search for HSC FITS files.
+    - bands (list of str): The color bands to search for (e.g., ['G', 'R', 'I', 'Z', 'Y']).
+    - min_bands (int, optional): The minimum number of color bands required for a patch to be included. Defaults to 2.
+
+    Returns:
+    - list of lists: A nested list where each sublist contains the file paths for the bands found for a patch. 
+      If a particular color band doesn't exist for a given patch, it is replaced by 'None'. The order of the filenames 
+      in each sublist matches the order of the bands provided.
+
+    The function prints the total number of FITS files found, the number of unique patches, and the number of patches 
+    that meet the criteria of having at least `min_bands` bands.
+    '''
 
     filenames = []
     for fits_path in fits_paths:
         # Look for fits files
         fits_files = sorted(glob.glob(f"{fits_path}/calexp-HSC-*.fits"))
         
-        # Convert '/arc/projects/ots/pdr3_dud/calexp-HSC-I-9707-4%2C0.fits' to 9707-4%2C0.fits
+        # Extract unique patches based on the file naming convention
         unique_patches = list(set(['-'.join(x.split('-')[-2:]) for x in fits_files]))
         unique_patches = sorted(unique_patches)
-        
-        # Make it hashable
-        set_fits_files = set(fits_files)
+
+        if verbose:
+            print(f'Found a total of {len(fits_files)} fits files from {len(unique_patches)} unique patches of the sky...')
     
-        # Sort file names
-        for t in unique_patches:
-            potential_files = [f'{fits_path}/calexp-HSC-{b}-{t}' for b in bands]
-    
-            # `f in set_fits_files` is O(n) if fits_files is a list,
-            # ~O(1) if fits_files is a hash table
-            if (all([f in set_fits_files for f in potential_files])):
-                filenames.append(potential_files)
-    print(f"Found {len(filenames)} patches with the {bands} bands.")
+        # For each unique patch, try to find files for all requested bands
+        for patch in unique_patches:
+            # Initialize list to store file paths for the current patch
+            current_patch_files = []
+            # Counter for the number of available bands in the current patch
+            band_count = 0  
+
+            # Check each band for the current patch
+            for band in bands:
+                potential_file = os.path.join(fits_path, f'calexp-HSC-{band}-{patch}')
+                if potential_file in fits_files:
+                    current_patch_files.append(potential_file)
+                    band_count += 1
+                else:
+                    # Append 'None' if the band file does not exist
+                    current_patch_files.append('None')
+
+            # Only add the patch to the list if it has at least min_bands bands
+            if band_count >= min_bands and band_count<5:
+                filenames.append(current_patch_files)
+
+    if verbose:
+        print(f"Found {len(filenames)} patches with at least {min_bands} of the {bands} bands.")
 
     return filenames
+
+def load_fits_bands(patch_filenames):
+    """
+    Load FITS files from a list of filenames representing different bands of astronomical images.
+    If a file cannot be loaded or is specified as 'None', it is replaced with an array of np.nan values.
+    The function ensures all arrays, whether loaded from files or filled with np.nan, have the same shape,
+    allowing for consistent handling of multi-band astronomical data. The first valid file encountered
+    determines the reference shape for the np.nan arrays.
+
+    Parameters:
+    - patch_filenames (list of str): A list containing the filenames of the FITS files to be loaded.
+      Filenames should be full paths. A filename can be 'None' to indicate a missing file for a band,
+      in which case it will be replaced with an array of np.nan values of the same shape as other bands.
+
+    Returns:
+    - numpy.ndarray: A 3D numpy array where the first dimension corresponds to the different bands
+      (channels), and the remaining dimensions correspond to the spatial dimensions of the images.
+      The array is organized as (C, H, W), where C is the number of channels (bands), H is the height,
+      and W is the width of the images. If any band is missing, its corresponding array will be filled
+      with np.nan values.
+
+    Raises:
+    - Exception: If there are issues opening a file, an error message is printed, and the process continues,
+      replacing the problematic file with an array of np.nan values. The function aims to complete loading
+      as much data as possible, even in the presence of errors.
+    """
+    
+    imgs = []
+    reference_shape = None  # Initially unknown
+
+    for fn in patch_filenames:
+        if fn == 'None':
+            # For now, just append a placeholder (None) for missing files
+            imgs.append(None)
+        else:
+            try:
+                # Attempt to open the FITS file
+                with fits.open(fn, mode='readonly', ignore_missing_simple=True) as hdul:
+                    data = hdul[1].data
+                    if reference_shape is None:
+                        reference_shape = data.shape  # Found our reference shape
+                    imgs.append(data)
+            except Exception as e:
+                # Handle the case where the FITS file cannot be opened
+                print(f"Error opening {fn}: {e}")
+                imgs.append(None)
+
+    # Now, ensure all placeholders are replaced with np.nan arrays of the correct shape
+    for i, item in enumerate(imgs):
+        if item is None:
+            imgs[i] = np.full(reference_shape, np.nan)
+
+    # Organize into (C, H, W) and convert to a single NumPy array
+    return np.stack(imgs)
 
 def random_cutouts(input_array, img_size, n_cutouts):
     """
@@ -334,7 +419,7 @@ class FitsDataset(torch.utils.data.Dataset):
         large-scale astronomical data for deep learning models.
     """
 
-    def __init__(self, fits_paths,  patch_size=8, max_mask_ratio=None, bands=['G','R','I','Z','Y'], 
+    def __init__(self, fits_paths,  patch_size=8, max_mask_ratio=None, bands=['G','R','I','Z','Y'], min_bands=5,
                  img_size=64, cutouts_per_tile=1024, batch_size=64, shuffle=True, 
                  transform=None, pixel_min=-3., pixel_max=None):
         
@@ -348,7 +433,7 @@ class FitsDataset(torch.utils.data.Dataset):
         self.pixel_max = pixel_max
 
         # Find names of patch fits files
-        self.band_filenames = find_HSC_bands(fits_paths, bands)
+        self.band_filenames = find_HSC_bands(fits_paths, bands, min_bands)
 
         if max_mask_ratio is not None:
             num_channels = len(bands)
@@ -369,11 +454,8 @@ class FitsDataset(torch.utils.data.Dataset):
         patch_filenames = self.band_filenames[idx]
         
         # Load all channels of the patch of sky
-        cutouts = []
-        for fn in patch_filenames:
-            cutouts.append(fits.open(fn, mode='readonly', ignore_missing_simple=True)[1].data)
-        # Organize into (C, H, W)
-        cutouts = np.array(cutouts)
+        # Any missing channels will be filled with np.nan
+        cutouts = load_fits_bands(patch_filenames)
 
         # Split into a grid of cutouts based on img_size and overlap
         cutouts = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile)
@@ -384,7 +466,7 @@ class FitsDataset(torch.utils.data.Dataset):
             cutouts = cutouts[permutation]
 
         # Remove any NaN pixel values
-        cutouts[np.isnan(cutouts)] = 0.
+        #cutouts[np.isnan(cutouts)] = 0.
 
         # Clip pixel values
         if self.pixel_min is not None:
@@ -393,7 +475,7 @@ class FitsDataset(torch.utils.data.Dataset):
             cutouts[cutouts>self.pixel_max] = self.pixel_max
 
         # Apply any augmentations
-        cutouts = torch.from_numpy(cutouts)
+        cutouts = torch.from_numpy(cutouts).to(torch.float32)
         if self.transform is not None:
             cutouts = self.transform(cutouts)
 
