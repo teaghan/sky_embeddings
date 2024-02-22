@@ -368,16 +368,18 @@ class MaskedAutoencoderViT(nn.Module):
         """
         # Invert nan_mask because we want 1s where the values are NOT NaN (valid for loss calculation)
         valid_data_mask = ~torch.isnan(imgs)
+        print('A', valid_data_mask.device)
         valid_data_mask = valid_data_mask.to(imgs.dtype)
 
         # Combine the valid data mask with the existing mask to exclude both NaN values and unseen pixels
         mask = valid_data_mask * mask
-        
+        print('B', mask.device)
         if self.simmim:
             if self.norm_pix_loss:
                 imgs = self.patchify(imgs)
                 # Compute mean and variance of patches in target
                 mean, var = patch_mean_and_var(imgs)
+                print('C', mean.device, var.device)
                 imgs = (imgs - mean) / (var + 1.e-6)**.5
                 imgs = self.unpatchify(imgs)
             
@@ -388,6 +390,7 @@ class MaskedAutoencoderViT(nn.Module):
 
             # Replace NaN values in loss with 0
             loss = torch.nan_to_num(loss, nan=0.0)
+            print('D', loss.device)
             
             loss = (loss * mask).sum() / (mask.sum() + 1e-5)
             
