@@ -249,7 +249,8 @@ class H5Dataset(torch.utils.data.Dataset):
 def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1):
     '''
     Searches for HSC (Hyper Suprime-Cam) survey FITS files across specified paths and returns a nested list of filenames 
-    that contain at least a minimum number of color bands per sky patch.
+    that contain at least a minimum number of color bands per sky patch. Optimized to minimize filesystem operations and
+    efficiently organize files by patch and band.
 
     Parameters:
     - fits_paths (list of str): Paths to search for HSC FITS files.
@@ -260,43 +261,30 @@ def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1):
     - list of lists: A nested list where each sublist contains the file paths for the bands found for a patch. 
       If a particular color band doesn't exist for a given patch, it is replaced by 'None'. The order of the filenames 
       in each sublist matches the order of the bands provided.
-
-    The function prints the total number of FITS files found, the number of unique patches, and the number of patches 
-    that meet the criteria of having at least `min_bands` bands.
     '''
-
-    filenames = []
-    for fits_path in fits_paths:
-        # Look for fits files
-        fits_files = sorted(glob.glob(f"{fits_path}/calexp-HSC-*.fits"))
-        
-        # Extract unique patches based on the file naming convention
-        unique_patches = list(set(['-'.join(x.split('-')[-2:]) for x in fits_files]))
-        unique_patches = sorted(unique_patches)
-
-        if verbose:
-            print(f'Found a total of {len(fits_files)} fits files from {len(unique_patches)} unique patches of the sky...')
     
-        # For each unique patch, try to find files for all requested bands
-        for patch in unique_patches:
-            # Initialize list to store file paths for the current patch
-            current_patch_files = []
-            # Counter for the number of available bands in the current patch
-            band_count = 0  
+    patch_files = {}  # Dictionary to store available bands for each patch
 
-            # Check each band for the current patch
-            for band in bands:
-                potential_file = os.path.join(fits_path, f'calexp-HSC-{band}-{patch}')
-                if potential_file in fits_files:
-                    current_patch_files.append(potential_file)
-                    band_count += 1
-                else:
-                    # Append 'None' if the band file does not exist
-                    current_patch_files.append('None')
+    for fits_path in fits_paths:
+        fits_files = glob.glob(f"{fits_path}/calexp-HSC-*.fits")
 
-            # Only add the patch to the list if it has at least min_bands bands
-            if band_count >= min_bands:
-                filenames.append(current_patch_files)
+        for file_path in fits_files:
+            # Extract band and patch identifier from the filename
+            parts = file_path.split('-')
+            band = parts[-3]
+            patch = '-'.join(parts[-2:])
+            
+            if band in bands:
+                if patch not in patch_files:
+                    patch_files[patch] = {b: 'None' for b in bands}
+                patch_files[patch][band] = file_path
+
+    # Filter patches by the minimum number of available bands and organize the filenames
+    filenames = []
+    for patch, available_bands in patch_files.items():
+        current_patch_files = [available_bands[band] for band in bands]
+        if len([f for f in current_patch_files if f != 'None']) >= min_bands:
+            filenames.append(current_patch_files)
 
     if verbose:
         print(f"Found {len(filenames)} patches with at least {min_bands} of the {bands} bands.")
