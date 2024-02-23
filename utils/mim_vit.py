@@ -375,15 +375,15 @@ class MaskedAutoencoderViT(nn.Module):
                 imgs = self.patchify(imgs)
                 # Compute mean and variance of patches in target
                 #mean, var = patch_mean_and_var(imgs)
-                mean = target.mean(dim=-1, keepdim=True)
-                var = target.var(dim=-1, keepdim=True)
+                mean = imgs.mean(dim=-1, keepdim=True)
+                var = imgs.var(dim=-1, keepdim=True)
                 imgs = (imgs - mean) / (var + 1.e-6)**.5
                 imgs = self.unpatchify(imgs)
         else:
             imgs = self.patchify(imgs)
             if self.norm_pix_loss:
-                #mean = target.mean(dim=-1, keepdim=True)
-                #var = target.var(dim=-1, keepdim=True)
+                #mean = imgs.mean(dim=-1, keepdim=True)
+                #var = imgs.var(dim=-1, keepdim=True)
                 # Compute mean and variance of patches in target
                 mean, var = patch_mean_and_var(imgs)
                 imgs = (imgs - mean) / (var + 1.e-6)**.5
