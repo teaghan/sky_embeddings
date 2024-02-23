@@ -300,6 +300,7 @@ class MaskedAutoencoderViT(nn.Module):
                 # Image is masked where mask==1 and replaced with the values in patch_mask_values
                 # Additionally, replace NaN values with patch_mask_values
                 x = torch.where(torch.isnan(x), patch_mask_values, x)
+                print('AA', patch_mask_values.device, x.device)
                 x = x * (1 - mask) + patch_mask_values * mask
         
         # embed patches
