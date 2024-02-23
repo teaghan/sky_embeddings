@@ -164,7 +164,7 @@ class MaskedAutoencoderViT(nn.Module):
             self.tile_size = (img_size)//(patch_size)
             
             # Pre-compute patch_mask_values for the expected image dimensions
-            self.patch_mask_values = self.mask_token.repeat(1, self.tile_size, self.tile_size)
+            #self.patch_mask_values = self.mask_token.repeat(1, self.tile_size, self.tile_size)
             
             # Simple decoder
             self.decoder = nn.Sequential(
@@ -291,8 +291,8 @@ class MaskedAutoencoderViT(nn.Module):
                 B, C, H, W = x.shape
 
                 # Expand the masking values to match the size of the batch of images
-                #patch_mask_values = self.mask_token.repeat(1, self.tile_size, self.tile_size)
-                patch_mask_values = self.patch_mask_values.expand(B, -1, -1, -1).to(x.device)
+                patch_mask_values = self.mask_token.repeat(1, self.tile_size, self.tile_size)
+                patch_mask_values = patch_mask_values.expand(B, -1, -1, -1)
                 
                 # Image is masked where mask==1 and replaced with the values in patch_mask_values
                 # Additionally, replace NaN values with patch_mask_values
