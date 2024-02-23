@@ -296,7 +296,7 @@ class MaskedAutoencoderViT(nn.Module):
                 
                 # Image is masked where mask==1 and replaced with the values in patch_mask_values
                 # Additionally, replace NaN values with patch_mask_values
-                #x = torch.where(torch.isnan(x), patch_mask_values, x)
+                x = torch.where(torch.isnan(x), patch_mask_values, x)
                 x = x * (1 - mask) + patch_mask_values * mask
         
         # embed patches
@@ -364,11 +364,11 @@ class MaskedAutoencoderViT(nn.Module):
         mask: [N, L], 0 is keep, 1 is remove, 
         """
         # Invert nan_mask because we want 1s where the values are NOT NaN (valid for loss calculation)
-        #valid_data_mask = ~torch.isnan(imgs)
-        #valid_data_mask = valid_data_mask.to(imgs.dtype)
+        valid_data_mask = ~torch.isnan(imgs)
+        valid_data_mask = valid_data_mask.to(imgs.dtype)
 
         # Combine the valid data mask with the existing mask to exclude both NaN values and unseen pixels
-        #mask = valid_data_mask * mask
+        mask = valid_data_mask * mask
         
         if self.simmim:
             if self.norm_pix_loss:
