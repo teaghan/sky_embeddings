@@ -119,7 +119,7 @@ def main(args):
                   mask_ratio,
                   losses, cur_iter, 
                   int(float(config['TRAINING']['total_batch_iters'])),
-                  args.verbose_iters, args.cp_time, model_filename, fig_dir)
+                  args.verbose_iters, args.cp_time, model_filename, fig_dir, str2bool(config['TRAINING']['linear_probe_eval']))
 
 def get_train_samples(dataloader, train_nested_batches):
     '''Accomodates both dataloaders.'''
@@ -134,7 +134,7 @@ def get_train_samples(dataloader, train_nested_batches):
             yield samples, mask
 
 def train_network(model, dataloader_train, dataloader_val, train_nested_batches, optimizer, lr_scheduler, device, mask_ratio, 
-                  losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir):
+                  losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir, linear_probe_eval):
     print('Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size))
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
           (verbose_iters, cp_time))
@@ -180,8 +180,9 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                         if i>=100:
                             break
 
-                # Run Linear Probing tests
-                linear_probe(model, losses_cp, device, dataloader_val)
+                if linear_probe_eval:
+                    # Run Linear Probing tests
+                    linear_probe(model, losses_cp, device, dataloader_val)
                 
                 # Calculate averages
                 for k in losses_cp.keys():
