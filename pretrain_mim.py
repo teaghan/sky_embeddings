@@ -142,6 +142,7 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
     # Train the neural networks
     losses_cp = defaultdict(list)
     cp_start_time = time.time()
+    time1 = time.time()
     while cur_iter < (total_batch_iters):
 
         # Iterate through training dataset
@@ -160,6 +161,9 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                             
             # Evaluate validation set and display losses
             if cur_iter % verbose_iters == 0:
+
+                time_el = time.time()-time1
+                print(f'{time_el:0.1f} seconds elapsed.')
 
                 with torch.no_grad():
                     for i, (samples, masks, _) in enumerate(dataloader_val):
