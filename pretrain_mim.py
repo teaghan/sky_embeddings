@@ -161,6 +161,7 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
             if cur_iter % 100 == 0:
                 time_el = time.time()-time1
                 print(f'{time_el:0.1f} seconds elapsed.')
+                time1 = time.time()
             # Evaluate validation set and display losses
             if cur_iter % verbose_iters == 0:
 
