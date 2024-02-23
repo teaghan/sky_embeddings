@@ -294,7 +294,7 @@ class MaskedAutoencoderViT(nn.Module):
 
                 # Expand the masking values to match the size of the batch of images
                 #patch_mask_values = self.mask_token.repeat(1, self.tile_size, self.tile_size)
-                patch_mask_values = self.patch_mask_values.expand(B, -1, -1, -1)
+                patch_mask_values = self.patch_mask_values.expand(B, -1, -1, -1).to(x.device)
                 
                 # Image is masked where mask==1 and replaced with the values in patch_mask_values
                 # Additionally, replace NaN values with patch_mask_values
