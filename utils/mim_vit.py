@@ -478,6 +478,7 @@ def patch_mean_and_var(imgs):
     # Sum the squared differences, divide by the count of non-NaN values to get the variance.
     var = diff_squared.sum(dim=-1, keepdim=True) / non_nan_mask.sum(dim=-1, keepdim=True)
 
+    print('CCC', non_nan_mask.device, mean.device, diff_squared.device, var.device)
     return mean, var
 
 def undo_pixel_norm(original_images, normalized_images, model):
