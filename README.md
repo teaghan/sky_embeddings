@@ -6,9 +6,9 @@ Welcome to the Sky Embeddings repository, where we leverage self-supervised lear
 
 This repository hosts code and methodologies for applying Masked Autoencoders (MAEs) to astronomical images, focusing on producing high-quality embeddings that capture the rich, underlying structures of the universe.
 
-### Using Masked Autoencoders
+### Related Work on Masked Image Modelling
 
-We employ the [MAE architecture developed by Facebook AI](https://github.com/facebookresearch/mae) as our primary machine learning framework. This allows us to create meaningful embeddings from partial observations of the sky.
+We combined the [MAE code developed by Facebook AI](https://github.com/facebookresearch/mae) and the [SimMIM Framework for Masked Image Modeling](https://github.com/microsoft/SimMIM) as our primary machine learning framework. This allows us to create meaningful embeddings from partial observations of the sky.
 
 ### Dependencies
 
@@ -17,6 +17,7 @@ Ensure you have the following installed:
 - Python 3.11.5
 - PyTorch: `pip install torch==2.0.1`
 - h5py: `pip install h5py`
+- Scikit-learn `pip install scikit-learn`
 
 ## Dataset: Hyper Suprime-Cam (HSC) - Subaru Telescope
 
@@ -37,15 +38,15 @@ You can train the network using one of the following methods:
 
 ### Option 1: Local Training
 
-1. Set model architecture and parameters using a configuration file in [the config directory](./configs). Duplicate the [original configuration file](./configs/mae_1.ini) and modify as needed.
-2. To train a model with a new config file named `mae_2.ini`, use `python train_mae.py mae_2 -v 5000 -ct 10.00`, which will train your model displaying the progress every 5000 batch iterations and the model would be saved every 10 minutes. The script will also continue training from the last save point.
+1. Set model architecture and parameters using a configuration file in [the config directory](./configs). Duplicate the [original configuration file](./configs/mim_1.ini) and modify as needed.
+2. To train a model with a new config file named `mim_2.ini`, use `python train_mae.py mim_2 -v 5000 -ct 10.00`, which will train your model displaying the progress every 5000 batch iterations and the model would be saved every 10 minutes. The script will also continue training from the last save point.
 
 ### Option 2: Compute Canada Cluster
 
 For those with access to Compute Canada:
 
 1. Modify the [load modules file](./cc/module_loads.txt) to load the necessary environment.
-2. To launch training with a modified batch size or other parameters, use `python cc/launch_mae.py mae_2 -bs 32`. This script automatically creates a new configuration and initiates multiple training jobs. You can checkout the other parameters that can be changed using the command `python cc/launch_mae.py -h`.
+2. To launch training with a modified batch size or other parameters, use `python cc/launch_pretraining.py mim_2 -bs 32`. This script automatically creates a new configuration and initiates multiple training jobs. You can checkout the other parameters that can be changed using the command `python cc/launch_pretraining.py -h`.
 
 ## Analysis Notebooks
 
