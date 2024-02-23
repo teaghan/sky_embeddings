@@ -61,7 +61,7 @@ def parseArguments():
                         type=str, default='lp')
     parser.add_argument("-pt", "--pretained_mae", 
                         help="Name of pretrained MAE model (or 'None' for fresh weights).", 
-                        type=str, default='sim_22')
+                        type=str, default='mim_1')
     parser.add_argument("-bs", "--batch_size", 
                         help="Training batchsize.", 
                         type=int, default=128)
@@ -85,7 +85,7 @@ def parseArguments():
                         type=str, default='True')
     
     parser.add_argument("-ims", "--img_size", 
-                        help="Number of rows and columns in each image sample (must be less than or equal to the img_size for the MAE).", 
+                        help="Number of rows and columns in each image sample (must be less than or equal to the img_size used in the pretraining).", 
                         type=int, default=64)
     parser.add_argument("-gp", "--global_pool", 
                         help="Global pooling method for model head (either 'token', 'avg', or 'map').", 

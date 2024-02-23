@@ -244,13 +244,16 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             if mask is not None:
                 # Mask input image
                 B, C, H, W = x.shape
-    
-                # Mask values are the same for every patch. Need to repeat these to create 
-                # an array that is the same size as the image
+
+                # Compute the tile size based on expected image dimensions
                 tile_size = (H // self.mask_token.shape[1], W // self.mask_token.shape[2])
+                # Expand the masking values to match the size of the batch of images
                 patch_mask_values = self.mask_token.repeat(1, tile_size[0], tile_size[1])
+                patch_mask_values = patch_mask_values.expand(B, -1, -1, -1)
                 
                 # Image is masked where mask==1 and replaced with the values in patch_mask_values
+                # Additionally, replace NaN values with patch_mask_values
+                x = torch.where(torch.isnan(x), patch_mask_values, x)
                 x = x * (1 - mask) + patch_mask_values * mask
         
         x = self.norm_inputs(x)
