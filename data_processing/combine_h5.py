@@ -4,8 +4,8 @@ import numpy as np
 import h5py
 
 data_dir = '/arc/projects/unions/HSC_h5/'
-out_path = os.path.join(data_dir, 'HSC_stars_GRIZY_64.h5')
-h5_paths = glob.glob(os.path.join(data_dir, 'HSC_stars_GRIZY_64_*_to_*.h5'))
+out_path = os.path.join(data_dir, 'HSC_zspec_GRIZY_64.h5')
+h5_paths = glob.glob(os.path.join(data_dir, 'HSC_zspec_GRIZY_64_*_to_*.h5'))
 
 batch_size = 2048
 
@@ -20,8 +20,8 @@ with h5py.File(out_path, 'w') as f_out:
     for i, fn in enumerate(h5_paths):
         with h5py.File(fn, 'r') as f_in: 
             for k in f_in.keys():
-                if 'zspec' in k:
-                    continue
+                #if 'zspec' in k:
+                #    continue
                 
                 if i==0:
                     # Create the same datasets as in file

@@ -45,9 +45,9 @@ def create_h5_dataset(fits_path, bands, img_size, out_dir, out_filename, scratch
             # Find ra and decs that are within the path
             p.match_catalogue(labels)
         # Grab cutouts
-        cutouts = get_cutouts_from_patch(p)
+        cutouts = get_cutouts_from_patch(p, collect_var=True)
         if len(cutouts)>0:
-            cutouts_to_hdf5(tmp_dir, cutouts)
+            cutouts_to_hdf5(tmp_dir, cutouts, collect_var=True)
 
         if (i+1)%100==0:
             print(f'{i+1} patches complete...')
@@ -128,7 +128,7 @@ out_filename = 'HSC_unkown_GRIZY_64.h5'
 labels_path = '../data/unkown.csv'
 create_h5_dataset(fits_path, bands, img_size, out_dir, out_filename, labels_path=labels_path,
                   patch_strategy='all', n_patches=-1)
-'''
+
 
 batch_size = 40
 labels_path = '../data/stars.csv'
@@ -136,6 +136,15 @@ for i in range(0, 1477, batch_size):
     low = i
     high = i+batch_size
     out_filename = f'HSC_stars_GRIZY_64_{low}_to_{high}.h5'
+    create_h5_dataset(fits_path, bands, img_size, out_dir, out_filename, labels_path=labels_path,
+                      patch_strategy='n_to_n', patch_low_bound=low, patch_high_bound=high)
+'''
+batch_size = 40
+labels_path = '../data/zspec.csv'
+for i in range(0, 1477, batch_size):
+    low = i
+    high = i+batch_size
+    out_filename = f'HSC_zspec_GRIZY_64_{low}_to_{high}.h5'
     create_h5_dataset(fits_path, bands, img_size, out_dir, out_filename, labels_path=labels_path,
                       patch_strategy='n_to_n', patch_low_bound=low, patch_high_bound=high)
 '''

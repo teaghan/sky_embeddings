@@ -109,8 +109,9 @@ class Patch:
         
         # Null zspec column for now
         zspecs = np.zeros(len(ras), dtype='i')
+        zspec_err = np.zeros(len(ras), dtype='i')
 
-        df = pd.DataFrame({'ra':ras, 'dec': decs, 'zspec': zspecs})
+        df = pd.DataFrame({'ra':ras, 'dec': decs, 'zspec': zspecs, 'zspec_err':zspec_err})
 
         # self.matches isn't quite an appropriate name anymore
         self.matches = df
@@ -287,7 +288,7 @@ class Cutout:
     def __init__(self):
         pass
 
-def get_cutouts_from_patch(patch, size=64):
+def get_cutouts_from_patch(patch, size=64, collect_var=False):
     # Array to hold cutouts for frame
     cutouts = []
 
@@ -296,22 +297,29 @@ def get_cutouts_from_patch(patch, size=64):
     # With self-supervision we might not have labels
     if 'zspec' in patch.matches.columns:
         # For each coordinate match falling within the frame
-        for ra, dec, zspec, j in zip(patch.matches.ra, patch.matches.dec, patch.matches.zspec, range(len(patch.matches))):
+        for ra, dec, zspec, zspec_err, j in zip(patch.matches.ra, patch.matches.dec, patch.matches.zspec, patch.matches.zspec_err, range(len(patch.matches))):
             c = SkyCoord(ra*u.deg, dec*u.deg)
 
             cutout = Cutout()
             cutout.data = {}
+            cutout.var_data = {}                
             for band, hdulist in patch.loaded_files.items():
                 x, y = astropy.wcs.utils.skycoord_to_pixel(c, w)
 
                 data = hdulist[1].data
-
                 c_data = np.copy(Cutout2D(data,(x,y), (size, size)).data)
                 if c_data.shape != (size, size):
                     c_data = np.copy(Cutout2D(data,(int(x),int(y)), (size, size)).data)
                 cutout.data[band] = c_data
 
-            cutout.meta = {'ra': ra, 'dec': dec, 'zspec': zspec}
+                if collect_var:
+                    var_data = hdulist[3].data
+                    v_data = np.copy(Cutout2D(var_data,(x,y), (size, size)).data)
+                    if v_data.shape != (size, size):
+                        v_data = np.copy(Cutout2D(var_data,(int(x),int(y)), (size, size)).data)
+                    cutout.var_data[band] = v_data
+
+            cutout.meta = {'ra': ra, 'dec': dec, 'zspec': zspec, 'zspec_err':zspec_err,}
             cutouts.append(cutout)
     # else:
     #     for ra, dec, j in zip(matches.ra, matches.dec, range(len(matches))):
@@ -345,13 +353,13 @@ def get_cutouts_from_file(labels, fits_file, size=64):
         
         # With self-supervision we might not have labels
         if 'zspec' in matches.columns:
-            for ra, dec, zspec, j in zip(matches.ra, matches.dec, matches.zspec, range(len(matches))):
+            for ra, dec, zspec, zspec_err, j in zip(matches.ra, matches.dec, matches.zspec, matches.zspec_err, range(len(matches))):
                 c = SkyCoord(ra*u.deg, dec*u.deg)
                 x, y = astropy.wcs.utils.skycoord_to_pixel(c, w)
                 # print(ra,dec,x,y)
                 img_cut[j] = Cutout2D(data,(x,y), (size, size)).data
 
-                met_cut.append({'ra': ra, 'dec': dec, 'zspec': zspec, 'first_parent_file':fits_file})
+                met_cut.append({'ra': ra, 'dec': dec, 'zspec': zspec, 'zspec_err':zspec_err, 'first_parent_file':fits_file})
         else:
             for ra, dec, j in zip(matches.ra, matches.dec, range(len(matches))):
                 c = SkyCoord(ra*u.deg, dec*u.deg)
@@ -638,7 +646,7 @@ def _i_to_indices_modulo(i, **kwargs):
     return i//kwargs['cutouts_per_file'], i % kwargs['cutouts_per_file']
 
 
-def cutouts_to_hdf5(hdf5_dir, cutout_list):
+def cutouts_to_hdf5(hdf5_dir, cutout_list, collect_var=False):
     # cutout.meta = {'ra': 352.85712, 'dec': -0.5041202, 'zspec': 0.6624044179916382}
     # cutout.data = {'G': array(shape=(64,64)), 'R':...}
 
@@ -657,19 +665,28 @@ def cutouts_to_hdf5(hdf5_dir, cutout_list):
     ra_dset = f.create_dataset("ra", (len(cutout_list),), dtype='f')
     dec_dset = f.create_dataset("dec", (len(cutout_list),), dtype='f')
     zspec_dset = f.create_dataset("zspec", (len(cutout_list),), dtype='f')
-
+    zspecerr_dset = f.create_dataset("zspec_err", (len(cutout_list),), dtype='f')
+    if collect_var:
+        v_dset = f.create_dataset("cutout variance", (len(cutout_list),num_bands,size,size), dtype='f')
 
     for i, c in enumerate(cutout_list):
         # Add data
         data = c.data # {'G': array, 'R': array...}
-        sorted_keys = sorted(list(data.keys()))
+        sorted_keys = sorted(list(data.keys()))#list(data.keys())#
+        print(sorted_keys)
         for j, key in enumerate(sorted_keys):
             c_dset[i,j,:,:] = data[key]
+            
+        if collect_var:
+            data = c.var_data
+            for j, key in enumerate(sorted_keys):
+                v_dset[i,j,:,:] = data[key]
 
         # Add meta
         ra_dset[i] = c.meta['ra']
         dec_dset[i] = c.meta['dec']
         zspec_dset[i] = c.meta['zspec']
+        zspecerr_dset[i] = c.meta['zspec_err']
 
     f.close()
 
