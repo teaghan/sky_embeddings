@@ -294,14 +294,13 @@ class MaskedAutoencoderViT(nn.Module):
                 # Mask input image
                 B, C, H, W = x.shape
 
-                # Expand the masking values to accommodate the batch size
+                # Expand the masking values to match the size of the batch of images
                 patch_mask_values = self.mask_token.repeat(1, self.tile_size, self.tile_size)
                 patch_mask_values = patch_mask_values.expand(B, -1, -1, -1)
                 
                 # Image is masked where mask==1 and replaced with the values in patch_mask_values
                 # Additionally, replace NaN values with patch_mask_values
                 x = torch.where(torch.isnan(x), patch_mask_values, x)
-                print('AA', patch_mask_values.device, x.device)
                 x = x * (1 - mask) + patch_mask_values * mask
         
         # embed patches
@@ -370,51 +369,37 @@ class MaskedAutoencoderViT(nn.Module):
         """
         # Invert nan_mask because we want 1s where the values are NOT NaN (valid for loss calculation)
         valid_data_mask = ~torch.isnan(imgs)
-        print('A', valid_data_mask.device)
         valid_data_mask = valid_data_mask.to(imgs.dtype)
 
         # Combine the valid data mask with the existing mask to exclude both NaN values and unseen pixels
         mask = valid_data_mask * mask
-        print('B', mask.device)
+        
         if self.simmim:
             if self.norm_pix_loss:
                 imgs = self.patchify(imgs)
                 # Compute mean and variance of patches in target
                 mean, var = patch_mean_and_var(imgs)
-                print('C', mean.device, var.device)
                 imgs = (imgs - mean) / (var + 1.e-6)**.5
                 imgs = self.unpatchify(imgs)
-            
-            if self.loss_fn=='mse':
-                loss = torch.nn.functional.mse_loss(imgs, pred, reduction='none')
-            else:
-                loss = torch.nn.functional.l1_loss(imgs, pred, reduction='none')
-
-            # Replace NaN values in loss with 0
-            loss = torch.nan_to_num(loss, nan=0.0)
-            print('D', loss.device)
-            
-            loss = (loss * mask).sum() / (mask.sum() + 1e-5)
-            
         else:
-            target = self.patchify(imgs)
+            imgs = self.patchify(imgs)
             if self.norm_pix_loss:
                 #mean = target.mean(dim=-1, keepdim=True)
                 #var = target.var(dim=-1, keepdim=True)
                 # Compute mean and variance of patches in target
                 mean, var = patch_mean_and_var(imgs)
-                target = (target - mean) / (var + 1.e-6)**.5
+                imgs = (imgs - mean) / (var + 1.e-6)**.5
     
-            if self.loss_fn=='mse':
-                loss = torch.nn.functional.mse_loss(target, pred, reduction='none')
-            else:
-                loss = torch.nn.functional.l1_loss(target, pred, reduction='none')
-            #loss = loss.mean(dim=-1)  # [N, L], mean loss per patch
+        if self.loss_fn=='mse':
+            loss = torch.nn.functional.mse_loss(imgs, pred, reduction='none')
+        else:
+            loss = torch.nn.functional.l1_loss(imgs, pred, reduction='none')
 
-            # Replace NaN values in loss with 0
-            loss = torch.nan_to_num(loss, nan=0.0)
-    
-            loss = (loss * mask).sum() / mask.sum()  # mean loss on removed patches
+        # Replace NaN values in loss with 0
+        loss = torch.nan_to_num(loss, nan=0.0)
+        
+        # Only compute loss on masked patches
+        loss = (loss * mask).sum() / (mask.sum() + 1e-5)
             
         return loss
 
@@ -479,7 +464,6 @@ def patch_mean_and_var(imgs):
     # Sum the squared differences, divide by the count of non-NaN values to get the variance.
     var = diff_squared.sum(dim=-1, keepdim=True) / non_nan_mask.sum(dim=-1, keepdim=True)
 
-    print('CCC', non_nan_mask.device, mean.device, diff_squared.device, var.device)
     return mean, var
 
 def undo_pixel_norm(original_images, normalized_images, model):
