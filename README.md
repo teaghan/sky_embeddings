@@ -50,10 +50,7 @@ For those with access to Compute Canada:
 
 ## Analysis Notebooks
 
-Explore the following Jupyter notebooks for analysis:
-
-1. [Test Notebook](./test_mae.ipynb): Evaluate the trained MAE's performance.
-2. [Similarity Search Notebook](./latent_similarity.ipynb): Experiment with similarity searches using embeddings against known object classes.
+Analysis notebooks still to come.
 
 ### Contribution and Support
 
