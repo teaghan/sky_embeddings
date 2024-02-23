@@ -165,17 +165,17 @@ class MaskedAutoencoderViT(nn.Module):
             self.mask_token = nn.Parameter(torch.zeros((in_chans, patch_size, patch_size)))
 
             # Pre-compute the tile size based on expected image dimensions
-            tile_size = (img_size)//(patch_size)
+            self.tile_size = (img_size)//(patch_size)
             
             # Pre-compute patch_mask_values for the expected image dimensions
-            self.patch_mask_values = self.mask_token.repeat(1, tile_size, tile_size).to(device)
+            #self.patch_mask_values = self.mask_token.repeat(1, tile_size, tile_size).to(device)
             
             # Simple decoder
             self.decoder = nn.Sequential(
                 nn.Conv2d(
                     in_channels=embed_dim,
-                    out_channels=tile_size ** 2 * in_chans, kernel_size=1),
-                nn.PixelShuffle(tile_size),
+                    out_channels=self.tile_size ** 2 * in_chans, kernel_size=1),
+                nn.PixelShuffle(self.tile_size),
             )
 
         else:
@@ -295,7 +295,8 @@ class MaskedAutoencoderViT(nn.Module):
                 B, C, H, W = x.shape
 
                 # Expand the masking values to accommodate the batch size
-                patch_mask_values = self.patch_mask_values.expand(B, -1, -1, -1)
+                patch_mask_values = self.mask_token.repeat(1, self.tile_size, self.tile_size)
+                patch_mask_values = patch_mask_values.expand(B, -1, -1, -1)
                 
                 # Image is masked where mask==1 and replaced with the values in patch_mask_values
                 # Additionally, replace NaN values with patch_mask_values
