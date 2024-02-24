@@ -205,11 +205,14 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                 print('\t\tTotal Loss: %0.3f'% (losses['train_loss'][-1]))
                 print('\tValidation Dataset')
                 print('\t\tTotal Loss: %0.3f'% (losses['val_loss'][-1]))
-                print('Linear Probing Results:')
-                print('\tTraining Dataset')
-                print('\t\tAccuracy: %0.3f, R2: %0.3f'% (losses['train_lp_acc'][-1], losses['train_lp_r2'][-1]))
-                print('\tValidation Dataset')
-                print('\t\tAccuracy: %0.3f, R2: %0.3f'% (losses['val_lp_acc'][-1], losses['val_lp_r2'][-1]))
+                if lp_class_data_file or lp_regress_data_file:
+                    print('Linear Probing Results:')
+                    if lp_class_data_file:
+                        print('\tClassification Accuracy:')
+                        print('\t\tTraining: %0.3f, Validation: %0.3f'% (losses['train_lp_acc'][-1], losses['val_lp_acc'][-1]))
+                    if lp_regress_data_file:
+                        print('\tRegression R2')
+                        print('\t\tTraining: %0.3f, Validation: %0.3f'% (losses['train_lp_r2'][-1], losses['val_lp_r2'][-1]))
 
                 # Reset checkpoint loss dictionary
                 losses_cp = defaultdict(list)
