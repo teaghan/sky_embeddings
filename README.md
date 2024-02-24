@@ -54,7 +54,9 @@ For those with access to Compute Canada:
 
 ### Evaluation
 
-During training, several types of figures will be created to track the progress. The [evaluation metrics will be plotted](./figures/mim_1_progress.png), which includes the loss values for the training and validation data. If `linear_probe_eval` is set to `True` in the training configuration, this plot will also include the results of a simple linear probing technique, which only takes a couple seconds to train. This allows us to track how effectively our embeddings can be used to classify (stars, qsos, and galaxies) and predict redshift of galaxies. Both linear probing models are trained on only 4.8k images and validated using 1.2k images. **Note:** This evaluation is currently hardcoded to be specific to some HSC datasets that I created, but it will be made more adaptable in the future.
+During training, several types of figures will be created to track the progress. 
+
+The [evaluation metrics will be plotted](./figures/mim_1_progress.png), which includes the loss values for the training and validation data. If `lp_class_data_file` and/or `lp_regress_data_file` are provided in the training configuration, this plot will also include the results of a simple linear probing technique, which only takes a couple seconds to train. This allows us to track how effectively our embeddings can be used to classify (stars, qsos, and galaxies) and predict redshift of galaxies. Both linear probing models are trained on only 4.8k images and validated using 1.2k images.
 
 Additionally, some of the masked image modelling results will be plotted throughout training, similar to [this one](./figures/mim_1_1000000iters.png).
 

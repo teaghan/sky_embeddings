@@ -227,12 +227,12 @@ with open(script_fn, 'w') as f:
     f.write('# Copy files to slurm directory\n')
     if train_data_file is not None:
         f.write('cp %s $SLURM_TMPDIR\n' % (os.path.join(data_dir, train_data_file)))
-    f.write('cp %s $SLURM_TMPDIR\n\n' % (os.path.join(data_dir, val_data_file)))
+    f.write('cp %s $SLURM_TMPDIR\n' % (os.path.join(data_dir, val_data_file)))
     if lp_class_data_file is not None:
         f.write('cp %s $SLURM_TMPDIR\n' % (os.path.join(data_dir, lp_class_data_file)))
     if lp_regress_data_file is not None:
         f.write('cp %s $SLURM_TMPDIR\n' % (os.path.join(data_dir, lp_regress_data_file)))
-    f.write('# Run MAE training\n')
+    f.write('\n# Run MAE training\n')
     f.write('python %s %s -v %i -ct %0.2f -dd $SLURM_TMPDIR/\n' % (training_script, 
                                                                    args.model_name,
                                                                    args.verbose_iters, 
