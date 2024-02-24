@@ -66,7 +66,7 @@ def main(args):
         batch_size = int(config['TRAINING']['batch_size'])
 
     # Masking stuff
-    if config['ARCHITECTURE']['model_type']=='simmim':
+    if 'mim' in config['ARCHITECTURE']['model_type']:
         mask_ratio = None
         max_mask_ratio = float(config['TRAINING']['max_mask_ratio'])
     else:
