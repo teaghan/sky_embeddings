@@ -17,8 +17,9 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
 
     num_ax = 1
     if 'train_lp_acc' in losses.keys():
-        if len(losses['train_lp_acc'])==len(losses['batch_iters']):
-            num_ax += 2
+        num_ax += 1
+    if 'train_lp_r2' in losses.keys():
+        num_ax += 1
         
     fig = plt.figure(figsize=(9,3*(num_ax)))
     
@@ -27,13 +28,16 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
     linestyles = ['-', '--', '-.', ':']
 
     ax1 = plt.subplot(gs[0])
-    
     axs = [ax1]
+    cur_ax = 0
     if 'train_lp_acc' in losses.keys():
-        if len(losses['train_lp_acc'])==len(losses['batch_iters']):
-            ax2 = plt.subplot(gs[1])
-            ax3 = plt.subplot(gs[2])
-            axs = [ax1, ax2, ax3]
+        cur_ax +=1
+        ax2 = plt.subplot(gs[cur_ax])
+        axs.append(ax2)
+    if 'train_lp_r2' in losses.keys():
+        cur_ax +=1
+        ax3 = plt.subplot(gs[cur_ax])
+        axs.append(ax3)
     
     ax1.set_title('Objective Function', fontsize=fontsize)
     ax1.plot(losses['batch_iters'], losses['train_loss'],
@@ -44,20 +48,19 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
         ax1.set_ylabel('Loss',fontsize=fontsize)
 
     if 'train_lp_acc' in losses.keys():
-        if len(losses['train_lp_acc'])==len(losses['batch_iters']):
-            ax2.set_title('Linear Probe Classification', fontsize=fontsize)
-            ax2.plot(losses['batch_iters'], losses['train_lp_acc'],
-                         label=r'Train', c='k')
-            ax2.plot(losses['batch_iters'], losses['val_lp_acc'],
-                             label=r'Val', c='r')
-            ax2.set_ylabel('Accuracy',fontsize=fontsize)
-    
-            ax3.set_title('Linear Probe Regression', fontsize=fontsize)
-            ax3.plot(losses['batch_iters'], losses['train_lp_r2'],
-                         label=r'Train', c='k')
-            ax3.plot(losses['batch_iters'], losses['val_lp_r2'],
-                             label=r'Val', c='r')
-            ax3.set_ylabel(r'$R^2$',fontsize=fontsize)
+        ax2.set_title('Linear Probe Classification', fontsize=fontsize)
+        ax2.plot(losses['batch_iters'], losses['train_lp_acc'],
+                     label=r'Train', c='k')
+        ax2.plot(losses['batch_iters'], losses['val_lp_acc'],
+                         label=r'Val', c='r')
+        ax2.set_ylabel('Accuracy',fontsize=fontsize)
+    if 'train_lp_r2' in losses.keys():
+        ax3.set_title('Linear Probe Regression', fontsize=fontsize)
+        ax3.plot(losses['batch_iters'], losses['train_lp_r2'],
+                     label=r'Train', c='k')
+        ax3.plot(losses['batch_iters'], losses['val_lp_r2'],
+                         label=r'Val', c='r')
+        ax3.set_ylabel(r'$R^2$',fontsize=fontsize)
     
     for i, ax in enumerate(axs):
         if x_lim is not None:

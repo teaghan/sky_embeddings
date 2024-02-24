@@ -114,12 +114,18 @@ def main(args):
                                           pos_channel=str2bool(config['DATA']['pos_channel']), 
                                           num_patches=model.module.patch_embed.num_patches,
                                           shuffle=True)
+
+    # Linear probing validation data files
+    lp_class_data_file = os.path.join(data_dir, config['DATA']['lp_class_data_file']) if 'lp_class_data_file' in config['DATA'] else None
+    lp_regress_data_file = os.path.join(data_dir, config['DATA']['lp_regress_data_file']) if 'lp_regress_data_file' in config['DATA'] else None
+        
     train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                   optimizer, lr_scheduler, device,
                   mask_ratio,
                   losses, cur_iter, 
                   int(float(config['TRAINING']['total_batch_iters'])),
-                  args.verbose_iters, args.cp_time, model_filename, fig_dir, str2bool(config['TRAINING']['linear_probe_eval']))
+                  args.verbose_iters, args.cp_time, model_filename, fig_dir,
+                  lp_class_data_file, lp_regress_data_file)
 
 def get_train_samples(dataloader, train_nested_batches):
     '''Accomodates both dataloaders.'''
@@ -134,7 +140,8 @@ def get_train_samples(dataloader, train_nested_batches):
             yield samples, mask
 
 def train_network(model, dataloader_train, dataloader_val, train_nested_batches, optimizer, lr_scheduler, device, mask_ratio, 
-                  losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir, linear_probe_eval):
+                  losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir, 
+                  lp_class_data_file, lp_regress_data_file):
     print('Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size))
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
           (verbose_iters, cp_time))
@@ -166,6 +173,7 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
             if cur_iter % verbose_iters == 0:
 
                 with torch.no_grad():
+                    # Calculate average loss on validation set
                     for i, (samples, masks, _) in enumerate(dataloader_val):
                         # Switch to GPU if available
                         samples = samples.to(device, non_blocking=True)
@@ -177,12 +185,13 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                                                                              lr_scheduler, 
                                                                              losses_cp, mode='val')
                         # Don't bother with the whole dataset
-                        if i>=100:
-                            break
-
-                if linear_probe_eval:
-                    # Run Linear Probing tests
-                    linear_probe(model, losses_cp, device, dataloader_val)
+                        #if i>=100:
+                        #    break
+                
+                    if lp_class_data_file or lp_regress_data_file:
+                        # Run Linear Probing tests
+                        linear_probe(model, losses_cp, device, dataloader_val, 
+                                     lp_class_data_file, lp_regress_data_file)
                 
                 # Calculate averages
                 for k in losses_cp.keys():

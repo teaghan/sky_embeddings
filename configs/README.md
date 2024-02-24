@@ -9,6 +9,8 @@ These parameters control various aspects of data handling, training, and model a
 - `cutouts_per_tile`: Number of random cutouts to create per FITS tile, set to 2048 by default. This means that - during training - each worker will load a separate tile in the sky and create this many cutouts per tile. These cutouts will then be split into batches to iterate over during training.
 - `val_data_file`: Filename for the validation dataset, such as `HSC_galaxies_GRIZY_64_val_new.h5`. At a minimum, the dataset should include the elements `cutouts`, `ra`, and `dec`.
 - `pos_channel`: Indicates whether or not to use the positional channel. This is set as a boolean (`False` by default). **Note:** this capability is currently in development and shouldn't be used yet.
+- `lp_class_data_file`: Filename for the linear probing classification validation dataset, such as `simple_classifier_data.h5`. At a minimum, the dataset should include the elements `cutouts`, `class` (which includes integer values starting at `0` and going to `num_classes-1` denoting the class of each object). If you do not want to use this validation process, simply remove this parameter from your config file.
+- `lp_regress_data_file`: Filename for the linear probing classification validation dataset, such as `simple_classifier_data.h5`. At a minimum, the dataset should include the elements `cutouts`, `zspec`. If you do not want to use this validation process, simply remove this parameter from your config file.
 
 ## [TRAINING]
 - `batch_size`: The size of the batch used during training, defaulting to 64.

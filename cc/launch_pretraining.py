@@ -58,6 +58,12 @@ def parseArguments():
     parser.add_argument("-vfn", "--val_data_file", 
                         help="Filename for validation samples.", 
                         type=str, default='HSC_galaxies_GRIZY_64_val_new.h5') 
+    parser.add_argument("-cfn", "--lp_class_data_file", 
+                        help="Filename for linear probe classification samples.", 
+                        type=str, default='simple_classifier_data.h5') 
+    parser.add_argument("-rfn", "--lp_regress_data_file", 
+                        help="Filename for linear probe regression samples.", 
+                        type=str, default='simple_regression_data.h5') 
 
     parser.add_argument("-bs", "--batch_size", 
                         help="Training batchsize.", 
@@ -151,7 +157,9 @@ elif user_input=='o':
                       'min_bands': args.min_bands,
                       'cutouts_per_tile': args.cutouts_per_tile,
                       'val_data_file': args.val_data_file, 
-                      'pos_channel': args.pos_channel}
+                      'pos_channel': args.pos_channel,
+                      'lp_class_data_file': args.lp_class_data_file,
+                      'lp_regress_data_file': args.lp_regress_data_file,}
 
     config['TRAINING'] = {'batch_size': args.batch_size,
                           'total_batch_iters': args.total_batch_iters,
@@ -177,6 +185,8 @@ elif user_input=='o':
         
     train_data_file = None
     val_data_file = args.val_data_file
+    lp_class_data_file = args.lp_class_data_file
+    lp_regress_data_file = args.lp_regress_data_file
     
     # Delete existing model file
     model_filename =  os.path.join(model_dir, args.model_name+'.pth.tar')
@@ -186,11 +196,11 @@ elif user_input=='o':
 elif user_input=='r':
     config = configparser.ConfigParser()
     config.read(config_fn)
-    if 'train_data_file' in config['DATA']:
-        train_data_file = os.path.join(data_dir, config['DATA']['train_data_file'])
-    else:
-        train_data_file = None
-    val_data_file = os.path.join(data_dir, config['DATA']['val_data_file'])
+    # Data filenames to be copied
+    train_data_file = config['DATA']['train_data_file'] if 'train_data_file' in config['DATA'] else None
+    val_data_file = config['DATA']['val_data_file']
+    lp_class_data_file = config['DATA']['lp_class_data_file'] if 'lp_class_data_file' in config['DATA'] else None
+    lp_regress_data_file = config['DATA']['lp_regress_data_file'] if 'lp_regress_data_file' in config['DATA'] else None
 
 todo_dir = os.path.join(cur_dir, '../scripts/todo')
 done_dir = os.path.join(cur_dir, '../scripts/done')
@@ -218,6 +228,10 @@ with open(script_fn, 'w') as f:
     if train_data_file is not None:
         f.write('cp %s $SLURM_TMPDIR\n' % (os.path.join(data_dir, train_data_file)))
     f.write('cp %s $SLURM_TMPDIR\n\n' % (os.path.join(data_dir, val_data_file)))
+    if lp_class_data_file is not None:
+        f.write('cp %s $SLURM_TMPDIR\n' % (os.path.join(data_dir, lp_class_data_file)))
+    if lp_regress_data_file is not None:
+        f.write('cp %s $SLURM_TMPDIR\n' % (os.path.join(data_dir, lp_regress_data_file)))
     f.write('# Run MAE training\n')
     f.write('python %s %s -v %i -ct %0.2f -dd $SLURM_TMPDIR/\n' % (training_script, 
                                                                    args.model_name,
