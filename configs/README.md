@@ -29,7 +29,7 @@ These parameters control various aspects of data handling, training, and model a
 - `pixel_std`: Standard deviation of pixel values used to normalize model inputs, set to 1.0 by default.
 - `embed_dim`: Size of the embeddings in the encoder, set to 768 by default.
 - `patch_size`: Dimensions of each patch from the image samples, set to 8 by default.
-- `model_type`: Specifies the model type or size, indicating the architecture template to use. The default choice is `simmim` which is the Simple Masked Image Modelling architecure. Other options currently include `base`, `large`, and `huge` which are all Masked Autoencoders. These options will likely change over time as further testing is done.
+- `model_type`: Specifies the model type or size, indicating the architecture template to use. The default choice is `simmim` which is the Simple Masked Image Modelling architecure. Other options currently include `mimlarge` and `mimhuge`. These options will likely change over time as further testing is done.
 
 ## [Notes]
 - `comment`: A field for any additional comments or notes regarding the configuration. This is useful to keep track of the changes from previous iterations of training.

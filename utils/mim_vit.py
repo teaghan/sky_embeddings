@@ -65,6 +65,26 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            loss_fn=loss_fn,
                            pixel_mean=pixel_mean,
                            pixel_std=pixel_std)
+    elif model_type=='mimlarge':
+        model = mim_vit_large(embed_dim=embed_dim,
+                           img_size=img_size,
+                           in_chans=num_channels,
+                           patch_size=patch_size,
+                           norm_pix_loss=norm_pix_loss,
+                           simmim=True,
+                           loss_fn=loss_fn,
+                           pixel_mean=pixel_mean,
+                           pixel_std=pixel_std)
+    elif model_type=='mimhuge':
+        model = mim_vit_huge(embed_dim=embed_dim,
+                           img_size=img_size,
+                           in_chans=num_channels,
+                           patch_size=patch_size,
+                           norm_pix_loss=norm_pix_loss,
+                           simmim=True,
+                           loss_fn=loss_fn,
+                           pixel_mean=pixel_mean,
+                           pixel_std=pixel_std)
     model.to(device)
 
     # Use multiple GPUs if available
@@ -445,6 +465,20 @@ def simmim_vit(**kwargs):
 
     model = MaskedAutoencoderViT(
         depth=12, num_heads=12,
+        decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
+        mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
+    return model
+
+def mim_vit_large(**kwargs):
+    model = MaskedAutoencoderViT(
+        depth=24, num_heads=16,
+        decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
+        mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
+    return model
+
+def mim_vit_huge(**kwargs):
+    model = MaskedAutoencoderViT(
+        depth=32, num_heads=16,
         decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
         mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
