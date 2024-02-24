@@ -81,6 +81,32 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                          num_classes=num_labels,
                          global_pool=global_pool,
                          drop_rate=dropout)
+    elif model_type=='mimlarge':
+        model = vit_large(label_means=label_means,
+                         label_stds=label_stds,
+                         pixel_mean=pixel_mean,
+                         pixel_std=pixel_std,
+                         simmim=True,
+                         img_size=img_size,
+                         in_chans=num_channels,
+                         embed_dim=embed_dim,
+                         patch_size=patch_size,
+                         num_classes=num_labels,
+                         global_pool=global_pool,
+                         drop_rate=dropout)
+    elif model_type=='mimhuge':
+        model = vit_huge(label_means=label_means,
+                         label_stds=label_stds,
+                         pixel_mean=pixel_mean,
+                         pixel_std=pixel_std,
+                         simmim=True,
+                         img_size=img_size,
+                         in_chans=num_channels,
+                         embed_dim=embed_dim,
+                         patch_size=patch_size,
+                         num_classes=num_labels,
+                         global_pool=global_pool,
+                         drop_rate=dropout)
     model.to(device)
 
     # Use multiple GPUs if available
@@ -241,19 +267,20 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
         
     def forward(self, x: torch.Tensor, mask=None) -> torch.Tensor:
         if self.simmim:
-            if mask is not None:
-                # Mask input image
-                B, C, H, W = x.shape
+            # Mask input image
+            B, C, H, W = x.shape
 
-                # Compute the tile size based on expected image dimensions
-                tile_size = (H // self.mask_token.shape[1], W // self.mask_token.shape[2])
-                # Expand the masking values to match the size of the batch of images
-                patch_mask_values = self.mask_token.repeat(1, tile_size[0], tile_size[1])
-                patch_mask_values = patch_mask_values.expand(B, -1, -1, -1)
-                
-                # Image is masked where mask==1 and replaced with the values in patch_mask_values
-                # Additionally, replace NaN values with patch_mask_values
-                x = torch.where(torch.isnan(x), patch_mask_values, x)
+            # Compute the tile size based on expected image dimensions
+            tile_size = (H // self.mask_token.shape[1], W // self.mask_token.shape[2])
+            # Expand the masking values to match the size of the batch of images
+            patch_mask_values = self.mask_token.repeat(1, tile_size[0], tile_size[1])
+            patch_mask_values = patch_mask_values.expand(B, -1, -1, -1)
+            
+            # Image is masked where mask==1 and replaced with the values in patch_mask_values
+            # Additionally, replace NaN values with patch_mask_values
+            x = torch.where(torch.isnan(x), patch_mask_values, x)
+            
+            if mask is not None:
                 x = x * (1 - mask) + patch_mask_values * mask
         
         x = self.norm_inputs(x)
