@@ -4,11 +4,11 @@ Welcome to the Sky Embeddings repository, where we leverage self-supervised lear
 
 ## Overview
 
-This repository hosts code and methodologies for applying Masked Autoencoders (MAEs) to astronomical images, focusing on producing high-quality embeddings that capture the rich, underlying structures of the universe.
+This repository hosts code and methodologies for applying Masked Image Modelling (MIM) to astronomical images, focusing on producing high-quality embeddings that capture the rich, underlying structures of the universe.
 
 ### Related Work on Masked Image Modelling
 
-We combined the [MAE code developed by Facebook AI](https://github.com/facebookresearch/mae) and the [SimMIM Framework for Masked Image Modeling](https://github.com/microsoft/SimMIM) as our primary machine learning framework. This allows us to create meaningful embeddings from partial observations of the sky.
+We combined aspects from the [MAE code developed by Facebook AI](https://github.com/facebookresearch/mae) and the [SimMIM Framework for Masked Image Modeling](https://github.com/microsoft/SimMIM) as our primary machine learning pipeline. Leveraging these developments with a few tricks of our own allowed us to create meaningful embeddings from observations of the sky.
 
 ### Dependencies
 
