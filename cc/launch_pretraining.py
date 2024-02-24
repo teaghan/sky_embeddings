@@ -42,7 +42,7 @@ def parseArguments():
     # Config params
     parser.add_argument("-tfp", "--train_data_paths", 
                         help="List of directories for training fits files.", 
-                        default="['/arc/projects/ots/pdr3_dud']") 
+                        default="['/home/obriaint/scratch/sky_embeddings/data/pdr3_wide','/home/obriaint/scratch/sky_embeddings/data/pdr3_dud']") 
     parser.add_argument("-bnd", "--bands", 
                         help="List of fits colour bands.", 
                         default="['G','I','R','Y','Z']") 
