@@ -19,9 +19,7 @@ Ensure you have the following installed:
 - h5py: `pip install h5py`
 - Scikit-learn `pip install scikit-learn`
 
-
-
-
+<br><br>
 
 ## Dataset: Hyper Suprime-Cam (HSC) - Subaru Telescope
 
@@ -36,8 +34,7 @@ Our primary dataset comes from the Hyper Suprime-Cam (HSC) on the Subaru Telesco
 
 Details on how to access and prepare the HSC data will be provided soon.
 
-
-
+<br><br>
 
 ## Masked Image Modelling
 
@@ -61,18 +58,13 @@ During training, several types of figures will be created to track the progress.
 
 Additionally, some of the masked image modelling results will be plotted throughout training, similar to [this one](./figures/mim_1_1000000iters.png).
 
-
-
-
+<br><br>
 
 ## Downstream Task: Similarity Search
 
 Checkout the [similarity search](./similarity_search.py) script and this [example bash script](./scripts/done/sim.sh) for guidance on how to perform the similarity search. This will produce some files in a `sky_embeddings/results` directory as well figures showing some of the top matches from the similarity search, similar to [this figure](./figures/mim_1_HSC_dwarf_galaxies_GRIZY_64_new_simsearch_results.png).
 
-
-
-
-
+<br><br>
 
 ## Downstream Task: Predicting Redshift
 
@@ -96,10 +88,7 @@ During training, the training progress will be tracked similar to the pretrainin
 
 After training, you can also use `python test_predictor.py lp_2` to perform predictions on the validation set and produce plots like [this one](./figures/lp_1_redshift.png). If you used option 2 above for training, this will be done automatically once the training is finished.
 
-
-
-
-
+<br><br>
 
 ## Contribution and Support
 
