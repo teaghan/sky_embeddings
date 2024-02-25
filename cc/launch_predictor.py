@@ -62,6 +62,9 @@ def parseArguments():
     parser.add_argument("-pt", "--pretained_mae", 
                         help="Name of pretrained MAE model (or 'None' for fresh weights).", 
                         type=str, default='mim_1')
+    parser.add_argument("-nt", "--num_train", 
+                        help="Number of training samples (use -1 to use the entire dataset).", 
+                        type=int, default=-1)
     parser.add_argument("-bs", "--batch_size", 
                         help="Training batchsize.", 
                         type=int, default=128)

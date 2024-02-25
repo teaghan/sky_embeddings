@@ -71,6 +71,8 @@ def main(args):
     else:
         batch_size = int(config['TRAINING']['batch_size'])
 
+    num_train = int(config['TRAINING']['num_train'])
+    train_indices = range(num_train) if num_train>-1 else None
     dataloader_train = build_h5_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
                                            batch_size=batch_size, 
                                            num_workers=num_workers,
@@ -81,7 +83,8 @@ def main(args):
                                            num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
                                            num_patches=model.module.patch_embed.num_patches,
                                            augment=str2bool(config['TRAINING']['augment']),
-                                           shuffle=True)
+                                           shuffle=True,
+                                           indices=train_indices)
     
     dataloader_val = build_h5_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
                                         batch_size=batch_size, 
