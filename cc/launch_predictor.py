@@ -146,6 +146,7 @@ elif user_input=='o':
     
     config['TRAINING'] = {'train_method': args.train_method,
                           'pretained_mae': args.pretained_mae,
+                          'num_train': args.num_train,
                           'batch_size': args.batch_size,
                           'total_batch_iters': args.total_batch_iters,
                           'layer_decay': args.layer_decay,
