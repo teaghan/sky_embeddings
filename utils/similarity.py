@@ -29,7 +29,7 @@ class RandomNoise:
 
     def __call__(self, img):
         noise_factor = random.uniform(*self.noise_range)
-        return add_noise(img, brightness_factor)
+        return add_noise(img, noise_factor)
 
 # Define the augmentation pipeline
 def get_augmentations(img_size=64):
