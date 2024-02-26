@@ -18,6 +18,19 @@ class RandomBrightnessAdjust:
         brightness_factor = random.uniform(*self.brightness_range)
         return adjust_brightness(img, brightness_factor)
 
+# Custom brightness adjustment for images
+def add_noise(img, noise_factor):
+    return img + torch.randn_like(img) * noise_factor
+
+# Custom transform that applies random noise
+class RandomNoise:
+    def __init__(self, noise_range=(0., 0.1)):
+        self.noise_range = noise_range
+
+    def __call__(self, img):
+        noise_factor = random.uniform(*self.noise_range)
+        return add_noise(img, brightness_factor)
+
 # Define the augmentation pipeline
 def get_augmentations(img_size=64):
     return v2.Compose([
@@ -25,7 +38,8 @@ def get_augmentations(img_size=64):
         v2.RandomVerticalFlip(),
         #v2.RandomRotation(degrees=(0, 360)),
         v2.RandomResizedCrop(size=(img_size, img_size), scale=(0.8, 1.0), ratio=(0.9, 1.1), antialias=True),
-        RandomBrightnessAdjust(brightness_range=(0.5, 1.5)),
+        RandomBrightnessAdjust(brightness_range=(0.2, 5)),
+        RandomNoise(noise_range=(0., 0.1)),
         #v2.GaussianBlur(kernel_size=(5, 5), sigma=(0.1, 2.0)),
         #v2.Lambda(lambda img: img + torch.randn_like(img) * 0.05),
     ])
