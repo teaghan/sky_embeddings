@@ -112,9 +112,9 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             # Remove cls token
             latent = latent[:,1:]
             
-            latents.append(latent.detach())
+            latents.append(latent.detach().cpu())
             if return_images:
-                images.append(samples.detach())
+                images.append(samples.detach().cpu())
             if len(latents)>=n_batches:
                 break
     if return_images:
