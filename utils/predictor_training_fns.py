@@ -17,7 +17,7 @@ def run_iter(model, samples, masks, labels, optimizer, lr_scheduler,
         loss = torch.nn.MSELoss()(model_output, labels)
     else:
         # Inverse uncertainties used as weights
-        weights = 1.0 / (label_uncertainties + 1e-8)
+        weights = 1.0 / (label_uncertainties + 1e-6)
         loss = torch.nn.functional.mse_loss(model_output, labels, reduction='none')
         weighted_loss = loss * weights
         loss = weighted_loss.mean()
