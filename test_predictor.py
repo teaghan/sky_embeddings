@@ -76,7 +76,8 @@ def main(args):
     
     print('The validation set consists of %i cutouts.' % (len(dataloader_val.dataset)))
 
-    tgt_labels, pred_labels = ft_predict(model, dataloader_val, device)
+    tgt_labels, pred_labels = ft_predict(model, dataloader_val, device,
+                                        use_label_errs=str2bool(config['TRAINING']['use_label_errs']))
 
     snr_vals = h5_snr(h5_path=os.path.join(data_dir, config['DATA']['val_data_file']), 
                       n_central_pix=8, batch_size=5000, num_samples=None)

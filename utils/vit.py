@@ -12,6 +12,7 @@ import os
 import sys
 cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)
+from utils.misc import str2bool
 from pos_embed import interpolate_pos_embed, crop_pos_embed
 from lr_decay import param_groups_lrd
 
@@ -27,6 +28,8 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
     model_type = mae_config['ARCHITECTURE']['model_type']
     global_pool = config['ARCHITECTURE']['global_pool']
     num_labels = len(eval(config['DATA']['label_keys']))
+    if str2bool(config['TRAINING']['use_label_errs']):
+        num_labels = num_labels//2
     label_means = len(eval(config['DATA']['label_means']))
     label_stds = len(eval(config['DATA']['label_stds']))
     dropout = float(eval(config['ARCHITECTURE']['dropout']))

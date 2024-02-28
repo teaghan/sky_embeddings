@@ -104,10 +104,12 @@ def main(args):
                   optimizer, lr_scheduler, device,
                   losses, cur_iter, 
                   int(float(config['TRAINING']['total_batch_iters'])),
-                  args.verbose_iters, args.cp_time, model_filename, fig_dir)
+                  args.verbose_iters, args.cp_time, model_filename, fig_dir,
+                 str2bool(config['TRAINING']['use_label_errs']))
 
 def train_network(model, dataloader_train, dataloader_val, optimizer, lr_scheduler, device, 
-                  losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir):
+                  losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir,
+                  use_label_errs):
     print('Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size))
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
           (verbose_iters, cp_time))
@@ -123,12 +125,22 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
             input_samples = input_samples.to(device, non_blocking=True)
             sample_masks = sample_masks.to(device, non_blocking=True)
             sample_labels = sample_labels.to(device, non_blocking=True)
+
+            if use_label_errs:
+                # Collect label uncertainties
+                num_labels = sample_labels.size(1)//2
+                sample_label_errs = sample_labels[:,num_labels:]
+                sample_labels = sample_labels[:,:num_labels]
+            else:
+                sample_label_errs = None
             
             # Run an iteration of training
             model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, sample_masks, sample_labels,
                                                                  optimizer, 
                                                                  lr_scheduler, 
-                                                                 losses_cp, mode='train')
+                                                                 losses_cp, 
+                                                                 label_uncertainties=sample_label_errs,
+                                                                 mode='train')
                             
             # Evaluate validation set and display losses
             if cur_iter % verbose_iters == 0:
@@ -140,11 +152,22 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                         sample_masks = sample_masks.to(device, non_blocking=True)
                         sample_labels = sample_labels.to(device, non_blocking=True)
 
+
+                        if use_label_errs:
+                            # Collect label uncertainties
+                            num_labels = sample_labels.size(1)//2
+                            sample_label_errs = sample_labels[:,num_labels:]
+                            sample_labels = sample_labels[:,:num_labels]
+                        else:
+                            sample_label_errs = None
+
                         # Run an iteration
                         model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, sample_masks, sample_labels,
                                                                              optimizer, 
                                                                              lr_scheduler, 
-                                                                             losses_cp, mode='val')
+                                                                             losses_cp, 
+                                                                             label_uncertainties=sample_label_errs,
+                                                                             mode='val')
                 
                 # Calculate averages
                 for k in losses_cp.keys():

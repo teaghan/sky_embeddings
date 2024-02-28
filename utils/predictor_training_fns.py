@@ -1,7 +1,7 @@
 import torch
 
 def run_iter(model, samples, masks, labels, optimizer, lr_scheduler,
-             losses_cp, mode='train'):
+             losses_cp, label_uncertainties=None, mode='train'):
         
     if mode=='train':
         model.train(True)
@@ -13,8 +13,15 @@ def run_iter(model, samples, masks, labels, optimizer, lr_scheduler,
 
     # Compute loss
     labels = model.module.normalize_labels(labels)
-    loss = torch.nn.MSELoss()(model_output, labels)
-
+    if label_uncertainties is None:
+        loss = torch.nn.MSELoss()(model_output, labels)
+    else:
+        # Inverse uncertainties used as weights
+        weights = 1.0 / (label_uncertainties + 1e-8)
+        loss = torch.nn.functional.mse_loss(model_output, labels, reduction='none')
+        weighted_loss = loss * weights
+        loss = weighted_loss.mean()
+    
     if loss.numel()>1:
         # In case of multiple GPUs
         loss = loss.unsqueeze(0).mean()

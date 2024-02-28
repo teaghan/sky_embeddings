@@ -122,7 +122,7 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
     else:
         return torch.cat(latents)
 
-def ft_predict(model, dataloader, device, num_batches=None, return_images=False):
+def ft_predict(model, dataloader, device, num_batches=None, return_images=False, use_label_errs=False):
     model.eval()
     
     tgt_labels = []
@@ -140,6 +140,10 @@ def ft_predict(model, dataloader, device, num_batches=None, return_images=False)
         samples = samples.to(device, non_blocking=True)
         masks = masks.to(device, non_blocking=True)
         labels = labels.to(device, non_blocking=True)
+        if use_label_errs:
+            # Don't need label uncertainties
+            num_labels = labels.size(1)//2
+            labels = labels[:,:num_labels]
     
         # Run predictions
         model_outputs = model(samples, mask=masks)
