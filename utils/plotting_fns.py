@@ -219,7 +219,7 @@ def plot_resid_hexbin(label_keys, tgt_stellar_labels, pred_stellar_labels,
                                  bins=None, vmax=max_counts) 
         
         # Annotate with statistics
-        ax.annotate('$\widetilde{m}$=%0.3f $s$=%0.3f'% (np.mean(diff), np.std(diff)),
+        ax.annotate('$\overline{x}$=%0.3f $s$=%0.3f'% (np.mean(diff), np.std(diff)),
                     (0.7,0.8), size=15, xycoords='axes fraction', 
                     bbox=bbox_props)
             
