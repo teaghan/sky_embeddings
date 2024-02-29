@@ -7,7 +7,7 @@ from utils.misc import str2bool, parseArguments, h5_snr
 from utils.vit import build_model
 from utils.dataloaders import build_h5_dataloader
 from utils.eval_fns import ft_predict
-from utils.plotting_fns import plot_resid_hexbin, evaluate_z
+from utils.plotting_fns import plot_resid_hexbin, evaluate_z, plot_progress
 
 def main(args):
     
