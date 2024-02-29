@@ -55,6 +55,11 @@ def main(args):
     model, losses, cur_iter = build_model(config, mae_config, 
                                           model_filename, mae_filename,
                                           device, build_optimizer=False)
+
+    # Plot training progress
+    plot_progress(losses, y_lims=[(0,0.005)], 
+                  savename=os.path.join(fig_dir, 
+                                        f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
     
     # Data loaders
     num_workers = min([os.cpu_count(),12*n_gpu])
