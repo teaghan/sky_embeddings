@@ -331,7 +331,7 @@ def z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
     ax2 = fig.add_subplot(gs[1, 0])#, sharex=ax1)
     cax2 = fig.add_subplot(gs[1, 1])
     plot_z_resid(fig, ax2, cax2, z_true, full_resid, full_bias, full_mad, full_frac_out, 
-                     y_lims=y_lims[0][1], gridsize=(100,50), max_counts=30, cmap='ocean_r', n_std=3,
+                     y_lims=y_lims[0][1], gridsize=(100,50), max_counts=5, cmap='ocean_r', n_std=3,
                      x_range=z_range, fontsize=fontsize)
 
     # Plot bias

@@ -92,8 +92,8 @@ def main(args):
                       gridsize=(80,40), max_counts=30, cmap='ocean_r', n_std=4,
                       savename=os.path.join(fig_dir, f'{model_name}_predictions.png'))
     
-    evaluate_z(pred_labels[snr_indices], tgt_labels[snr_indices], n_bins=8, z_range=(0.2,1.6), threshold=0.15, 
-               y_lims=[(-0.15,0.15),(-0.1,0.1),(0,0.07),(0,0.2)], snr=snr[snr_indices],
+    evaluate_z(pred_labels[snr_indices], tgt_labels[snr_indices], n_bins=8, z_range=(0.2,1.6), threshold=0.1, 
+               y_lims=[(-0.08,0.08),(-0.02,0.02),(0,0.03),(0,0.1)], snr=snr[snr_indices],
                savename=os.path.join(fig_dir, f'{model_name}_redshift.png'))
 
 # Run the testing
