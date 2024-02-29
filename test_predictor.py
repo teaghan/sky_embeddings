@@ -89,7 +89,7 @@ def main(args):
     snr_indices = snr>5
     
     plot_resid_hexbin([r'$Z$'], tgt_labels[snr_indices], pred_labels[snr_indices], y_lims=[1], 
-                      gridsize=(80,40), max_counts=30, cmap='ocean_r', n_std=4,
+                      gridsize=(80,40), max_counts=5, cmap='ocean_r', n_std=4,
                       savename=os.path.join(fig_dir, f'{model_name}_predictions.png'))
     
     evaluate_z(pred_labels[snr_indices], tgt_labels[snr_indices], n_bins=8, z_range=(0.2,1.6), threshold=0.1, 
