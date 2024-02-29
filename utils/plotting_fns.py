@@ -219,7 +219,7 @@ def plot_resid_hexbin(label_keys, tgt_stellar_labels, pred_stellar_labels,
                                  bins=None, vmax=max_counts) 
         
         # Annotate with statistics
-        ax.annotate('$\widetilde{m}$=%0.2f $s$=%0.2f'% (np.mean(diff), np.std(diff)),
+        ax.annotate('$\widetilde{m}$=%0.3f $s$=%0.3f'% (np.mean(diff), np.std(diff)),
                     (0.7,0.8), size=15, xycoords='axes fraction', 
                     bbox=bbox_props)
             
@@ -271,7 +271,7 @@ def plot_z_resid(fig, ax, cax, z_true, resid, bias, mad, frac_out, y_lims=1,
     
     # Annotate with statistics
     bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=1)
-    ax.annotate(f'bias={bias:.2f}, MAD={mad:.2f}, frac={frac_out:.2f}',
+    ax.annotate(f'bias={bias:.3f}, MAD={mad:.3f}, frac={frac_out:.3f}',
                 (0.6,0.8), size=fontsize, xycoords='axes fraction', 
                 bbox=bbox_props)
         
