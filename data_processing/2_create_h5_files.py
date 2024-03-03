@@ -176,6 +176,17 @@ if 'zspec' in file_type:
         create_h5_subsets(fits_paths, out_name, labels_path, out_dir, patch_start, patch_end, batch_size,
                               bands, use_calexp, img_size)
 
+
+if 'dwarf' in file_type:
+    # Dwarf Galaxies
+    fits_paths = ['/project/rrg-kyi/astro/hsc/pdr3_wide','/project/rrg-kyi/astro/hsc/pdr3_dud']
+    for out_name, use_calexp in zip(['HSC_dud_dwarf_galaxy_calexp_GIRYZ7610_64', 'HSC_dud_dwarf_galaxy_GIRYZ7610_64'],
+                                    [True, False]):
+        labels_path = os.path.join(out_dir,'dwarf_galaxies.csv')
+        patch_start = 0
+        patch_end = 55000
+        create_h5_subsets(fits_paths, out_name, labels_path, out_dir, patch_start, patch_end, batch_size,
+                              bands, use_calexp, img_size)
 '''
 out_name = 'HSC_dwarf_galaxies_calexp_GIRYZ7610_64'
 labels_path = os.path.join(out_dir,'dwarf_galaxies.csv')
