@@ -25,7 +25,7 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
 
             loss, pred, mask = model(samples, mask_ratio=mask_ratio, mask=mask)
 
-            print('AN', pred.shape len(np.where(np.isnan(pred.data.cpu().numpy()))[0])/np.prod(pred.data.cpu().numpy().shape))
+            print('AN', pred.shape, len(np.where(np.isnan(pred.data.cpu().numpy()))[0])/np.prod(pred.data.cpu().numpy().shape))
             
             if hasattr(model, 'module'):
                 model = model.module
