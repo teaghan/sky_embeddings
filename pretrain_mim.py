@@ -100,6 +100,7 @@ def main(args):
                                                   max_mask_ratio=max_mask_ratio, 
                                                   img_size=int(config['ARCHITECTURE']['img_size']), 
                                                   cutouts_per_tile=int(config['DATA']['cutouts_per_tile']), 
+                                                  use_calexp=str2bool(config['DATA']['use_calexp']),
                                                   augment=False, 
                                                   shuffle=True)
         train_nested_batches = True

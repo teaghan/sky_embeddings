@@ -10,7 +10,7 @@ from astropy.io import fits
 
 def build_fits_dataloader(fits_paths, bands, min_bands, batch_size, num_workers,
                           patch_size=8, max_mask_ratio=None, 
-                          img_size=64, cutouts_per_tile=1024,
+                          img_size=64, cutouts_per_tile=1024, use_calexp=True,
                           augment=False, shuffle=True):
     '''Return a dataloader to be used during training.'''
 
@@ -29,7 +29,7 @@ def build_fits_dataloader(fits_paths, bands, min_bands, batch_size, num_workers,
                           bands=bands, min_bands=min_bands, img_size=img_size, 
                           cutouts_per_tile=cutouts_per_tile,
                           batch_size=batch_size, shuffle=shuffle,
-                          transform=transforms)
+                          transform=transforms, use_calexp=use_calexp)
 
     # Build dataloader
     return torch.utils.data.DataLoader(dataset, batch_size=1, 
@@ -246,7 +246,7 @@ class H5Dataset(torch.utils.data.Dataset):
 
         return cutout, mask, labels
 
-def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1):
+def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True):
     '''
     Searches for HSC (Hyper Suprime-Cam) survey FITS files across specified paths and returns a nested list of filenames 
     that contain at least a minimum number of color bands per sky patch. Optimized to minimize filesystem operations and
@@ -256,6 +256,7 @@ def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1):
     - fits_paths (list of str): Paths to search for HSC FITS files.
     - bands (list of str): The color bands to search for (e.g., ['G', 'R', 'I', 'Z', 'Y']).
     - min_bands (int, optional): The minimum number of color bands required for a patch to be included. Defaults to 2.
+    - use_calexp (bool, optional): Determines whether to include files with 'calexp-' prefix. Defaults to True.
 
     Returns:
     - list of lists: A nested list where each sublist contains the file paths for the bands found for a patch. 
@@ -266,18 +267,21 @@ def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1):
     patch_files = {}  # Dictionary to store available bands for each patch
 
     for fits_path in fits_paths:
-        fits_files = glob.glob(f"{fits_path}/calexp-HSC-*.fits")
+        fits_files = glob.glob(f"{fits_path}/*.fits")
 
         for file_path in fits_files:
-            # Extract band and patch identifier from the filename
-            parts = file_path.split('-')
-            band = parts[-3]
-            patch = '-'.join(parts[-2:])
-            
-            if band in bands:
-                if patch not in patch_files:
-                    patch_files[patch] = {b: 'None' for b in bands}
-                patch_files[patch][band] = file_path
+            file_name = file_path.split('/')[-1]  # Extract just the filename
+            # Determine if file matches the calexp condition
+            if (use_calexp and file_name.startswith('calexp-')) or (not use_calexp and not file_name.startswith('calexp-')):
+                # Extract band and patch identifier from the filename
+                parts = file_name.split('-')
+                band = parts[-3]
+                patch = '-'.join(parts[-2:])
+                
+                if band in bands:
+                    if patch not in patch_files:
+                        patch_files[patch] = {b: 'None' for b in bands}
+                    patch_files[patch][band] = file_path
 
     # Filter patches by the minimum number of available bands and organize the filenames
     filenames = []
@@ -409,7 +413,7 @@ class FitsDataset(torch.utils.data.Dataset):
 
     def __init__(self, fits_paths,  patch_size=8, max_mask_ratio=None, bands=['G','R','I','Z','Y'], min_bands=5,
                  img_size=64, cutouts_per_tile=1024, batch_size=64, shuffle=True, 
-                 transform=None, pixel_min=-3., pixel_max=None):
+                 transform=None, pixel_min=-3., pixel_max=None, use_calexp=True):
         
         self.fits_paths = fits_paths
         self.img_size = img_size
@@ -419,9 +423,10 @@ class FitsDataset(torch.utils.data.Dataset):
         self.transform = transform
         self.pixel_min = pixel_min
         self.pixel_max = pixel_max
+        self.use_calexp = use_calexp
 
         # Find names of patch fits files
-        self.band_filenames = find_HSC_bands(fits_paths, bands, min_bands)
+        self.band_filenames = find_HSC_bands(fits_paths, bands, min_bands, use_calexp=use_calexp)
 
         if max_mask_ratio is not None:
             num_channels = len(bands)
