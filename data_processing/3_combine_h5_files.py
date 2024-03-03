@@ -3,7 +3,7 @@ import glob
 import numpy as np
 import h5py
 
-out_dir = '/home/obriaint/scratch/sky_embeddings/data/'
+data_dir = '/home/obriaint/scratch/sky_embeddings/data/'
 
 h5_fns = ['HSC_dud_galaxy_calexp_GIRYZ7610_64','HSC_dud_qso_calexp_GIRYZ7610_64',
           'HSC_dud_star_calexp_GIRYZ7610_64','HSC_dud_galaxy_zspec_calexp_GIRYZ7610_64_train',
