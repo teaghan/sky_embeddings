@@ -515,9 +515,6 @@ def undo_pixel_norm(original_images, normalized_images, model):
     #mean = original_images.mean(dim=-1, keepdim=True)
     #var = original_images.var(dim=-1, keepdim=True)
     mean, var = patch_mean_and_var(original_images)
-    print('CC', mean.shape, var.shape, original_images.shape)
-    print('D', mean[0])
-    print('D', var[0])
 
     unnormalized = normalized_images * (var + 1.e-6)**.5 + mean
     

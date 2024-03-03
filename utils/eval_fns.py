@@ -24,8 +24,6 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
             mask = mask.to(device, non_blocking=True)
 
             loss, pred, mask = model(samples, mask_ratio=mask_ratio, mask=mask)
-
-            print('AN', pred.shape, len(np.where(np.isnan(pred.data.cpu().numpy()))[0])/np.prod(pred.data.cpu().numpy().shape))
             
             if hasattr(model, 'module'):
                 model = model.module
@@ -39,16 +37,14 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
                 mask = mask.unsqueeze(-1).repeat(1, 1, model.patch_embed.patch_size[0]**2 * model.in_chans)  # (N, H*W, p*p*3)
                 mask = model.unpatchify(mask)  # 1 is removing, 0 is keeping
 
-            if model.norm_pix_loss:
-                # Return back to original scale
-                pred = model.denorm_imgs(samples, pred)
+            #if model.norm_pix_loss:
+            # Return back to original scale
+            pred = model.denorm_imgs(samples, pred)
             
             pred = torch.einsum('nchw->nhwc', pred).detach()
             mask = torch.einsum('nchw->nhwc', mask).detach()
             samples = torch.einsum('nchw->nhwc', samples)
 
-            print('A', len(np.where(np.isnan(pred.data.cpu().numpy()))[0])/np.prod(pred.data.cpu().numpy().shape))
-            np.prod(a.shape)
             # Fill in missing prediction pixels with original values
             pred[mask==0] = samples[mask==0]
 
