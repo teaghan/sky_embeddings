@@ -181,7 +181,7 @@ if 'dwarf' in file_type:
     # Dwarf Galaxies
     fits_paths = ['/project/rrg-kyi/astro/hsc/pdr3_wide','/project/rrg-kyi/astro/hsc/pdr3_dud']
     batch_size = 5000
-    for out_name, use_calexp in zip(['HSC_dud_dwarf_galaxy_calexp_GIRYZ7610_64', 'HSC_dud_dwarf_galaxy_GIRYZ7610_64'],
+    for out_name, use_calexp in zip(['HSC_all_dwarf_galaxy_calexp_GIRYZ7610_64', 'HSC_dud_dwarf_galaxy_GIRYZ7610_64'],
                                     [True, False]):
         labels_path = os.path.join(out_dir,'dwarf_galaxies.csv')
         patch_start = 0
