@@ -124,10 +124,10 @@ file_type = sys.argv[1]
 
 if 'gal' in file_type:
     # Galaxies
-    for out_name, use_calexp in zip(['HSC_dud_galaxy_calexp_GIRYZ7610_64', 'HSC_dud_galaxy_GIRYZ7610_64'],
-                                    [True, False]):
+    for out_name, use_calexp in zip(['HSC_dud_galaxy_GIRYZ7610_64'], #'HSC_dud_galaxy_calexp_GIRYZ7610_64',
+                                    [False]): # True
         labels_path = os.path.join(out_dir,'HSC_galaxy_dud.csv')
-        patch_start = 200
+        patch_start = 0
         patch_end = 1515
         create_h5_subsets(fits_paths, out_name, labels_path, out_dir, patch_start, patch_end, batch_size,
                               bands, use_calexp, img_size)
