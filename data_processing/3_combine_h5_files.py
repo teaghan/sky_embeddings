@@ -15,7 +15,7 @@ for h5_fn in h5_fns:
     
     batch_size = 2048
     
-    order = np.argsort([int(p.split('_')[5]) for p in h5_paths])
+    order = np.argsort([int(p.split('_')[-3]) for p in h5_paths])
     h5_paths = [h5_paths[i] for i in order]
     print('Combining the following files:')
     for p in h5_paths:
