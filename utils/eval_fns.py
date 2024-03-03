@@ -51,7 +51,6 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
             np.prod(a.shape)
             # Fill in missing prediction pixels with original values
             pred[mask==0] = samples[mask==0]
-            print('B',np.where(np.isnan(pred.data.cpu().numpy())))
 
             # Masked inputs
             masked_samples = samples.detach().clone()
@@ -60,7 +59,6 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
             samples = samples.data.cpu().numpy()
             pred = pred.data.cpu().numpy()
             masked_samples = masked_samples.data.cpu().numpy()
-            print('B',np.where(np.isnan(pred)))
             
             # Save results
             pred_imgs.append(pred)

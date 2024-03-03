@@ -424,11 +424,11 @@ class MaskedAutoencoderViT(nn.Module):
     def norm_inputs(self, x):
         return (x - self.pixel_mean) / self.pixel_std
     
-    def denorm_imgs(self, orig_imgs, norm_imgs):
+    def denorm_imgs(self, orig_imgs, x):
         if self.norm_pix_loss:
             # Undo pixel norm
-            norm_imgs = undo_pixel_norm(orig_imgs, norm_imgs, self)
-        return norm_imgs
+            x = undo_pixel_norm(orig_imgs, x, self)
+        return x * self.pixel_std + self.pixel_mean
 
     def forward(self, imgs, mask_ratio=0.75, mask=None, denorm_out=False):
         imgs = self.norm_inputs(imgs)
@@ -512,8 +512,10 @@ def undo_pixel_norm(original_images, normalized_images, model):
     original_images = model.patchify(original_images)
     normalized_images = model.patchify(normalized_images)
     
-    mean = original_images.mean(dim=-1, keepdim=True)
-    var = original_images.var(dim=-1, keepdim=True)
+    #mean = original_images.mean(dim=-1, keepdim=True)
+    #var = original_images.var(dim=-1, keepdim=True)
+    mean, var = patch_mean_and_var(original_images)
+    print('CC', mean.shape, var.shape, original_images.shape)
 
     unnormalized = normalized_images * (var + 1.e-6)**.5 + mean
     
