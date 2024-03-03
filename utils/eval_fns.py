@@ -45,7 +45,8 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
             mask = torch.einsum('nchw->nhwc', mask).detach()
             samples = torch.einsum('nchw->nhwc', samples)
 
-            print('A', np.where(np.isnan(pred.data.cpu().numpy())))
+            print('A', len(np.where(np.isnan(pred.data.cpu().numpy()))[0])/np.prod(pred.data.cpu().numpy().shape))
+            np.prod(a.shape)
             # Fill in missing prediction pixels with original values
             pred[mask==0] = samples[mask==0]
             print('B',np.where(np.isnan(pred.data.cpu().numpy())))
