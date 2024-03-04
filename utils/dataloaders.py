@@ -275,6 +275,8 @@ def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True):
             if (use_calexp and file_name.startswith('calexp-')) or (not use_calexp and not file_name.startswith('calexp-')):
                 # Extract band and patch identifier from the filename
                 parts = file_name.split('-')
+                if len(parts)<3:
+                    continue
                 band = parts[-3]
                 patch = '-'.join(parts[-2:])
                 
