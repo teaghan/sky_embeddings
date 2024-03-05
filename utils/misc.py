@@ -121,8 +121,8 @@ def calculate_snr(images, n_central_pix):
     surrounding_region = images[:, :, mask].reshape(batch_size, n_channels, -1)
 
     # Calculate the mean of the central region and the standard deviation of the surrounding region
-    mean_central = np.mean(central_region, axis=(2, 3))
-    std_surrounding = np.std(surrounding_region, axis=2)
+    mean_central = np.nanmean(central_region, axis=(2, 3))
+    std_surrounding = np.nanstd(surrounding_region, axis=2)
 
     # Calculate the SNR
     snr = mean_central / (std_surrounding + 1e-8)  # Added a small value to avoid division by zero
