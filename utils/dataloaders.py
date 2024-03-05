@@ -71,7 +71,6 @@ class RandomChannelNaN:
         # Randomly select n_channels_to_replace to replace with NaN
         channels_to_replace = random.sample(range(C), n_channels_to_replace)
 
-        print(channels_to_replace)
         for c in channels_to_replace:
             img[c, :, :] = torch.nan
 
