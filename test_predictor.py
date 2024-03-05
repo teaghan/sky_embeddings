@@ -92,7 +92,7 @@ def main(args):
     
     # Only display objects that are not super noisy
     snr_indices = snr>5
-    print(len(snr_indices))
+    print(len(np.where(snr_indices)[0]))
     
     plot_resid_hexbin([r'$Z$'], tgt_labels[snr_indices], pred_labels[snr_indices], y_lims=[1], 
                       gridsize=(80,40), max_counts=5, cmap='ocean_r', n_std=4,
