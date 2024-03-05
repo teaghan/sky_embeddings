@@ -1,3 +1,4 @@
+import random
 import numpy as np
 import torch
 import h5py
@@ -8,6 +9,92 @@ import os
 import glob
 from astropy.io import fits
 
+# Custom brightness adjustment for images
+def adjust_brightness(img, brightness_factor):
+    return img * brightness_factor
+
+# Custom transform that applies brightness adjustment with a random factor
+class RandomBrightnessAdjust:
+    def __init__(self, brightness_range=(0.8, 1.2)):
+        self.brightness_range = brightness_range
+
+    def __call__(self, img):
+        brightness_factor = random.uniform(*self.brightness_range)
+        return adjust_brightness(img, brightness_factor)
+
+# Custom brightness adjustment for images
+def add_noise(img, noise_factor):
+    return img + torch.randn_like(img) * noise_factor
+
+# Custom transform that applies random noise
+class RandomNoise:
+    def __init__(self, noise_range=(0., 0.1)):
+        self.noise_range = noise_range
+
+    def __call__(self, img):
+        noise_factor = random.uniform(*self.noise_range)
+        return add_noise(img, noise_factor)
+
+class RandomChannelNaN:
+    def __init__(self, max_channels=1):
+        """
+        Initializes the RandomChannelNaN transformation with a maximum number of channels to replace.
+
+        Args:
+            max_channels (int): The maximum number of channels that can be replaced with NaN values.
+        """
+        self.max_channels = max_channels
+
+    def __call__(self, img):
+        """
+        Applies the RandomChannelNaN transformation to an input image tensor, randomly replacing up to `max_channels` channels with NaN values.
+
+        Args:
+            img (torch.Tensor): The input image tensor. Expected shape: (C, H, W) where
+                C is the number of channels, H is the height, and W is the width.
+
+        Returns:
+            torch.Tensor: The augmented image tensor with a random number of channels replaced by NaN values, up to `max_channels`.
+        """
+        # Ensure the input is a tensor
+        if not isinstance(img, torch.Tensor):
+            raise TypeError("img must be a torch.Tensor")
+
+        # Ensure max_channels is not greater than the number of channels in the image
+        C, _, _ = img.shape
+        if self.max_channels > C:
+            raise ValueError(f"max_channels must be less than or equal to the number of channels in the image. Got {self.max_channels} for an image with {C} channels.")
+
+        # Randomly decide the number of channels to replace, up to max_channels
+        n_channels_to_replace = random.randint(0, self.max_channels)
+
+        # Randomly select n_channels_to_replace to replace with NaN
+        channels_to_replace = random.sample(range(C), n_channels_to_replace)
+
+        for c in channels_to_replace:
+            img[c, :, :] = torch.nan
+
+        return img
+
+# Define the augmentation pipeline
+def get_augmentations(img_size=64, flip=True, crop=True, brightness=True, noise=True, nan_channels=True):
+    transforms = []
+    if flip:
+        transforms.append(v2.RandomHorizontalFlip())
+        transforms.append(v2.RandomVerticalFlip())
+    if crop:
+        transforms.append(v2.RandomResizedCrop(size=(img_size, img_size), 
+                                               scale=(0.8, 1.0), 
+                                               ratio=(0.9, 1.1), antialias=True))
+    if brightness:
+        transforms.append(RandomBrightnessAdjust(brightness_range=(0.2, 5)))
+    if noise:
+        transforms.append(RandomNoise(noise_range=(0., 0.1)))
+    if nan_channels:
+        transforms.append(RandomChannelNaN(max_channels=2))
+        
+    return v2.Compose(transforms)
+
 def build_fits_dataloader(fits_paths, bands, min_bands, batch_size, num_workers,
                           patch_size=8, max_mask_ratio=None, 
                           img_size=64, cutouts_per_tile=1024, use_calexp=True,
@@ -15,11 +102,7 @@ def build_fits_dataloader(fits_paths, bands, min_bands, batch_size, num_workers,
     '''Return a dataloader to be used during training.'''
 
     if augment:
-        # Define augmentations
-        transforms = v2.Compose([v2.GaussianBlur(kernel_size=5, sigma=(0.1,1.5)),
-                                 v2.RandomResizedCrop(size=(img_size, img_size), scale=(0.8,1), antialias=True),
-                                 v2.RandomHorizontalFlip(p=0.5),
-                                 v2.RandomVerticalFlip(p=0.5)])
+        transforms = get_augmentations(img_size=img_size)
     else:
         transforms = None
     
@@ -41,11 +124,7 @@ def build_h5_dataloader(filename, batch_size, num_workers, patch_size=8, num_cha
                         num_patches=None, augment=False, shuffle=True, indices=None):
 
     if augment:
-        # Define augmentations
-        transforms = v2.Compose([v2.GaussianBlur(kernel_size=5, sigma=(0.1,1.5)),
-                                 v2.RandomResizedCrop(size=(img_size, img_size), scale=(0.8,1), antialias=True),
-                                 v2.RandomHorizontalFlip(p=0.5),
-                                 v2.RandomVerticalFlip(p=0.5)])
+        transforms = transforms = get_augmentations(img_size=img_size)
     else:
         transforms = None
     
