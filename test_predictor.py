@@ -88,10 +88,11 @@ def main(args):
                       n_central_pix=8, batch_size=5000, num_samples=None)
     
     # Calculate minimum snr of the 5 channels
-    snr = np.nanmin(snr_vals, axis=(1))
+    print(snr_vals.shape)
+    snr = np.nanmin(snr_vals[:,:5], axis=(1))
     
     # Only display objects that are not super noisy
-    snr_indices = snr>2
+    snr_indices = snr>5
     print(len(np.where(snr_indices)[0]))
     
     plot_resid_hexbin([r'$Z$'], tgt_labels[snr_indices], pred_labels[snr_indices], y_lims=[1], 
