@@ -87,9 +87,9 @@ def get_augmentations(img_size=64, flip=True, crop=True, brightness=True, noise=
                                                scale=(0.8, 1.0), 
                                                ratio=(0.9, 1.1), antialias=True))
     if brightness:
-        transforms.append(RandomBrightnessAdjust(brightness_range=(0.2, 5)))
+        transforms.append(RandomBrightnessAdjust(brightness_range=(0.8, 1.2)))
     if noise:
-        transforms.append(RandomNoise(noise_range=(0., 0.1)))
+        transforms.append(RandomNoise(noise_range=(0., 0.01)))
     if nan_channels:
         transforms.append(RandomChannelNaN(max_channels=2))
         
