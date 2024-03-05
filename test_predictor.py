@@ -91,7 +91,7 @@ def main(args):
     snr = np.nanmin(snr_vals, axis=(1))
     
     # Only display objects that are not super noisy
-    snr_indices = snr>0
+    snr_indices = snr>2
     print(len(np.where(snr_indices)[0]))
     
     plot_resid_hexbin([r'$Z$'], tgt_labels[snr_indices], pred_labels[snr_indices], y_lims=[1], 
