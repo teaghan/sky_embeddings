@@ -5,12 +5,11 @@ import h5py
 
 data_dir = '/home/obriaint/scratch/sky_embeddings/data/'
 
-h5_fns = [#'HSC_dud_galaxy_calexp_GIRYZ7610_64','HSC_dud_qso_calexp_GIRYZ7610_64',
-          #'HSC_dud_star_calexp_GIRYZ7610_64','HSC_dud_galaxy_zspec_calexp_GIRYZ7610_64_train',
-        'HSC_dud_galaxy_GIRYZ7610_64','HSC_dud_qso_GIRYZ7610_64',
-          'HSC_dud_star_GIRYZ7610_64','HSC_dud_galaxy_zspec_GIRYZ7610_64_train',
-          'HSC_dud_galaxy_zspec_calexp_GIRYZ7610_64_val',#'HSC_dud_galaxy_zspec_calexp_GIRYZ7610_64_test',
-          'HSC_dud_galaxy_zspec_GIRYZ7610_64_val']#,'HSC_dud_galaxy_zspec_GIRYZ7610_64_test']
+h5_fns = [#'HSC_dud_galaxy_calexp_GIRYZ7610_64', 'HSC_dud_qso_calexp_GIRYZ7610_64', 'HSC_dud_star_calexp_GIRYZ7610_64',
+          #'HSC_dud_galaxy_GIRYZ7610_64', 'HSC_dud_qso_GIRYZ7610_64', #'HSC_dud_star_GIRYZ7610_64',
+          #'HSC_dud_galaxy_zspec_calexp_GIRYZ7610_64_train', 'HSC_dud_galaxy_zspec_GIRYZ7610_64_train',
+          'HSC_dud_galaxy_zspec_calexp_GIRYZ7610_64_test', 'HSC_dud_galaxy_zspec_GIRYZ7610_64_test']
+          #'HSC_dud_galaxy_zspec_calexp_GIRYZ7610_64_val', 'HSC_dud_galaxy_zspec_GIRYZ7610_64_val',]
 
 for h5_fn in h5_fns: 
     out_path = os.path.join(data_dir, f'{h5_fn}.h5')
