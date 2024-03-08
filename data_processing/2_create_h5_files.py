@@ -182,7 +182,7 @@ if 'dwarf' in file_type:
                                     [True, False]):
         labels_path = os.path.join(out_dir,'dwarf_galaxies.csv')
 
-        create_h5_subsets(fits_paths, out_name, labels_path, out_dir, patch_strategy='all', n_patches=-1
+        create_h5_subsets(fits_paths, out_name, labels_path, out_dir, patch_strategy='all', n_patches=-1,
                               bands, use_calexp, img_size)
         out_filename = f'{out_name}.h5'
         if os.path.exists(os.path.join(out_dir, out_filename)):
