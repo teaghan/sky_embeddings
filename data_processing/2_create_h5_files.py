@@ -176,7 +176,23 @@ if 'zspec' in file_type:
         create_h5_subsets(fits_paths, out_name, labels_path, out_dir, patch_start, patch_end, batch_size,
                               bands, use_calexp, img_size)
 
+if 'dwarf' in file_type:
+    # Dwarf Galaxies
+    for out_name, use_calexp in zip(['HSC_dud_dwarf_galaxy_calexp_GIRYZ7610_64', 'HSC_dud_dwarf_galaxy_GIRYZ7610_64'],
+                                    [True, False]):
+        labels_path = os.path.join(out_dir,'dwarf_galaxies.csv')
 
+        create_h5_subsets(fits_paths, out_name, labels_path, out_dir, patch_strategy='all', n_patches=-1
+                              bands, use_calexp, img_size)
+        out_filename = f'{out_name}.h5'
+        if os.path.exists(os.path.join(out_dir, out_filename)):
+            print(f'{out_filename} already exists. Moving on...')
+            continue
+        else:
+            create_h5_dataset(fits_paths, bands, use_calexp, img_size, out_dir, out_filename, labels_path=labels_path,
+                              patch_strategy='all', n_patches=-1)
+
+'''
 if 'dwarf' in file_type:
     # Dwarf Galaxies
     fits_paths = ['/project/rrg-kyi/astro/hsc/pdr3_wide','/project/rrg-kyi/astro/hsc/pdr3_dud']
@@ -189,20 +205,7 @@ if 'dwarf' in file_type:
         create_h5_subsets(fits_paths, out_name, labels_path, out_dir, patch_start, patch_end, batch_size,
                               bands, use_calexp, img_size)
 '''
-out_name = 'HSC_dwarf_galaxies_calexp_GIRYZ7610_64'
-labels_path = os.path.join(out_dir,'dwarf_galaxies.csv')
-batch_size = 500
-for i in range(0, 52882, batch_size):
-    low = i
-    high = i+batch_size
-    out_filename = f'{out_name}_{low}_to_{high}.h5'
-    if os.path.exists(os.path.join(out_dir, out_filename)):
-        continue
-        print(f'{out_filename} already exists. Moving on...')
-    else:
-        create_h5_dataset(fits_paths, bands, use_calexp, img_size, out_dir, out_filename, labels_path=labels_path,
-                          patch_strategy='n_to_n', patch_low_bound=low, patch_high_bound=high)
-'''
+
 '''
 
 out_filename = 'HSC_strong_lens_candidates_GRIZY_64.h5'
