@@ -190,6 +190,20 @@ if 'dwarf' in file_type:
             create_h5_dataset(fits_paths, bands, use_calexp, img_size, out_dir, out_filename, labels_path=labels_path,
                               patch_strategy='all', n_patches=-1)
 
+if 'lense' in file_type:
+    # Strong Lensing events
+    for out_name, use_calexp in zip(['HSC_dud_strong_lens_calexp_GIRYZ7610_64', 'HSC_dud_strong_lens_GIRYZ7610_64'],
+                                    [True, False]):
+        labels_path = os.path.join(out_dir,'strong_lens_candidates.csv')
+
+        out_filename = f'{out_name}.h5'
+        if os.path.exists(os.path.join(out_dir, out_filename)):
+            print(f'{out_filename} already exists. Moving on...')
+            continue
+        else:
+            create_h5_dataset(fits_paths, bands, use_calexp, img_size, out_dir, out_filename, labels_path=labels_path,
+                              patch_strategy='all', n_patches=-1)
+
 '''
 if 'dwarf' in file_type:
     # Dwarf Galaxies
