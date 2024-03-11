@@ -48,6 +48,14 @@ def run_iter(imgs, masks_enc, masks_pred, encoder, predictor, target_encoder,
             loss = loss.unsqueeze(0).mean()
         return loss
 
+    if 'train' in mode:
+        # Adjust learning rate and weight decay
+        _new_lr = lr_scheduler.step()
+        _new_wd = wd_scheduler.step()
+
+        losses_cp['lr'].append(float(_new_lr))
+        losses_cp['wd'].append(float(_new_wd))
+        
     # Step 1. Forward
     #with torch.cuda.amp.autocast(dtype=torch.bfloat16, enabled=use_bfloat16):
     h = forward_target()
@@ -63,10 +71,6 @@ def run_iter(imgs, masks_enc, masks_pred, encoder, predictor, target_encoder,
         optimizer.step()
         # Reset gradients
         optimizer.zero_grad(set_to_none=True)
-        
-        # Adjust learning rate and weight decay
-        _new_lr = lr_scheduler.step()
-        _new_wd = wd_scheduler.step()
         
         # Save loss and metrics
         losses_cp['train_loss'].append(float(loss))

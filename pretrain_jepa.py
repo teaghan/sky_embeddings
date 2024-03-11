@@ -216,11 +216,15 @@ def train_network(encoder, predictor, target_encoder,
                 
                 # Calculate averages
                 for k in losses_cp.keys():
-                    losses[k].append(np.mean(np.array(losses_cp[k]), axis=0))
+                    if k=='lr' or k=='wd':
+                        losses[k].append(losses_cp[k][-1])
+                    else:
+                        losses[k].append(np.mean(np.array(losses_cp[k]), axis=0))
                 losses['batch_iters'].append(cur_iter)
                 
                 # Print current status
                 print('\nBatch Iterations: %i/%i ' % (cur_iter, total_batch_iters))
+                print('\nLearning Rate: %0.5f, Weight decay: %0.5f ' % (losses['lr'][-1], losses['wd'][-1]))
                 print('Losses:')
                 print('\tTraining Dataset')
                 print('\t\tTotal Loss: %0.3f'% (losses['train_loss'][-1]))
