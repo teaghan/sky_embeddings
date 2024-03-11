@@ -85,7 +85,8 @@ def run_iter(imgs, masks_enc, masks_pred, encoder, predictor, target_encoder,
         # Save loss and metrics
         losses_cp['val_loss'].append(float(loss))
 
-    return losses_cp
+    return (encoder, predictor, target_encoder, 
+               optimizer, lr_scheduler, wd_scheduler, losses_cp)
 
 def linear_probe(encoder, losses_cp, device, dataloader_template, class_data_path=None,
                  regress_data_path=None, combine='central'):

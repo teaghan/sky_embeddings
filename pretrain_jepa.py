@@ -178,7 +178,8 @@ def train_network(encoder, predictor, target_encoder,
             masks_pred = [u.to(device, non_blocking=True) for u in masks_pred]
             
             # Run an iteration of training
-            losses_cp = run_iter(imgs, masks_enc, masks_pred, 
+            (encoder, predictor, target_encoder, 
+               optimizer, lr_scheduler, wd_scheduler, losses_cp) = run_iter(imgs, masks_enc, masks_pred, 
                                                                  encoder, predictor, target_encoder, 
                                                                  optimizer, lr_scheduler, wd_scheduler, 
                                                                  momentum_scheduler, 
@@ -200,7 +201,8 @@ def train_network(encoder, predictor, target_encoder,
                         masks_pred = [u.to(device, non_blocking=True) for u in masks_pred]
 
                         # Run an iteration
-                        losses_cp = run_iter(imgs, masks_enc, masks_pred, 
+                        (encoder, predictor, target_encoder, 
+               optimizer, lr_scheduler, wd_scheduler, losses_cp) = run_iter(imgs, masks_enc, masks_pred, 
                                                                              encoder, predictor, target_encoder, 
                                                                              optimizer, lr_scheduler, wd_scheduler, 
                                                                              momentum_scheduler, 
