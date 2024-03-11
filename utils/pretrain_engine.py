@@ -98,7 +98,7 @@ def linear_probe(encoder, losses_cp, device, dataloader_template, class_data_pat
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         
         # Creating and training a classifier
-        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, C=0.01, random_state=42)
+        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, C=1., random_state=42)
         clf.fit(X_train, y_train)
         
         # Predicting the class label

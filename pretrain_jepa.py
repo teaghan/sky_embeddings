@@ -81,8 +81,8 @@ def main(args):
         allow_overlap=str2bool(config['MASK']['allow_overlap']),
         min_keep=int(config['MASK']['min_keep']))
     
-    transform = get_augmentations(img_size=int(config['ARCHITECTURE']['img_size']), 
-                                  flip=False, crop=False, brightness=True, noise=True, nan_channels=True)
+    transform = None#get_augmentations(img_size=int(config['ARCHITECTURE']['img_size']), 
+                #                  flip=False, crop=False, brightness=True, noise=True, nan_channels=True)
     
     num_workers = min([os.cpu_count(),12*n_gpu])
     if num_workers>1:
