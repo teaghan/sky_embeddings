@@ -165,7 +165,7 @@ def get_embeddings(data_path, encoder, device, dataloader_template, y_label='cla
         x = select_centre(latent_features, n_patches=16)
         x = np.max(x, axis=1)
     elif combine=='central':
-        x = select_centre(latent_features, n_patches=4)
+        x = select_centre(latent_features, n_patches=9)
         x = x.reshape(x.shape[0], -1)
     elif combine=='mean':
         x = np.mean(latent_features, axis=1)
