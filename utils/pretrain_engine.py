@@ -11,7 +11,7 @@ from tensors import repeat_interleave_batch
 from data import build_h5_dataloader, get_augmentations
 
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression, ElasticNet
+from sklearn.linear_model import LogisticRegression, ElasticNet, LinearRegression
 from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
 from sklearn.preprocessing import StandardScaler
 
