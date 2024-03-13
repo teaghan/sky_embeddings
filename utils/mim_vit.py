@@ -355,7 +355,9 @@ class MaskedAutoencoderViT(nn.Module):
 
         # Pool patches into a single embedding
         if self.attn_pool:
+            print(x.shape)
             x = self.attn_pool(x).unsqueeze(1)
+            print(x.shape)
         
         x = self.norm(x)
         
