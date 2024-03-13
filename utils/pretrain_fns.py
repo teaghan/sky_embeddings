@@ -125,6 +125,11 @@ def get_embeddings(data_path, model, device, dataloader_template, y_label='class
     with h5py.File(data_path, "r") as f:
         y = f[y_label][:]
 
+    if model.module.attn_pool:
+        # There is only one output set of features if there is an attention pooling layer
+        combine='flatten'
+
+    scale = True    
     if combine=='flatten':
         x = latent_features.reshape(latent_features.shape[0], -1)
     elif combine=='pool':
@@ -135,10 +140,15 @@ def get_embeddings(data_path, model, device, dataloader_template, y_label='class
     elif combine=='central':
         x = select_centre(latent_features, n_patches=4)
         x = x.reshape(x.shape[0], -1)
-    else:
+    elif combine=='mean':
         x = np.mean(latent_features, axis=1)
-
-    scaler = StandardScaler()
-    x = scaler.fit_transform(x)
+    else:
+        x = latent_features
+        x = (x - np.nanmean(x)) / np.nanstd(x)
+        scale = False
+        
+    if scale:
+        scaler = StandardScaler()
+        x = scaler.fit_transform(x)
 
     return x, y

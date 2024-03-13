@@ -4,8 +4,8 @@ from collections import defaultdict
 import torch
 import torch.nn as nn
 import timm.optim.optim_factory as optim_factory
-
 from timm.models.vision_transformer import PatchEmbed, Block
+from timm.layers import AttentionPoolLatent
 
 import os
 import sys
@@ -26,6 +26,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
     patch_size = int(config['ARCHITECTURE']['patch_size'])
     model_type = config['ARCHITECTURE']['model_type']
     loss_fn = config['TRAINING']['loss_fn']
+    attn_pool = str2bool(config['ARCHITECTURE']['attn_pool'])
 
     # Construct the model
     if model_type=='base':
@@ -64,7 +65,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            simmim=True,
                            loss_fn=loss_fn,
                            pixel_mean=pixel_mean,
-                           pixel_std=pixel_std)
+                           pixel_std=pixel_std,
+                           attn_pool=attn_pool)
     elif model_type=='mimlarge':
         model = mim_vit_large(embed_dim=embed_dim,
                            img_size=img_size,
@@ -74,7 +76,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            simmim=True,
                            loss_fn=loss_fn,
                            pixel_mean=pixel_mean,
-                           pixel_std=pixel_std)
+                           pixel_std=pixel_std,
+                           attn_pool=attn_pool)
     elif model_type=='mimhuge':
         model = mim_vit_huge(embed_dim=embed_dim,
                            img_size=img_size,
@@ -84,7 +87,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            simmim=True,
                            loss_fn=loss_fn,
                            pixel_mean=pixel_mean,
-                           pixel_std=pixel_std)
+                           pixel_std=pixel_std,
+                           attn_pool=attn_pool)
     model.to(device)
 
     # Use multiple GPUs if available
@@ -154,7 +158,7 @@ class MaskedAutoencoderViT(nn.Module):
                  embed_dim=1024, depth=24, num_heads=16,
                  decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
                  mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False, 
-                 simmim=False, loss_fn='mse', pixel_mean=0, pixel_std=1.):
+                 simmim=False, loss_fn='mse', pixel_mean=0, pixel_std=1., attn_pool=False):
         super().__init__()
 
         self.simmim = simmim
@@ -185,13 +189,24 @@ class MaskedAutoencoderViT(nn.Module):
             
             # Pre-compute patch_mask_values for the expected image dimensions
             #self.patch_mask_values = self.mask_token.repeat(1, self.tile_size, self.tile_size)
+
+            if attn_pool:
+                self.attn_pool = AttentionPoolLatent(embed_dim,
+                                                     num_heads=num_heads,
+                                                     mlp_ratio=mlp_ratio,
+                                                     norm_layer=norm_layer)
+                dec_upsample_size = img_size
+                
+            else:
+                self.attn_pool = False
+                dec_upsample_size = self.tile_size
             
             # Simple decoder
             self.decoder = nn.Sequential(
                 nn.Conv2d(
                     in_channels=embed_dim,
-                    out_channels=self.tile_size ** 2 * in_chans, kernel_size=1),
-                nn.PixelShuffle(self.tile_size),
+                    out_channels=dec_upsample_size ** 2 * in_chans, kernel_size=1),
+                nn.PixelShuffle(dec_upsample_size),
             )
 
         else:
@@ -338,10 +353,15 @@ class MaskedAutoencoderViT(nn.Module):
         for blk in self.blocks:
             x = blk(x)
 
+        # Pool patches into a single embedding
+        if self.attn_pool:
+            x = self.attn_pool(x).unsqueeze(1)
+        
         x = self.norm(x)
-
+        
         if self.simmim and reshape_out:
-            x = x[:, 1:]
+            if not self.attn_pool:
+                x = x[:, 1:]
             B, L, C = x.shape
             H = W = int(L ** 0.5)
             x = x.permute(0, 2, 1).reshape(B, C, H, W)
