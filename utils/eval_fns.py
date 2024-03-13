@@ -4,7 +4,7 @@ import os
 import sys
 cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)
-from similarity import get_augmentations
+from dataloaders import get_augmentations
 
 def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
     if not single_batch:
@@ -107,10 +107,13 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
 
             if hasattr(model, 'module'):
                 latent, _, _ = model.module.forward_encoder(samples, mask_ratio, mask=None, reshape_out=False)
+                remove_cls = False if not model.module.attn_pool else True
             else:
                 latent, _, _ = model.forward_encoder(samples, mask_ratio, mask=None, reshape_out=False)
-            # Remove cls token
-            latent = latent[:,1:]
+                remove_cls = False if not model.attn_pool else True
+            if remove_cls:
+                # Remove cls token
+                latent = latent[:,1:]
             
             latents.append(latent.detach().cpu())
             if return_images:
