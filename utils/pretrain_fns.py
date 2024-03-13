@@ -129,8 +129,6 @@ def get_embeddings(data_path, model, device, dataloader_template, y_label='class
         # There is only one output set of features if there is an attention pooling layer
         combine='flatten'
 
-    print(latent_features.shape)
-
     scale = True    
     if combine=='flatten':
         x = latent_features.reshape(latent_features.shape[0], -1)
