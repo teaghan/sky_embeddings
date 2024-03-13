@@ -19,6 +19,72 @@ def apply_masks(x, masks):
         mask_keep = m.unsqueeze(-1).repeat(1, 1, x.size(-1))
         all_x += [torch.gather(x, dim=1, index=mask_keep)]
     return torch.cat(all_x, dim=0)
+
+class SimpleMaskCollator(object):
+    def __init__(
+        self,
+        input_size=(32, 32),
+        patch_size=8,
+        nenc=1,  # Number of encoder masks per image
+        npred=2,  # Number of predictor masks per image
+    ):
+        if not isinstance(input_size, tuple):
+            input_size = (input_size, ) * 2
+        self.patch_size = patch_size
+        self.height, self.width = input_size[0] // patch_size, input_size[1] // patch_size
+        self.nenc = nenc
+        self.npred = npred
+        # Shared counter for iteration tracking across processes.
+        self._itr_counter = Value('i', -1)
+
+    def step(self):
+        """Increments and returns the global step counter."""
+        with self._itr_counter.get_lock():
+            self._itr_counter.value += 1
+            return self._itr_counter.value
+
+    def __call__(self, batch):
+        if batch[0].ndim > 4:
+            # Batch size of one from dataloader with embedded batches
+            N, M, C, H, W = batch[0].size()
+            collated_batch = batch[0].reshape((N*M, C, H, W))
+            reshape_out = True
+        else:
+            collated_batch = torch.utils.data.default_collate(batch)
+            reshape_out = False
+        # Batch size
+        B = len(collated_batch)
+
+        n_patches = self.height * self.width
+        n_per_mask = n_patches//(self.nenc + self.npred)
+        
+        collated_masks_enc, collated_masks_pred = [], []
+        for _ in range(B):
+                        
+            # Generate random order of patches
+            patch_indices = torch.randperm(n_patches)
+            
+            # Assign different patches to each mask
+            masks_e = [torch.sort(patch_indices[i*n_per_mask:(i+1)*n_per_mask]).values for i in range(self.nenc)]
+            start_i = self.nenc*n_per_mask
+            masks_p = [torch.sort(patch_indices[start_i+i*n_per_mask:start_i+(i+1)*n_per_mask]).values for i in range(self.npred)]
+            collated_masks_enc.append(masks_e)
+            collated_masks_pred.append(masks_p)
+
+        #collated_masks_pred = [[cm for cm in cm_list] for cm_list in collated_masks_pred]
+        collated_masks_pred = torch.utils.data.default_collate(collated_masks_pred)
+        # --
+        #collated_masks_enc = [[cm for cm in cm_list] for cm_list in collated_masks_enc]
+        collated_masks_enc = torch.utils.data.default_collate(collated_masks_enc)
+        
+        # Adjusting the structure for encoder and predictor masks
+        if reshape_out:
+            collated_batch = collated_batch.reshape((N, M, C, H, W))
+            collated_masks_enc = list(zip(*[mask.reshape((N, M, -1)) for mask in collated_masks_enc]))
+            collated_masks_pred = list(zip(*[mask.reshape((N, M, -1)) for mask in collated_masks_pred]))
+            
+        return collated_batch, collated_masks_enc, collated_masks_pred
+
 '''
 class MaskCollator(object):
     """Initializes a MaskCollator for dynamic mask generation for image batches.
@@ -187,6 +253,7 @@ class MaskCollator(object):
         
         return collated_batch, collated_masks_enc, collated_masks_pred
 '''
+
 class MaskCollator(object):
 
     def __init__(
@@ -245,7 +312,7 @@ class MaskCollator(object):
         h, w = b_size
 
         def constrain_mask(mask, tries=0):
-            """ Helper to restrict given mask to a set of acceptable regions """
+            ''' Helper to restrict given mask to a set of acceptable regions '''
             N = max(int(len(acceptable_regions)-tries), 0)
             for k in range(N):
                 mask *= acceptable_regions[k]
