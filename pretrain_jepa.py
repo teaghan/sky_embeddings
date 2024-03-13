@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 from utils.misc import str2bool, parseArguments
 from utils.pretrain_engine import run_iter, linear_probe
 from utils.vision_transformer import build_model
-from utils.masks import MaskCollator
+from utils.masks import SimpleMaskCollator, MaskCollator
 from utils.data import build_h5_dataloader, build_fits_dataloader, get_augmentations
 from utils.plotting_fns import plot_progress
 
@@ -70,7 +70,12 @@ def main(args):
 
     
     # Masking and data loading
-    mask_collator = MaskCollator(
+    mask_collator = SimpleMaskCollator(
+        input_size=int(config['ARCHITECTURE']['img_size']),
+        patch_size=int(config['ARCHITECTURE']['patch_size']),
+        nenc=int(config['MASK']['num_enc_masks']),
+        npred=int(config['MASK']['num_pred_masks']))
+    '''mask_collator = MaskCollator(
         input_size=int(config['ARCHITECTURE']['img_size']),
         patch_size=int(config['ARCHITECTURE']['patch_size']),
         pred_mask_scale=eval(config['MASK']['pred_mask_scale']),
@@ -79,7 +84,7 @@ def main(args):
         nenc=int(config['MASK']['num_enc_masks']),
         npred=int(config['MASK']['num_pred_masks']),
         allow_overlap=str2bool(config['MASK']['allow_overlap']),
-        min_keep=int(config['MASK']['min_keep']))
+        min_keep=int(config['MASK']['min_keep']))'''
     
     transform = None#get_augmentations(img_size=int(config['ARCHITECTURE']['img_size']), 
                 #                  flip=False, crop=False, brightness=True, noise=True, nan_channels=True)
@@ -101,7 +106,7 @@ def main(args):
                                                 img_size=int(config['ARCHITECTURE']['img_size']),
                                                 pos_channel=str2bool(config['DATA']['pos_channel']), 
                                                 transforms=transform,
-                                                  collator=mask_collator,
+                                               collator=mask_collator,
                                                shuffle=True)
         train_nested_batches = False
         print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
