@@ -98,13 +98,11 @@ def get_augmentations(img_size=64, flip=True, crop=True, brightness=True, noise=
 def build_fits_dataloader(fits_paths, bands, min_bands, batch_size, num_workers,
                           patch_size=8, max_mask_ratio=None, 
                           img_size=64, cutouts_per_tile=1024, use_calexp=True,
-                          augment=False, shuffle=True):
+                          augment=False, shuffle=True, transforms=None):
     '''Return a dataloader to be used during training.'''
 
-    if augment:
+    if (transforms is None) and augment:
         transforms = get_augmentations(img_size=img_size)
-    else:
-        transforms = None
     
     # Build dataset
     dataset = FitsDataset(fits_paths, patch_size=patch_size, 
@@ -121,12 +119,11 @@ def build_fits_dataloader(fits_paths, bands, min_bands, batch_size, num_workers,
 
 def build_h5_dataloader(filename, batch_size, num_workers, patch_size=8, num_channels=5, 
                         max_mask_ratio=None, label_keys=None, img_size=64, pos_channel=False, 
-                        num_patches=None, augment=False, shuffle=True, indices=None):
+                        num_patches=None, augment=False, shuffle=True, indices=None, transforms=None):
 
-    if augment:
-        transforms = transforms = get_augmentations(img_size=img_size)
-    else:
-        transforms = None
+    if (transforms is None) and augment:
+        transforms = get_augmentations(img_size=img_size)
+
     
     # Build dataset
     dataset = H5Dataset(filename, img_size=img_size, patch_size=patch_size, 
@@ -241,7 +238,7 @@ class H5Dataset(torch.utils.data.Dataset):
 
     def __init__(self, data_file, img_size, patch_size, num_channels, max_mask_ratio, 
                  pos_channel=False, num_patches=None, label_keys=None, 
-                 transform=None, pixel_min=-3., pixel_max=None, indices=None):
+                 transform=None, pixel_min=-3., pixel_max=50., indices=None):
         
         self.data_file = data_file
         self.transform = transform
@@ -494,7 +491,7 @@ class FitsDataset(torch.utils.data.Dataset):
 
     def __init__(self, fits_paths,  patch_size=8, max_mask_ratio=None, bands=['G','R','I','Z','Y'], min_bands=5,
                  img_size=64, cutouts_per_tile=1024, batch_size=64, shuffle=True, 
-                 transform=None, pixel_min=-3., pixel_max=None, use_calexp=True):
+                 transform=None, pixel_min=-3., pixel_max=50., use_calexp=True):
         
         self.fits_paths = fits_paths
         self.img_size = img_size
