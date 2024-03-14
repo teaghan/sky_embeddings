@@ -530,6 +530,7 @@ class MaskedAutoencoderViT(nn.Module):
             loss = torch.nn.functional.mse_loss(imgs, pred, reduction='none')
         else:
             loss = torch.nn.functional.l1_loss(imgs, pred, reduction='none')
+        
 
         # Adjust mask based on nan values for numerical stability
         nan_mask = torch.where(torch.isnan(torch.sum(loss, 2)), 0, 1)
@@ -537,6 +538,9 @@ class MaskedAutoencoderViT(nn.Module):
         
         # Replace NaN values in loss with 0
         loss = torch.nan_to_num(loss, nan=0.0)
+
+        # Also remove large pixel values?
+        loss[imgs > 50] = 0
         
         # Only compute loss on masked patches
         mask = mask.unsqueeze(2)
