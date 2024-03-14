@@ -228,7 +228,7 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                                                               device, 
                                                               mask_ratio, 
                                                               single_batch=True)
-                plot_batch_tiled(orig_imgs, mask_imgs, pred_imgs, n_samples=5, channel_index=0,
+                plot_batch_tiled(orig_imgs, mask_imgs, pred_imgs, n_samples=5,
                            savename=os.path.join(fig_dir, 
                                                  f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters.png'))
 
