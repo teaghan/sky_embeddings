@@ -170,6 +170,7 @@ class MaskedAutoencoderViT(nn.Module):
         # MAE encoder specifics
         self.patch_embed = PatchEmbed((patch_size, patch_size*in_chans), patch_size, 1, embed_dim)
         num_patches = self.patch_embed.num_patches
+        print(num_patches)
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim), requires_grad=False)  # fixed sin-cos embedding
@@ -234,6 +235,7 @@ class MaskedAutoencoderViT(nn.Module):
         # initialization
         # initialize (and freeze) pos_embed by sin-cos embedding
         pos_embed = get_2d_sincos_pos_embed(self.pos_embed.shape[-1], int(self.patch_embed.num_patches**.5), cls_token=True)
+        print(pos_embed.shape)
         self.pos_embed.data.copy_(torch.from_numpy(pos_embed).float().unsqueeze(0))
 
         if not self.simmim:
