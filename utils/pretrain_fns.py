@@ -58,7 +58,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
         # Classifier task
         x,y = get_embeddings(class_data_path, 
                              model, device, dataloader_template,
-                             y_label='class', combine=combine)
+                             y_label='class', combine=combine, remove_cls=True)
         
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
@@ -81,7 +81,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
         # Regression task
         x,y = get_embeddings(regress_data_path, 
                              model, device, dataloader_template,
-                             y_label='zspec', combine=combine)
+                             y_label='zspec', combine=combine, remove_cls=True)
     
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
@@ -103,7 +103,8 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
         losses_cp['train_lp_r2'].append(float(r2_train))
         losses_cp['val_lp_r2'].append(float(r2_test))
 
-def get_embeddings(data_path, model, device, dataloader_template, y_label='class', combine='central'):
+def get_embeddings(data_path, model, device, 
+                   dataloader_template, y_label='class', combine='central', remove_cls=True):
 
     # Data loader
     dataloader = build_h5_dataloader(data_path, 
@@ -118,7 +119,7 @@ def get_embeddings(data_path, model, device, dataloader_template, y_label='class
                                          shuffle=False)
 
     # Map target samples to latent-space
-    latent_features = mae_latent(model, dataloader, device, verbose=0)
+    latent_features = mae_latent(model, dataloader, device, verbose=0, remove_cls=remove_cls)
     latent_features = latent_features.data.cpu().numpy()
 
     # Collect targets

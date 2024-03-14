@@ -192,7 +192,7 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                     if lp_class_data_file or lp_regress_data_file:
                         # Run Linear Probing tests
                         linear_probe(model, losses_cp, device, dataloader_val, 
-                                     lp_class_data_file, lp_regress_data_file, combine='flatten')
+                                     lp_class_data_file, lp_regress_data_file, combine='flatten', remove_cls=False)
                 
                 # Calculate averages
                 for k in losses_cp.keys():
