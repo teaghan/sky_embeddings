@@ -39,7 +39,7 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
             pred = model.unflatten_patches(pred)
             
             # Fill in missing prediction pixels with original values
-            #pred[mask==0] = samples[mask==0]
+            pred[mask==0] = samples[mask==0]
             pred = pred.data.cpu().numpy()
             
             # Originals
