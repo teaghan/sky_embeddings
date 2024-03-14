@@ -580,9 +580,6 @@ def extract_center(array, n):
     start_row = rows // 2 - n // 2
     start_col = cols // 2 - n // 2
 
-    print(rows, cols, array.shape)
-    print(start_row, start_col)
-
     # Extract and return the nxn center
     return array[:,start_row:start_row + n, start_col:start_col + n]
 
