@@ -540,7 +540,7 @@ class MaskedAutoencoderViT(nn.Module):
         
         # Only compute loss on masked patches
         mask = mask.unsqueeze(2)
-        avg_scale_factor = mask.sum() / mask.numel() * samples.numel()
+        avg_scale_factor = mask.sum() / mask.numel() * loss.numel()
         loss = (loss * mask).sum() / (avg_scale_factor + 1e-5)
             
         return loss
