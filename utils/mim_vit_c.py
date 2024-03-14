@@ -333,6 +333,14 @@ class MaskedAutoencoderViT(nn.Module):
         # Flatten patch_size and channels into a single dimension
         return x.reshape(batch_size, 1, patch_size, patch_size*channels)
 
+    def unflatten_patches(self, x):
+        """
+        x: (N, C, patch_size**2)
+        imgs: (N, C, H, W)
+        """
+        patch_size = self.patch_embed.patch_size[0]
+        return x.reshape((x.size(0), x.size(1), patch_size, patch_size))
+
     def random_masking_old(self, x, mask_ratio):
         """
         Perform per-sample random masking by per-sample shuffling.
