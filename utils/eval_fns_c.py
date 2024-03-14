@@ -61,7 +61,7 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
     return pred_imgs, mask_imgs, orig_imgs
 
 def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_images=False, verbose=1, 
-               apply_augmentations=False, num_augmentations=16):
+               apply_augmentations=False, num_augmentations=16, remove_cls=True):
     
     if n_batches is None:
         n_batches = len(dataloader)
@@ -98,10 +98,10 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
 
             if hasattr(model, 'module'):
                 latent, _, _ = model.module.forward_encoder(samples, mask_ratio, mask=None, reshape_out=False)
-                remove_cls = True if not model.module.attn_pool else False
+                remove_cls = False if model.module.attn_pool
             else:
                 latent, _, _ = model.forward_encoder(samples, mask_ratio, mask=None, reshape_out=False)
-                remove_cls = True if not model.attn_pool else False
+                remove_cls = False if model.attn_pool
             if remove_cls:
                 # Remove cls token
                 latent = latent[:,1:]

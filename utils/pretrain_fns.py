@@ -50,7 +50,7 @@ def run_iter(model, samples, masks, mask_ratio, optimizer, lr_scheduler,
     return model, optimizer, lr_scheduler, losses_cp
 
 def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=None,
-                 regress_data_path=None, combine='central'):
+                 regress_data_path=None, combine='central', remove_cls=True):
     '''Train a quick linear probing model to evaluate the quality of the embeddings.'''
     
     model.train(False)
@@ -58,7 +58,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
         # Classifier task
         x,y = get_embeddings(class_data_path, 
                              model, device, dataloader_template,
-                             y_label='class', combine=combine, remove_cls=True)
+                             y_label='class', combine=combine, remove_cls=remove_cls)
         
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
@@ -81,7 +81,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
         # Regression task
         x,y = get_embeddings(regress_data_path, 
                              model, device, dataloader_template,
-                             y_label='zspec', combine=combine, remove_cls=True)
+                             y_label='zspec', combine=combine, remove_cls=remove_cls)
     
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
