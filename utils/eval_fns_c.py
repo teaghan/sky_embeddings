@@ -18,6 +18,8 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
     with torch.no_grad():
         # Loop through spectra in dataset
         for samples, mask, _ in dataloader:
+
+            masked_samples = samples.detach().clone()
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
@@ -28,23 +30,23 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
             if hasattr(model, 'module'):
                 model = model.module
 
-            mask[torch.isnan(samples.view(samples.size(0),samples.size(1),-1)).all(-1)] = 1.
+            mask[torch.isnan(masked_samples.view(masked_samples.size(0),masked_samples.size(1),-1)).all(-1)] = 1.
             
             # Return back to original scale
-            pred = model.denorm_imgs(samples, pred)
+            pred = model.denorm_imgs(masked_samples, pred)
             
             # Reshape to image size
             pred = model.unflatten_patches(pred)
             
             # Fill in missing prediction pixels with original values
             #pred[mask==0] = samples[mask==0]
-            
-            # Masked inputs
-            masked_samples = samples.detach().clone()
-            masked_samples[mask==1] = torch.nan
-            
-            samples = samples.data.cpu().numpy()
             pred = pred.data.cpu().numpy()
+            
+            # Originals
+            samples = masked_samples.data.cpu().numpy()
+
+            # Masked inputs
+            masked_samples[mask==1] = torch.nan
             masked_samples = masked_samples.data.cpu().numpy()
             
             # Save results
