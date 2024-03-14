@@ -207,9 +207,9 @@ def plot_batch_tiled(orig_imgs, mask_imgs, pred_imgs, n_samples=5, savename=None
         
         for j, img_batch in enumerate([orig_imgs, mask_imgs, pred_imgs]):
             tiled_image = tile_channels(img_batch[i])
-            if j==0:
-                vmin, vmax = np.nanmin(tiled_image), np.nanmax(tiled_image)
-            axes[i, j].imshow(tiled_image, vmin=vmin, vmax=vmax)#, cmap='gray')
+            #if j==0:
+            #    vmin, vmax = np.nanmin(tiled_image), np.nanmax(tiled_image)
+            axes[i, j].imshow(tiled_image)#, vmin=vmin, vmax=vmax)#, cmap='gray')
             axes[i, j].axis('off')  # Hide the axes
 
     plt.tight_layout()
