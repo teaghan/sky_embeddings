@@ -188,14 +188,12 @@ def plot_batch_tiled(orig_imgs, mask_imgs, pred_imgs, n_samples=5, savename=None
     n_samples (int): Number of samples to plot.
     savename (str, optional): Filename to save the plot. If None, the plot is shown.
     """
-    print(orig_imgs.shape, mask_imgs.shape, pred_imgs.shape)
     # Normalize the batch between 0 and 1
-    orig_imgs = normalize_images(np.concatenate((orig_imgs, mask_imgs, pred_imgs)))
-    b = pred_imgs.shape[0]
-    mask_imgs = orig_imgs[b:b*2]
-    pred_imgs = orig_imgs[b*2:]
-    orig_imgs = orig_imgs[:b]
-    print(orig_imgs.shape, mask_imgs.shape, pred_imgs.shape)
+    #orig_imgs = normalize_images(np.concatenate((orig_imgs, mask_imgs, pred_imgs)))
+    #b = pred_imgs.shape[0]
+    #mask_imgs = orig_imgs[b:b*2]
+    #pred_imgs = orig_imgs[b*2:]
+    #orig_imgs = orig_imgs[:b]
 
     # Create a figure with subplots
     fig, axes = plt.subplots(n_samples, 3, figsize=(10, n_samples*10/3))
