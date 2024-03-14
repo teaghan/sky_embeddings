@@ -188,12 +188,14 @@ def plot_batch_tiled(orig_imgs, mask_imgs, pred_imgs, n_samples=5, savename=None
     n_samples (int): Number of samples to plot.
     savename (str, optional): Filename to save the plot. If None, the plot is shown.
     """
+    print(orig_imgs.shape, mask_imgs.shape, pred_imgs.shape)
     # Normalize the batch between 0 and 1
     orig_imgs = normalize_images(np.concatenate((orig_imgs, mask_imgs, pred_imgs)))
     b = pred_imgs.shape[0]
     mask_imgs = orig_imgs[b:b*2]
     pred_imgs = orig_imgs[b*2:]
     orig_imgs = orig_imgs[:b]
+    print(orig_imgs.shape, mask_imgs.shape, pred_imgs.shape)
 
     # Create a figure with subplots
     fig, axes = plt.subplots(n_samples, 3, figsize=(10, n_samples*10/3))
@@ -203,7 +205,7 @@ def plot_batch_tiled(orig_imgs, mask_imgs, pred_imgs, n_samples=5, savename=None
         if i == 0:
             axes[i, 0].set_title('Original', fontsize=12)
             axes[i, 1].set_title('Masked Input', fontsize=12)
-            axes[i, 2].set_title('Reconstruction \n+ Visible', fontsize=12)
+            axes[i, 2].set_title('Reconstruction', fontsize=12)
         
         for j, img_batch in enumerate([orig_imgs, mask_imgs, pred_imgs]):
             tiled_image = tile_channels(img_batch[i])
