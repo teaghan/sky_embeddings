@@ -6,7 +6,7 @@ import sys
 cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)
 from dataloaders import build_h5_dataloader
-from eval_fns import mae_latent
+from eval_fns_c import mae_latent
 from misc import select_centre
 
 from sklearn.model_selection import train_test_split
