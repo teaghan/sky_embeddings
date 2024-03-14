@@ -11,8 +11,8 @@ from utils.misc import str2bool, parseArguments
 from utils.pretrain_fns import run_iter, linear_probe
 from utils.mim_vit_c import build_model
 from utils.dataloaders import build_h5_dataloader, build_fits_dataloader
-from utils.plotting_fns import plot_progress, plot_batch
-from utils.eval_fns import mae_predict
+from utils.plotting_fns import plot_progress, plot_batch_tiled
+from utils.eval_fns_c import mae_predict
 
 def main(args):
 
@@ -228,7 +228,7 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                                                               device, 
                                                               mask_ratio, 
                                                               single_batch=True)
-                plot_batch(orig_imgs, mask_imgs, pred_imgs, n_samples=5, channel_index=0,
+                plot_batch_tiled(orig_imgs, mask_imgs, pred_imgs, n_samples=5, channel_index=0,
                            savename=os.path.join(fig_dir, 
                                                  f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters.png'))
 

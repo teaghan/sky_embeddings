@@ -146,6 +146,81 @@ def plot_batch(orig_imgs, mask_imgs, pred_imgs,
 
     plt.close()
 
+def tile_channels(image, grid_size=None):
+    """
+    Rearranges the channels of an image into a tiled grid on a single axis.
+    
+    Parameters:
+    image (numpy.ndarray): The image to rearrange, expected shape: (channels, height, width).
+    grid_size (tuple, optional): The grid size (rows, cols) for tiling the channels. 
+                                 If None, it's automatically determined based on the number of channels.
+    
+    Returns:
+    numpy.ndarray: The image with channels rearranged into a tiled grid.
+    """
+    channels, height, width = image.shape
+    if grid_size is None:
+        # Determine grid size if not specified
+        grid_rows = int(np.ceil(np.sqrt(channels)))
+        grid_cols = int(np.ceil(channels / grid_rows))
+    else:
+        grid_rows, grid_cols = grid_size
+    
+    # Initialize an array for the tiled image
+    tiled_image = np.zeros((height * grid_rows, width * grid_cols))
+    
+    channel_index = 0
+    for row in range(grid_rows):
+        for col in range(grid_cols):
+            if channel_index >= channels:
+                break  # No more channels to process
+            tiled_image[row*height:(row+1)*height, col*width:(col+1)*width] = image[channel_index]
+            channel_index += 1
+    
+    return tiled_image
+
+def plot_batch_tiled(orig_imgs, mask_imgs, pred_imgs, n_samples=5, savename=None):
+    """
+    Plots original, masked, and predicted images with all channels tiled into a single axis.
+    
+    Parameters:
+    orig_imgs, mask_imgs, pred_imgs (numpy.ndarray): Batch of images to plot.
+    n_samples (int): Number of samples to plot.
+    savename (str, optional): Filename to save the plot. If None, the plot is shown.
+    """
+    # Normalize the batch between 0 and 1
+    orig_imgs = normalize_images(np.concatenate((orig_imgs, mask_imgs, pred_imgs)))
+    b = pred_imgs.shape[0]
+    mask_imgs = orig_imgs[b:b*2]
+    pred_imgs = orig_imgs[b*2:]
+    orig_imgs = orig_imgs[:b]
+
+    # Create a figure with subplots
+    fig, axes = plt.subplots(n_samples, 3, figsize=(10, n_samples*10/3))
+    
+    # Loop through the samples and display each one
+    for i in range(n_samples):
+        if i == 0:
+            axes[i, 0].set_title('Original', fontsize=12)
+            axes[i, 1].set_title('Masked Input', fontsize=12)
+            axes[i, 2].set_title('Reconstruction \n+ Visible', fontsize=12)
+        
+        for j, img_batch in enumerate([orig_imgs, mask_imgs, pred_imgs]):
+            tiled_image = tile_channels(img_batch[i])
+            vmin, vmax = np.nanmin(tiled_image), np.nanmax(tiled_image)
+            axes[i, j].imshow(tiled_image, vmin=vmin, vmax=vmax, cmap='gray')
+            axes[i, j].axis('off')  # Hide the axes
+
+    plt.tight_layout()
+    
+    if savename is not None:
+        plt.savefig(savename, facecolor='white', transparent=False, dpi=100,
+                    bbox_inches='tight', pad_inches=0.05)
+    else:
+        plt.show()
+
+    plt.close()
+
 def display_images(images, vmin=0., vmax=1., show_num=True, savename=None):
     """
     Display a list of images in a 2D grid using matplotlib.

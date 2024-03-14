@@ -626,14 +626,8 @@ def undo_pixel_norm(original_images, normalized_images, model):
     Returns:
     torch.Tensor: The unnormalized images.
     """
-    
-    original_images = model.patchify(original_images)
-    normalized_images = model.patchify(normalized_images)
-    
-    #mean = original_images.mean(dim=-1, keepdim=True)
-    #var = original_images.var(dim=-1, keepdim=True)
+    original_images = original_images.view(original_images.size(0), original_images.size(1), -1)
+
     mean, var = patch_mean_and_var(original_images)
 
-    unnormalized = normalized_images * (var + 1.e-6)**.5 + mean
-    
-    return model.unpatchify(unnormalized)
+    return normalized_images * (var + 1.e-6)**.5 + mean
