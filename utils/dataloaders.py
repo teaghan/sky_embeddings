@@ -238,7 +238,7 @@ class H5Dataset(torch.utils.data.Dataset):
 
     def __init__(self, data_file, img_size, patch_size, num_channels, max_mask_ratio, 
                  pos_channel=False, num_patches=None, label_keys=None, 
-                 transform=None, pixel_min=-3., pixel_max=50., indices=None):
+                 transform=None, pixel_min=-3., pixel_max=None, indices=None):
         
         self.data_file = data_file
         self.transform = transform
@@ -491,7 +491,7 @@ class FitsDataset(torch.utils.data.Dataset):
 
     def __init__(self, fits_paths,  patch_size=8, max_mask_ratio=None, bands=['G','R','I','Z','Y'], min_bands=5,
                  img_size=64, cutouts_per_tile=1024, batch_size=64, shuffle=True, 
-                 transform=None, pixel_min=-3., pixel_max=50., use_calexp=True):
+                 transform=None, pixel_min=-3., pixel_max=None, use_calexp=True):
         
         self.fits_paths = fits_paths
         self.img_size = img_size
