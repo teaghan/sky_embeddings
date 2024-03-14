@@ -98,10 +98,12 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
 
             if hasattr(model, 'module'):
                 latent, _, _ = model.module.forward_encoder(samples, mask_ratio, mask=None, reshape_out=False)
-                remove_cls = False if model.module.attn_pool
+                if model.module.attn_pool:
+                    remove_cls = False 
             else:
                 latent, _, _ = model.forward_encoder(samples, mask_ratio, mask=None, reshape_out=False)
-                remove_cls = False if model.attn_pool
+                if model.attn_pool:
+                    remove_cls = False 
             if remove_cls:
                 # Remove cls token
                 latent = latent[:,1:]
