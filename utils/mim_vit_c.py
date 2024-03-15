@@ -701,8 +701,10 @@ def undo_layer_norm(original_images, normalized_images, eps=1e-05):
     Returns:
     torch.Tensor: The unnormalized images.
     """
+    print(original_images.shape, normalized_images.shape)
 
-    mean, var = nan_mean_and_var(original_images, dim=(1,2,3))
+    mean, var = nan_mean_and_var(original_images, dim=0)
+    print(mean.shape, var.shape)
     
 
     # Reverse the standard normalization, including epsilon for stability
