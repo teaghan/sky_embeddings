@@ -224,6 +224,7 @@ class MaskedAutoencoderViT(nn.Module):
     
             self.decoder_norm = norm_layer(decoder_embed_dim)
             self.decoder_pred = nn.Linear(decoder_embed_dim, patch_size**2 * in_chans, bias=True) # decoder to patch
+            self.attn_pool = False
             # --------------------------------------------------------------------------
 
         self.norm_pix_loss = norm_pix_loss
