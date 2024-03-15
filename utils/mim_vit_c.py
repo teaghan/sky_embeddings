@@ -414,11 +414,11 @@ class MaskedAutoencoderViT(nn.Module):
 
         # If the input image size is larger than the patch_size, then turn each patch into its own sample
         # ie. (batch_size, channels, img_size, img_size) -> (batch_size*num_patches, channels, patch_size, patch_size) 
-        imgs = self.batchify_images(imgs)
+        x = self.batchify_images(x)
         # Normalize each sample
-        imgs = layer_norm(imgs)
+        x = layer_norm(x)
         
-        #imgs = self.norm_inputs(imgs)
+        #x = self.norm_inputs(x)
 
         # Determine which channels have missing info (ie. all pixels are NaN)
         # this mask has a shape of (batch_size*num_patches, channels)
