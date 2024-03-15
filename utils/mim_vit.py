@@ -206,6 +206,7 @@ class MaskedAutoencoderViT(nn.Module):
                     out_channels=dec_upsample_size ** 2 * in_chans, kernel_size=1),
                 nn.PixelShuffle(dec_upsample_size),
             )
+            self.mask_token = nn.Parameter(torch.zeros(1, 1, 1))
 
         else:
             # --------------------------------------------------------------------------
@@ -319,9 +320,10 @@ class MaskedAutoencoderViT(nn.Module):
             
     def forward_encoder(self, x, mask_ratio=0, mask=None, reshape_out=True):
 
-        # Mask input image
         B, C, H, W = x.shape
-
+        # Normalize input images
+        imgs = self.norm_inputs(imgs)
+        
         # Expand the masking values to match the size of the batch of images
         patch_mask_values = self.patch_mask_values.repeat(1, self.tile_size, self.tile_size)
         patch_mask_values = patch_mask_values.expand(B, -1, -1, -1)
@@ -459,9 +461,10 @@ class MaskedAutoencoderViT(nn.Module):
         return x * self.pixel_std + self.pixel_mean
 
     def forward(self, imgs, mask_ratio=0.75, mask=None, denorm_out=False):
-        imgs = self.norm_inputs(imgs)
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio, mask)
         pred = self.forward_decoder(latent, ids_restore)  # [N, L, p*p*3]
+        # Normalize inputs before computing loss
+        imgs = self.norm_inputs(imgs)
         loss = self.forward_loss(imgs.detach(), pred, mask)
         return loss, pred, mask
 
