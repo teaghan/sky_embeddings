@@ -33,7 +33,7 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
             mask[torch.isnan(masked_samples.view(masked_samples.size(0),masked_samples.size(1),-1)).all(-1)] = 1.
             
             # Return back to original scale
-            pred = model.denorm_imgs(masked_samples, pred)
+            pred = model.denorm_imgs(samples, pred)
             
             # Reshape to image size
             pred = model.unflatten_patches(pred)
