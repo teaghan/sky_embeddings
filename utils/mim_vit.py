@@ -404,14 +404,14 @@ class MaskedAutoencoderViT(nn.Module):
         pred: [N, L, p*p*3]
         mask: [N, L], 0 is keep, 1 is remove, 
         """
-        # Invert nan_mask because we want 1s where the values are NOT NaN (valid for loss calculation)
-        valid_data_mask = ~torch.isnan(imgs)
-        valid_data_mask = valid_data_mask.to(imgs.dtype)
-
-        # Combine the valid data mask with the existing mask to exclude both NaN values and unseen pixels
-        mask = valid_data_mask * mask
         
         if self.simmim:
+            # Invert nan_mask because we want 1s where the values are NOT NaN (valid for loss calculation)
+            valid_data_mask = ~torch.isnan(imgs)
+            valid_data_mask = valid_data_mask.to(imgs.dtype)
+    
+            # Combine the valid data mask with the existing mask to exclude both NaN values and unseen pixels
+            mask = valid_data_mask * mask
             if self.norm_pix_loss:
                 imgs = self.patchify(imgs)
                 # Compute mean and variance of patches in target
@@ -434,11 +434,21 @@ class MaskedAutoencoderViT(nn.Module):
         else:
             loss = torch.nn.functional.l1_loss(imgs, pred, reduction='none')
 
+
+        # Adjust mask based on nan values for numerical stability
+        nan_mask = torch.where(torch.isnan(torch.sum(loss, 2)), 0, 1)
+        mask *= nan_mask
+        
         # Replace NaN values in loss with 0
         loss = torch.nan_to_num(loss, nan=0.0)
+
+        # Also remove large pixel values?
+        #loss[imgs > 50] = 0
         
         # Only compute loss on masked patches
-        loss = (loss * mask).sum() / (mask.sum() + 1e-5)
+        mask = mask.unsqueeze(2)
+        avg_scale_factor = mask.sum() / mask.numel() * loss.numel()
+        loss = (loss * mask).sum() / (avg_scale_factor + 1e-5)
             
         return loss
 
