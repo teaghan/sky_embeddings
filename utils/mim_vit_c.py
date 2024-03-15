@@ -170,7 +170,6 @@ class MaskedAutoencoderViT(nn.Module):
         # MAE encoder specifics
         self.patch_embed = PatchEmbed((patch_size, patch_size*in_chans), patch_size, 1, embed_dim)
         num_patches = self.patch_embed.num_patches
-        print(num_patches)
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim), requires_grad=False)  # fixed sin-cos embedding
@@ -412,10 +411,6 @@ class MaskedAutoencoderViT(nn.Module):
         return x_masked, mask, ids_restore
             
     def forward_encoder(self, x, mask_ratio=0, mask=None, reshape_out=True):
-        
-        # If the input image size is larger than the patch_size, then turn each patch into its own sample
-        # ie. (batch_size, channels, img_size, img_size) -> (batch_size*num_patches, channels, patch_size, patch_size) 
-        x = self.batchify_images(x)
 
         # Determine which channels have missing info (ie. all pixels are NaN)
         # this mask has a shape of (batch_size*num_patches, channels)
@@ -517,14 +512,14 @@ class MaskedAutoencoderViT(nn.Module):
                 B, C, H, W = imgs.shape
                 imgs = imgs.view(B, C, -1)
                 # Compute mean and variance of patches in target
-                mean, var = patch_mean_and_var(imgs)
+                mean, var = nan_mean_and_var(imgs)
                 imgs = (imgs - mean) / (var + 1.e-6)**.5
                 imgs = imgs.view(B, C, H, W)
         else:
             imgs = imgs.view(imgs.size(0), imgs.size(1), -1)
             if self.norm_pix_loss:
                 # Compute mean and variance of patches in target
-                mean, var = patch_mean_and_var(imgs)
+                mean, var = nan_mean_and_var(imgs)
                 # Normalize each patch
                 imgs = (imgs - mean) / (var + 1.e-6)**.5
     
@@ -558,13 +553,23 @@ class MaskedAutoencoderViT(nn.Module):
         if self.norm_pix_loss:
             # Undo pixel norm
             x = undo_pixel_norm(orig_imgs, x, self)
-        return x * self.pixel_std + self.pixel_mean
+
+        # Now undo input norm with orig images
+        return undo_layer_norm(orig_imgs, x)
+        #return x * self.pixel_std + self.pixel_mean
 
     def forward(self, imgs, mask_ratio=0.75, mask=None, denorm_out=False):
+
+        # If the input image size is larger than the patch_size, then turn each patch into its own sample
+        # ie. (batch_size, channels, img_size, img_size) -> (batch_size*num_patches, channels, patch_size, patch_size) 
+        imgs = self.batchify_images(imgs)
+        # Normalize each sample
+        imgs = layer_norm(imgs)
+        
         # Randomly set the mask ratio for this batch
         mask_ratio = torch.rand(1).item() * mask_ratio
         
-        imgs = self.norm_inputs(imgs)
+        #imgs = self.norm_inputs(imgs)
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio, mask)
         pred = self.forward_decoder(latent, ids_restore)
         loss = self.forward_loss(imgs.detach(), pred, mask)
@@ -615,7 +620,7 @@ def mim_vit_huge(**kwargs):
         decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
         mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
-
+'''
 def patch_mean_and_var(imgs):
     # Create a mask of non-NaN values (True where the data is not NaN)
     non_nan_mask = ~torch.isnan(imgs)
@@ -628,6 +633,33 @@ def patch_mean_and_var(imgs):
     diff_squared = torch.where(non_nan_mask, imgs - mean, torch.tensor(0.0, device=imgs.device)) ** 2
     # Sum the squared differences, divide by the count of non-NaN values to get the variance.
     var = diff_squared.sum(dim=-1, keepdim=True) / non_nan_mask.sum(dim=-1, keepdim=True)
+
+    return mean, var
+'''
+def nan_mean_and_var(imgs, dim=-1, keepdim=True):
+    # Create a mask of non-NaN values (True where the data is not NaN)
+    non_nan_mask = ~torch.isnan(imgs)
+    
+    # Calculate the sum of non-NaN values along the specified dimensions
+    valid_values_sum = torch.where(non_nan_mask, imgs, torch.tensor(0.0, device=imgs.device)).sum(dim=dim, keepdim=keepdim)
+    
+    # Count the number of non-NaN values along the specified dimensions
+    valid_values_count = non_nan_mask.sum(dim=dim, keepdim=keepdim)
+    
+    # Calculate the mean of non-NaN values
+    mean = valid_values_sum / valid_values_count
+    
+    # Calculate the variance of non-NaN values
+    # Subtract the mean from only the non-NaN values and square the result.
+    if keepdim:
+        expanded_mean = mean
+    else:
+        # Expand mean to match the original shape for subtraction if keepdim is False
+        expanded_mean = mean.unsqueeze(dim)
+        
+    diff_squared = torch.where(non_nan_mask, imgs - expanded_mean, torch.tensor(0.0, device=imgs.device)) ** 2
+    # Sum the squared differences and divide by the count of non-NaN values to get the variance.
+    var = diff_squared.sum(dim=dim, keepdim=keepdim) / valid_values_count
 
     return mean, var
 
@@ -643,6 +675,30 @@ def undo_pixel_norm(original_images, normalized_images, model):
     """
     original_images = original_images.view(original_images.size(0), original_images.size(1), -1)
 
-    mean, var = patch_mean_and_var(original_images)
+    mean, var = nan_mean_and_var(original_images)
 
     return normalized_images * (var + 1.e-6)**.5 + mean
+
+def layer_norm(x, eps=1e-05):
+    
+    mean, var = nan_mean_and_var(x, dim=(1,2,3))
+
+    return (x - mean) / torch.sqrt(var + eps)
+
+def undo_layer_norm(original_images, normalized_images, eps=1e-05):
+    """
+    Undo the normalization by LayerNorm, including the epsilon value.
+
+    Args:
+    normalized_images (torch.Tensor): The normalized images.
+    layer_norm (torch.nn.LayerNorm): The LayerNorm layer used for normalization.
+
+    Returns:
+    torch.Tensor: The unnormalized images.
+    """
+
+    mean, var = nan_mean_and_var(original_images, dim=(1,2,3))
+    
+
+    # Reverse the standard normalization, including epsilon for stability
+    return normalized_images * torch.sqrt(var + eps) + mean
