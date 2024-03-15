@@ -180,15 +180,13 @@ class MaskedAutoencoderViT(nn.Module):
         self.norm = norm_layer(embed_dim)
         # --------------------------------------------------------------------------
 
-        if self.simmim:
-            # Trainable pixel values that replace the masked pixels
-            self.mask_token = nn.Parameter(torch.zeros((in_chans, patch_size, patch_size)))
+        # Trainable pixel values that replace the masked pixels
+        self.patch_mask_values = nn.Parameter(torch.zeros((in_chans, patch_size, patch_size)))
 
-            # Pre-compute the tile size based on expected image dimensions
-            self.tile_size = (img_size)//(patch_size)
-            
-            # Pre-compute patch_mask_values for the expected image dimensions
-            #self.patch_mask_values = self.mask_token.repeat(1, self.tile_size, self.tile_size)
+        # Pre-compute the tile size based on expected image dimensions
+        self.tile_size = (img_size)//(patch_size)
+        
+        if self.simmim:
 
             if attn_pool:
                 self.attn_pool = AttentionPoolLatent(embed_dim,
@@ -320,14 +318,19 @@ class MaskedAutoencoderViT(nn.Module):
         return x_masked, mask, ids_restore
             
     def forward_encoder(self, x, mask_ratio=0, mask=None, reshape_out=True):
+
+        # Mask input image
+        B, C, H, W = x.shape
+
+        # Expand the masking values to match the size of the batch of images
+        patch_mask_values = self.patch_mask_values.repeat(1, self.tile_size, self.tile_size)
+        patch_mask_values = patch_mask_values.expand(B, -1, -1, -1)
+        
+        # Replace NaN values with patch_mask_values
+        x = torch.where(torch.isnan(x), patch_mask_values, x)
+        
         if self.simmim:
             ids_restore = None
-            # Mask input image
-            B, C, H, W = x.shape
-
-            # Expand the masking values to match the size of the batch of images
-            patch_mask_values = self.mask_token.repeat(1, self.tile_size, self.tile_size)
-            patch_mask_values = patch_mask_values.expand(B, -1, -1, -1)
             
             # Image is masked where mask==1 and replaced with the values in patch_mask_values
             # Additionally, replace NaN values with patch_mask_values
@@ -423,8 +426,6 @@ class MaskedAutoencoderViT(nn.Module):
         else:
             imgs = self.patchify(imgs)
             if self.norm_pix_loss:
-                #mean = imgs.mean(dim=-1, keepdim=True)
-                #var = imgs.var(dim=-1, keepdim=True)
                 # Compute mean and variance of patches in target
                 mean, var = patch_mean_and_var(imgs)
                 imgs = (imgs - mean) / (var + 1.e-6)**.5
@@ -436,17 +437,13 @@ class MaskedAutoencoderViT(nn.Module):
 
 
         # Adjust mask based on nan values for numerical stability
-        nan_mask = torch.where(torch.isnan(torch.sum(loss, 2)), 0, 1)
-        mask *= nan_mask
+        nan_mask = torch.where(torch.isnan(loss), 0, 1)
+        mask = nan_mask*mask.unsqueeze(2)
         
-        # Replace NaN values in loss with 0
+        # Replace NaN values in loss with 0 since 0*nan is still nan
         loss = torch.nan_to_num(loss, nan=0.0)
-
-        # Also remove large pixel values?
-        #loss[imgs > 50] = 0
         
         # Only compute loss on masked patches
-        mask = mask.unsqueeze(2)
         avg_scale_factor = mask.sum() / mask.numel() * loss.numel()
         loss = (loss * mask).sum() / (avg_scale_factor + 1e-5)
             
