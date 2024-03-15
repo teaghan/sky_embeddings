@@ -440,7 +440,7 @@ class MaskedAutoencoderViT(nn.Module):
 
         # Adjust mask based on nan values for numerical stability
         nan_mask = torch.where(torch.isnan(loss), 0, 1)
-        if nan_mask.shape != nan_mask.shape:
+        if nan_mask.shape != mask.shape:
             mask = mask.unsqueeze(2)
         mask = nan_mask*mask
         
