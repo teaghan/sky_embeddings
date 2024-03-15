@@ -322,7 +322,7 @@ class MaskedAutoencoderViT(nn.Module):
 
         B, C, H, W = x.shape
         # Normalize input images
-        imgs = self.norm_inputs(imgs)
+        x = self.norm_inputs(x)
         
         # Expand the masking values to match the size of the batch of images
         patch_mask_values = self.patch_mask_values.repeat(1, self.tile_size, self.tile_size)
