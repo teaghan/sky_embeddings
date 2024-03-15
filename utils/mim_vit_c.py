@@ -412,6 +412,14 @@ class MaskedAutoencoderViT(nn.Module):
             
     def forward_encoder(self, x, mask_ratio=0, mask=None, reshape_out=True):
 
+        # If the input image size is larger than the patch_size, then turn each patch into its own sample
+        # ie. (batch_size, channels, img_size, img_size) -> (batch_size*num_patches, channels, patch_size, patch_size) 
+        imgs = self.batchify_images(imgs)
+        # Normalize each sample
+        imgs = layer_norm(imgs)
+        
+        #imgs = self.norm_inputs(imgs)
+
         # Determine which channels have missing info (ie. all pixels are NaN)
         # this mask has a shape of (batch_size*num_patches, channels)
         nan_channels = torch.isnan(x[:,:,:,0]).all(dim=-1).float()
@@ -559,19 +567,16 @@ class MaskedAutoencoderViT(nn.Module):
         #return x * self.pixel_std + self.pixel_mean
 
     def forward(self, imgs, mask_ratio=0.75, mask=None, denorm_out=False):
-
-        # If the input image size is larger than the patch_size, then turn each patch into its own sample
-        # ie. (batch_size, channels, img_size, img_size) -> (batch_size*num_patches, channels, patch_size, patch_size) 
-        imgs = self.batchify_images(imgs)
-        # Normalize each sample
-        imgs = layer_norm(imgs)
-        
         # Randomly set the mask ratio for this batch
         mask_ratio = torch.rand(1).item() * mask_ratio
         
-        #imgs = self.norm_inputs(imgs)
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio, mask)
         pred = self.forward_decoder(latent, ids_restore)
+
+        # Normalize each target sample
+        imgs = self.batchify_images(imgs)
+        imgs = layer_norm(imgs)
+        
         loss = self.forward_loss(imgs.detach(), pred, mask)
         return loss, pred, mask
 
