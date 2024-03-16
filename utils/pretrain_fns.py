@@ -6,7 +6,7 @@ import sys
 cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)
 from dataloaders import build_h5_dataloader
-from eval_fns_c import mae_latent
+from eval_fns import mae_latent
 from misc import select_centre
 
 from sklearn.model_selection import train_test_split
@@ -111,7 +111,6 @@ def get_embeddings(data_path, model, device,
                                          batch_size=64, 
                                          num_workers=dataloader_template.num_workers,
                                          img_size=dataloader_template.dataset.img_size,
-                                         pos_channel=dataloader_template.dataset.pos_channel,
                                          num_patches=dataloader_template.dataset.num_patches,
                                          patch_size=model.module.patch_embed.patch_size[0], 
                                          num_channels=model.module.in_chans, 

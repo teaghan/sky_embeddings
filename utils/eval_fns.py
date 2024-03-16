@@ -17,11 +17,12 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
     latents = []
     with torch.no_grad():
         # Loop through spectra in dataset
-        for samples, mask, _ in dataloader:
+        for samples, mask, ra_decs in dataloader:
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
             mask = mask.to(device, non_blocking=True)
+            ra_decs = ra_decs.to(device, non_blocking=True)
 
             loss, pred, mask = model(samples, mask_ratio=mask_ratio, mask=mask)
             
@@ -37,7 +38,6 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
                 mask = mask.unsqueeze(-1).repeat(1, 1, model.patch_embed.patch_size[0]**2 * model.in_chans)  # (N, H*W, p*p*3)
                 mask = model.unpatchify(mask)  # 1 is removing, 0 is keeping
 
-            #if model.norm_pix_loss:
             # Return back to original scale
             pred = model.denorm_imgs(samples, pred)
             
@@ -70,7 +70,7 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
     return pred_imgs, mask_imgs, orig_imgs
 
 def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_images=False, verbose=1, 
-               apply_augmentations=False, num_augmentations=16):
+               apply_augmentations=False, num_augmentations=16, remove_cls=True):
     
     if n_batches is None:
         n_batches = len(dataloader)
@@ -86,7 +86,7 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
 
     with torch.no_grad():
         # Loop through spectra in dataset
-        for batch_idx, (samples, masks, _) in enumerate(dataloader):
+        for batch_idx, (samples, masks, ra_decs) in enumerate(dataloader):
 
             # Apply augmentations if enabled
             augmented_samples = []
@@ -104,13 +104,16 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
+            ra_decs = ra_decs.to(device, non_blocking=True)
 
             if hasattr(model, 'module'):
                 latent, _, _ = model.module.forward_encoder(samples, mask_ratio, mask=None, reshape_out=False)
-                remove_cls = True if not model.module.attn_pool else False
+                if model.module.attn_pool:
+                    remove_cls = False 
             else:
                 latent, _, _ = model.forward_encoder(samples, mask_ratio, mask=None, reshape_out=False)
-                remove_cls = True if not model.attn_pool else False
+                if model.attn_pool:
+                    remove_cls = False 
             if remove_cls:
                 # Remove cls token
                 latent = latent[:,1:]

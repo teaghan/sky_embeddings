@@ -83,7 +83,6 @@ def main(args):
                                                 num_channels=int(config['ARCHITECTURE']['num_channels']), 
                                                 max_mask_ratio=max_mask_ratio, 
                                                 img_size=int(config['ARCHITECTURE']['img_size']),
-                                                pos_channel=str2bool(config['DATA']['pos_channel']), 
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 shuffle=True)
         print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
@@ -101,6 +100,7 @@ def main(args):
                                                   img_size=int(config['ARCHITECTURE']['img_size']), 
                                                   cutouts_per_tile=int(config['DATA']['cutouts_per_tile']), 
                                                   use_calexp=str2bool(config['DATA']['use_calexp']),
+                                                  ra_dec=True,
                                                   augment=False, 
                                                   shuffle=True)
         train_nested_batches = True
@@ -112,7 +112,6 @@ def main(args):
                                           num_channels=int(config['ARCHITECTURE']['num_channels']), 
                                           max_mask_ratio=max_mask_ratio, 
                                           img_size=int(config['ARCHITECTURE']['img_size']),
-                                          pos_channel=str2bool(config['DATA']['pos_channel']), 
                                           num_patches=model.module.patch_embed.num_patches,
                                           shuffle=True)
 
@@ -132,13 +131,13 @@ def get_train_samples(dataloader, train_nested_batches):
     '''Accomodates both dataloaders.'''
     if train_nested_batches:
         # Iterate through all of the tiles
-        for sample_batches, masks in dataloader:
+        for sample_batches, masks, ra_decs in dataloader:
             # Iterate through each batch of images in this tile of the sky
-            for samples, mask in zip(sample_batches[0], masks[0]):
-                yield samples, mask
+            for samples, mask, ra_dec in zip(sample_batches[0], masks[0], ra_decs[0]):
+                yield samples, mask, ra_dec
     else:
-        for samples, mask, _ in dataloader:
-            yield samples, mask
+        for samples, mask, ra_dec in dataloader:
+            yield samples, mask, ra_dec
 
 def train_network(model, dataloader_train, dataloader_val, train_nested_batches, optimizer, lr_scheduler, device, mask_ratio, 
                   losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir, 
@@ -154,11 +153,12 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
     while cur_iter < (total_batch_iters):
 
         # Iterate through training dataset
-        for samples, masks in get_train_samples(dataloader_train, train_nested_batches):
+        for samples, masks, ra_decs in get_train_samples(dataloader_train, train_nested_batches):
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
             masks = masks.to(device, non_blocking=True)
+            ra_decs = ra_decs.to(device, non_blocking=True)
             
             # Run an iteration of training
             model, optimizer, lr_scheduler, losses_cp = run_iter(model, samples, masks,
@@ -175,10 +175,11 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
 
                 with torch.no_grad():
                     # Calculate average loss on validation set
-                    for i, (samples, masks, _) in enumerate(dataloader_val):
+                    for i, (samples, masks, ra_decs) in enumerate(dataloader_val):
                         # Switch to GPU if available
                         samples = samples.to(device, non_blocking=True)
                         masks = masks.to(device, non_blocking=True)
+                        ra_decs = ra_decs.to(device, non_blocking=True)
 
                         # Run an iteration
                         model, optimizer, lr_scheduler, losses_cp = run_iter(model, samples, masks,
