@@ -9,7 +9,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 from utils.misc import str2bool, parseArguments
 from utils.pretrain_fns import run_iter, linear_probe
-from utils.mim_vit_3 import build_model
+from utils.mim_vit import build_model
 from utils.dataloaders import build_h5_dataloader, build_fits_dataloader
 from utils.plotting_fns import plot_progress, plot_batch
 from utils.eval_fns import mae_predict
