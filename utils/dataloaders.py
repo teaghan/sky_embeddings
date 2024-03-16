@@ -249,6 +249,7 @@ class H5Dataset(torch.utils.data.Dataset):
         self.pixel_min = pixel_min
         self.pixel_max = pixel_max
         self.indices = indices
+        self.max_mask_ratio = max_mask_ratio
 
         if max_mask_ratio is not None:
             self.mask_generator = MaskGenerator(input_size=img_size,
