@@ -110,17 +110,19 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
                 latent, _, _ = model.module.forward_encoder(samples, ra_dec=ra_decs, 
                                                             mask_ratio=mask_ratio, mask=None, 
                                                             reshape_out=False)
+                num_extra_tokens = model.module.num_extra_tokens
                 if model.module.attn_pool:
                     remove_cls = False 
             else:
                 latent, _, _ = model.forward_encoder(samples, ra_dec=ra_decs, 
                                                      mask_ratio=mask_ratio, mask=None, 
                                                     reshape_out=False)
+                num_extra_tokens = model.module.num_extra_tokens
                 if model.attn_pool:
                     remove_cls = False 
             if remove_cls:
                 # Remove cls token
-                latent = latent[:,1:]
+                latent = latent[:,num_extra_tokens:]
             
             latents.append(latent.detach().cpu())
             if return_images:
