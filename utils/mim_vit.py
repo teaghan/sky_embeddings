@@ -96,6 +96,18 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            pixel_std=pixel_std,
                            attn_pool=attn_pool,
                              ra_dec=ra_dec)
+    elif model_type=='maesimple':
+        mae_vit_base_with_simple_decoder(embed_dim=embed_dim,
+                           img_size=img_size,
+                           in_chans=num_channels,
+                           patch_size=patch_size,
+                           norm_pix_loss=norm_pix_loss,
+                           simmim=False,
+                           loss_fn=loss_fn,
+                           pixel_mean=pixel_mean,
+                           pixel_std=pixel_std,
+                           attn_pool=attn_pool,
+                             ra_dec=ra_dec)
     model.to(device)
 
     # Use multiple GPUs if available
@@ -513,6 +525,13 @@ class MaskedAutoencoderViT(nn.Module):
         imgs = self.norm_inputs(imgs)
         loss = self.forward_loss(imgs.detach(), pred, mask)
         return loss, pred, mask
+
+def mae_vit_base_with_simple_decoder(**kwargs):
+    model = MaskedAutoencoderViT(
+        depth=12, num_heads=12,
+        decoder_embed_dim=512, decoder_depth=1, decoder_num_heads=1,
+        mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
+    return model
 
 def mae_vit_base(**kwargs):
     model = MaskedAutoencoderViT(
