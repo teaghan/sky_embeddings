@@ -536,6 +536,7 @@ class FitsDataset(torch.utils.data.Dataset):
         # Split into a grid of cutouts based on img_size and overlap
         if self.ra_dec:
             cutouts, ra_dec = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, pix_to_radec)
+            ra_dec = torch.from_numpy(ra_dec.astype(np.float32))
         else:
             cutouts = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, pix_to_radec)
 
