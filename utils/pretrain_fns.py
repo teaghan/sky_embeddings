@@ -134,9 +134,7 @@ def get_embeddings(data_path, model, device,
 
     scale = True
     if combine=='token':
-        print(latent_features.shape)
         x = latent_features[:,:1].reshape(latent_features.shape[0], -1)
-        print(x.shape)
     elif combine=='flatten':
         x = latent_features.reshape(latent_features.shape[0], -1)
     elif combine=='pool':
