@@ -27,6 +27,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
     model_type = config['ARCHITECTURE']['model_type']
     loss_fn = config['TRAINING']['loss_fn']
     attn_pool = str2bool(config['ARCHITECTURE']['attn_pool'])
+    ra_dec = str2bool(config['ARCHITECTURE']['ra_dec'])
 
     # Construct the model
     if model_type=='base':
@@ -37,7 +38,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                              norm_pix_loss=norm_pix_loss,
                              loss_fn=loss_fn,
                              pixel_mean=pixel_mean,
-                             pixel_std=pixel_std)
+                             pixel_std=pixel_std,
+                             ra_dec=ra_dec)
     elif model_type=='large':
         model = mae_vit_large(embed_dim=embed_dim,
                               img_size=img_size,
@@ -46,7 +48,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                               norm_pix_loss=norm_pix_loss,
                               loss_fn=loss_fn,
                               pixel_mean=pixel_mean,
-                              pixel_std=pixel_std)
+                              pixel_std=pixel_std,
+                             ra_dec=ra_dec)
     elif model_type=='huge':
         model = mae_vit_huge(embed_dim=embed_dim,
                              img_size=img_size,
@@ -55,7 +58,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                              norm_pix_loss=norm_pix_loss,
                              loss_fn=loss_fn,
                              pixel_mean=pixel_mean,
-                             pixel_std=pixel_std)
+                             pixel_std=pixel_std,
+                             ra_dec=ra_dec)
     elif model_type=='simmim':
         model = simmim_vit(embed_dim=embed_dim,
                            img_size=img_size,
@@ -66,7 +70,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            loss_fn=loss_fn,
                            pixel_mean=pixel_mean,
                            pixel_std=pixel_std,
-                           attn_pool=attn_pool)
+                           attn_pool=attn_pool,
+                             ra_dec=ra_dec)
     elif model_type=='mimlarge':
         model = mim_vit_large(embed_dim=embed_dim,
                            img_size=img_size,
@@ -77,7 +82,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            loss_fn=loss_fn,
                            pixel_mean=pixel_mean,
                            pixel_std=pixel_std,
-                           attn_pool=attn_pool)
+                           attn_pool=attn_pool,
+                             ra_dec=ra_dec)
     elif model_type=='mimhuge':
         model = mim_vit_huge(embed_dim=embed_dim,
                            img_size=img_size,
@@ -88,7 +94,8 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            loss_fn=loss_fn,
                            pixel_mean=pixel_mean,
                            pixel_std=pixel_std,
-                           attn_pool=attn_pool)
+                           attn_pool=attn_pool,
+                             ra_dec=ra_dec)
     model.to(device)
 
     # Use multiple GPUs if available
@@ -158,27 +165,50 @@ class MaskedAutoencoderViT(nn.Module):
                  embed_dim=1024, depth=24, num_heads=16,
                  decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
                  mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False, 
-                 simmim=False, loss_fn='mse', pixel_mean=0, pixel_std=1., attn_pool=False):
+                 simmim=False, loss_fn='mse', pixel_mean=0, pixel_std=1., attn_pool=False, ra_dec=False):
         super().__init__()
 
         self.simmim = simmim
         self.loss_fn = loss_fn
         self.pixel_mean = pixel_mean
         self.pixel_std = pixel_std
+        self.simmim = simmim
+        self.loss_fn = loss_fn
+        self.pixel_mean = pixel_mean
+        self.pixel_std = pixel_std
+        self.norm_pix_loss = norm_pix_loss
+        self.in_chans = in_chans
+        self.ra_dec = ra_dec
         
         # --------------------------------------------------------------------------
-        # MAE encoder specifics
+        # Mapping for each patch of the image to the Embedding space
         self.patch_embed = PatchEmbed(img_size, patch_size, in_chans, embed_dim)
         num_patches = self.patch_embed.num_patches
 
-        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
-        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim), requires_grad=False)  # fixed sin-cos embedding
+        if self.ra_dec:
+            # Mapping for Right Ascension and Dec to the Embedding space
+            self.ra_dec_embed = nn.Linear(2, embed_dim, bias=True)
+            self.num_extra_tokens = 2
+        else:
+            self.num_extra_tokens = 1
 
+        # Class token that is the same size as the embeddings
+        # This CLS token is prepended to the sequence of patch embeddings before the sequence is fed into the transformer encoder. 
+        # The purpose of the CLS token is to aggregate information from the entire image as it passes through the transformer layers. 
+        # By the end of the transformer layers, the CLS token's embedding is expected to contain a global representation of the input image,
+        # which can be used for image classification or other downstream tasks.
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+
+        # Fixed sin-cos embedding to identify the spatial position of each patch
+        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + self.num_extra_tokens, embed_dim), requires_grad=False)
+
+        # Transformer blocks
         self.blocks = nn.ModuleList([
             Block(embed_dim, num_heads, mlp_ratio, qkv_bias=True, norm_layer=norm_layer)
             for i in range(depth)])
+
+        # Normalization function applied to embeddings
         self.norm = norm_layer(embed_dim)
-        # --------------------------------------------------------------------------
 
         # Trainable pixel values that replace the masked pixels
         self.patch_mask_values = nn.Parameter(torch.zeros((in_chans, patch_size, patch_size)))
@@ -215,7 +245,8 @@ class MaskedAutoencoderViT(nn.Module):
     
             self.mask_token = nn.Parameter(torch.zeros(1, 1, decoder_embed_dim))
     
-            self.decoder_pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, decoder_embed_dim), requires_grad=False)  # fixed sin-cos embedding
+            self.decoder_pos_embed = nn.Parameter(torch.zeros(1, num_patches + self.num_extra_tokens, 
+                                                              decoder_embed_dim), requires_grad=False)  # fixed sin-cos embedding
     
             self.decoder_blocks = nn.ModuleList([
                 Block(decoder_embed_dim, decoder_num_heads, mlp_ratio, qkv_bias=True, norm_layer=norm_layer)
@@ -234,11 +265,15 @@ class MaskedAutoencoderViT(nn.Module):
     def initialize_weights(self):
         # initialization
         # initialize (and freeze) pos_embed by sin-cos embedding
-        pos_embed = get_2d_sincos_pos_embed(self.pos_embed.shape[-1], int(self.patch_embed.num_patches**.5), cls_token=True)
+        pos_embed = get_2d_sincos_pos_embed(self.pos_embed.shape[-1], 
+                                            int(self.patch_embed.num_patches**.5), 
+                                            cls_token=True, ra_dec=self.ra_dec)
         self.pos_embed.data.copy_(torch.from_numpy(pos_embed).float().unsqueeze(0))
 
         if not self.simmim:
-            decoder_pos_embed = get_2d_sincos_pos_embed(self.decoder_pos_embed.shape[-1], int(self.patch_embed.num_patches**.5), cls_token=True)
+            decoder_pos_embed = get_2d_sincos_pos_embed(self.decoder_pos_embed.shape[-1], 
+                                                        int(self.patch_embed.num_patches**.5), 
+                                                        cls_token=True, ra_dec=self.ra_dec)
             self.decoder_pos_embed.data.copy_(torch.from_numpy(decoder_pos_embed).float().unsqueeze(0))
 
         # initialize patch_embed like nn.Linear (instead of nn.Conv2d)
@@ -318,7 +353,7 @@ class MaskedAutoencoderViT(nn.Module):
 
         return x_masked, mask, ids_restore
             
-    def forward_encoder(self, x, mask_ratio=0, mask=None, reshape_out=True):
+    def forward_encoder(self, x, ra_dec=None, mask_ratio=0, mask=None, reshape_out=True):
 
         B, C, H, W = x.shape
         # Normalize input images
@@ -343,14 +378,18 @@ class MaskedAutoencoderViT(nn.Module):
         # embed patches
         x = self.patch_embed(x)
 
-        # add pos embed w/o cls token
-        x = x + self.pos_embed[:, 1:, :]
+        x = x + self.pos_embed[:, self.num_extra_tokens:, :]
 
         if not self.simmim:
             # masking: length -> length * mask_ratio
             x, mask, ids_restore = self.random_masking(x, mask_ratio)
 
-        # append cls token
+        if self.ra_dec:
+            # Append RA and Dec token
+            ra_dec = self.ra_dec_embed(ra_dec).unsqueeze(1)
+            x = torch.cat((ra_dec, x), dim=1)
+        
+        # Append cls token
         cls_token = self.cls_token + self.pos_embed[:, :1, :]
         cls_tokens = cls_token.expand(x.shape[0], -1, -1)
         x = torch.cat((cls_tokens, x), dim=1)
@@ -367,7 +406,7 @@ class MaskedAutoencoderViT(nn.Module):
         
         if self.simmim and reshape_out:
             if not self.attn_pool:
-                x = x[:, 1:]
+                x = x[:, self.num_extra_tokens:]
             B, L, C = x.shape
             H = W = int(L ** 0.5)
             x = x.permute(0, 2, 1).reshape(B, C, H, W)
@@ -380,14 +419,15 @@ class MaskedAutoencoderViT(nn.Module):
             x = self.decoder_embed(x)
     
             # append mask tokens to sequence
-            mask_tokens = self.mask_token.repeat(x.shape[0], ids_restore.shape[1] + 1 - x.shape[1], 1)
-            x_ = torch.cat([x[:, 1:, :], mask_tokens], dim=1)  # no cls token
+            mask_tokens = self.mask_token.repeat(x.shape[0], ids_restore.shape[1] + self.num_extra_tokens - x.shape[1], 1)
+
+            x_ = torch.cat([x[:, self.num_extra_tokens:, :], mask_tokens], dim=1)  # no cls and ra_dec tokens
             x_ = torch.gather(x_, dim=1, index=ids_restore.unsqueeze(-1).repeat(1, 1, x.shape[2]))  # unshuffle
-            x = torch.cat([x[:, :1, :], x_], dim=1)  # append cls token
-    
+            x = torch.cat([x[:, :self.num_extra_tokens, :], x_], dim=1)  # append cls and ra_dec tokens
+
             # add pos embed
             x = x + self.decoder_pos_embed
-    
+
             # apply Transformer blocks
             for blk in self.decoder_blocks:
                 x = blk(x)
@@ -398,6 +438,9 @@ class MaskedAutoencoderViT(nn.Module):
     
             # remove cls token
             x = x[:, 1:, :]
+            if self.ra_dec:
+                # Remove RA and Dec token
+                x = x[:, 1:, :]
         else:
             x = self.decoder(x)
 
@@ -462,8 +505,9 @@ class MaskedAutoencoderViT(nn.Module):
             x = undo_pixel_norm(orig_imgs, x, self)
         return x * self.pixel_std + self.pixel_mean
 
-    def forward(self, imgs, mask_ratio=0.75, mask=None, denorm_out=False):
-        latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio, mask)
+    def forward(self, imgs, ra_dec=None, mask_ratio=0.75, mask=None, denorm_out=False):
+        latent, mask, ids_restore = self.forward_encoder(imgs, ra_dec=ra_dec,
+                                                         mask_ratio=mask_ratio, mask=mask)
         pred = self.forward_decoder(latent, ids_restore)  # [N, L, p*p*3]
         # Normalize inputs before computing loss
         imgs = self.norm_inputs(imgs)

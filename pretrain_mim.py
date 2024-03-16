@@ -9,7 +9,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 from utils.misc import str2bool, parseArguments
 from utils.pretrain_fns import run_iter, linear_probe
-from utils.mim_vit import build_model
+from utils.mim_vit_3 import build_model
 from utils.dataloaders import build_h5_dataloader, build_fits_dataloader
 from utils.plotting_fns import plot_progress, plot_batch
 from utils.eval_fns import mae_predict
@@ -60,11 +60,7 @@ def main(args):
     num_workers = min([os.cpu_count(),12*n_gpu])
     if num_workers>1:
         num_workers -=1
-    if n_gpu>1:
-        batch_size = int(int(config['TRAINING']['batch_size'])/n_gpu)
-    else:
-        batch_size = int(config['TRAINING']['batch_size'])
-
+        
     # Masking stuff
     if 'mim' in config['ARCHITECTURE']['model_type']:
         mask_ratio = None
@@ -77,7 +73,7 @@ def main(args):
     if 'train_data_file' in config['DATA']:
         # Using .h5 training file
         dataloader_train = build_h5_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
-                                                batch_size=batch_size, 
+                                                batch_size=int(config['TRAINING']['batch_size']), 
                                                 num_workers=num_workers,
                                                 patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(config['ARCHITECTURE']['num_channels']), 
@@ -93,7 +89,7 @@ def main(args):
         dataloader_train =  build_fits_dataloader(eval(config['DATA']['train_data_paths']), 
                                                   bands=eval(config['DATA']['bands']), 
                                                   min_bands=int(config['DATA']['min_bands']), 
-                                                  batch_size=batch_size,
+                                                  batch_size=int(config['TRAINING']['batch_size']),
                                                   num_workers=num_workers,
                                                   patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                                   max_mask_ratio=max_mask_ratio, 
@@ -106,7 +102,7 @@ def main(args):
         train_nested_batches = True
     
     dataloader_val = build_h5_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
-                                          batch_size=batch_size, 
+                                          batch_size=int(config['TRAINING']['batch_size']), 
                                           num_workers=num_workers,
                                           patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                           num_channels=int(config['ARCHITECTURE']['num_channels']), 
@@ -161,7 +157,7 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
             ra_decs = ra_decs.to(device, non_blocking=True)
             
             # Run an iteration of training
-            model, optimizer, lr_scheduler, losses_cp = run_iter(model, samples, masks,
+            model, optimizer, lr_scheduler, losses_cp = run_iter(model, samples, ra_decs, masks,
                                                                  mask_ratio, optimizer, 
                                                                  lr_scheduler, 
                                                                  losses_cp, mode='train')
@@ -182,7 +178,7 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                         ra_decs = ra_decs.to(device, non_blocking=True)
 
                         # Run an iteration
-                        model, optimizer, lr_scheduler, losses_cp = run_iter(model, samples, masks,
+                        model, optimizer, lr_scheduler, losses_cp = run_iter(model, samples, ra_decs, masks,
                                                                              mask_ratio, optimizer, 
                                                                              lr_scheduler, 
                                                                              losses_cp, mode='val')
@@ -193,7 +189,7 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                     if lp_class_data_file or lp_regress_data_file:
                         # Run Linear Probing tests
                         linear_probe(model, losses_cp, device, dataloader_val, 
-                                     lp_class_data_file, lp_regress_data_file)
+                                     lp_class_data_file, lp_regress_data_file, combine='central')
                 
                 # Calculate averages
                 for k in losses_cp.keys():
