@@ -565,7 +565,7 @@ class FitsDataset(torch.utils.data.Dataset):
             masks = torch.zeros((M, self.batch_size))
 
         if self.ra_dec:
-            ra_dec = ra_dec[:M * self.batch_size].reshape((M, 2))
+            ra_dec = ra_dec[:M * self.batch_size].reshape((M, self.batch_size, 2))
             return cutouts, masks, ra_dec
         else:
             return cutouts, masks
