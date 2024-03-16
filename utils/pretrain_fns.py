@@ -52,6 +52,9 @@ def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler
 def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=None,
                  regress_data_path=None, combine='central', remove_cls=True):
     '''Train a quick linear probing model to evaluate the quality of the embeddings.'''
+
+    if combine=='token':
+        remove_cls = False
     
     model.train(False)
     if class_data_path:
@@ -129,8 +132,12 @@ def get_embeddings(data_path, model, device,
         # There is only one output set of features if there is an attention pooling layer
         combine='flatten'
 
-    scale = True    
-    if combine=='flatten':
+    scale = True
+    if combine=='token':
+        print(latent_features.shape)
+        x = latent_features[:,:1].reshape(latent_features.shape[0], -1)
+        print(x.shape)
+    elif combine=='flatten':
         x = latent_features.reshape(latent_features.shape[0], -1)
     elif combine=='pool':
         x = np.max(latent_features, axis=1)
