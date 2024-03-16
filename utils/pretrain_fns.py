@@ -14,7 +14,7 @@ from sklearn.linear_model import LogisticRegression, ElasticNet
 from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
 from sklearn.preprocessing import StandardScaler
 
-def run_iter(model, samples, masks, mask_ratio, optimizer, lr_scheduler,
+def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler,
              losses_cp, mode='train'):
         
     if mode=='train':
@@ -23,7 +23,7 @@ def run_iter(model, samples, masks, mask_ratio, optimizer, lr_scheduler,
         model.train(False)
         
     # Run predictions and calculate loss
-    loss, _, _ = model(samples, mask_ratio=mask_ratio, mask=masks)
+    loss, _, _ = model(samples, ra_dec=ra_decs, mask_ratio=mask_ratio, mask=masks)
     if loss.numel()>1:
         # In case of multiple GPUs
         loss = loss.unsqueeze(0).mean()

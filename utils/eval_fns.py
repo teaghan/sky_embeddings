@@ -24,7 +24,7 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
             mask = mask.to(device, non_blocking=True)
             ra_decs = ra_decs.to(device, non_blocking=True)
 
-            loss, pred, mask = model(samples, mask_ratio=mask_ratio, mask=mask)
+            loss, pred, mask = model(samples, ra_dec=ra_decs, mask_ratio=mask_ratio, mask=mask)
             
             if hasattr(model, 'module'):
                 model = model.module
@@ -107,11 +107,15 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             ra_decs = ra_decs.to(device, non_blocking=True)
 
             if hasattr(model, 'module'):
-                latent, _, _ = model.module.forward_encoder(samples, mask_ratio, mask=None, reshape_out=False)
+                latent, _, _ = model.module.forward_encoder(samples, ra_dec=ra_decs, 
+                                                            mask_ratio=mask_ratio, mask=None, 
+                                                            reshape_out=False)
                 if model.module.attn_pool:
                     remove_cls = False 
             else:
-                latent, _, _ = model.forward_encoder(samples, mask_ratio, mask=None, reshape_out=False)
+                latent, _, _ = model.forward_encoder(samples, ra_dec=ra_decs, 
+                                                     mask_ratio=mask_ratio, mask=None, 
+                                                    reshape_out=False)
                 if model.attn_pool:
                     remove_cls = False 
             if remove_cls:
