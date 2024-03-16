@@ -108,6 +108,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            pixel_std=pixel_std,
                            attn_pool=attn_pool,
                              ra_dec=ra_dec)
+    print(model_type)
     model.to(device)
 
     # Use multiple GPUs if available
