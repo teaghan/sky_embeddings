@@ -97,7 +97,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            attn_pool=attn_pool,
                              ra_dec=ra_dec)
     elif model_type=='maesimple':
-        mae_vit_base_with_simple_decoder(embed_dim=embed_dim,
+        model = mae_vit_base_with_simple_decoder(embed_dim=embed_dim,
                            img_size=img_size,
                            in_chans=num_channels,
                            patch_size=patch_size,
@@ -109,7 +109,6 @@ def build_model(config, model_filename, device, build_optimizer=False):
                            attn_pool=attn_pool,
                              ra_dec=ra_dec)
 
-    print(model_type)
     model.to(device)
 
     # Use multiple GPUs if available
