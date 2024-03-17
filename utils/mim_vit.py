@@ -522,22 +522,23 @@ class MaskedAutoencoderViT(nn.Module):
 
     def normalize_ra_dec(self, ra_dec):
         """
-        Normalize RA and Dec values in degrees to be between -1 and 1.
+        Normalize RA and Dec values in a tensor to be between -1 and 1.
         
         Parameters:
-        ra_dec (tf.Tensor): A tensor of shape (batch_size, 2) where the first column is RA and the second is Dec.
-        
+        - ra_dec_tensor: A tensor of shape (batch_size, 2) where the first column contains RA and the second contains Dec,
+          both in degrees.
+          
         Returns:
-        tf.Tensor: Normalized RA and Dec values.
+        - A tensor of the same shape where RA and Dec values are normalized to the range [-1, 1].
         """
-        # RA normalization from 0-360 to -1 to 1
-        ra_normalized = (ra_dec[:, 0] / 180.0) - 1.0
+        # RA: Scale from [0, 360] to [-1, 1]
+        normalized_ra = (ra_dec[:, 0] / 180.0) - 1.0
         
-        # Dec normalization from -90-90 to -1 to 1
-        dec_normalized = ra_dec[:, 1] / 90.0
+        # Dec: Scale from [-90, 90] to [-1, 1]
+        normalized_dec = ra_dec[:, 1] / 90.0
         
-        # Stack the normalized RA and Dec back into a single tensor
-        return tf.stack([ra_normalized, dec_normalized], axis=1)
+        # Stack the normalized RA and Dec back into a tensor of the same shape
+        return torch.stack((normalized_ra, normalized_dec), dim=1)
 
     def forward(self, imgs, ra_dec=None, mask_ratio=0.75, mask=None, denorm_out=False):
         latent, mask, ids_restore = self.forward_encoder(imgs, ra_dec=ra_dec,
