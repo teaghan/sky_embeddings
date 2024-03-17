@@ -409,8 +409,9 @@ def load_fits_bands(patch_filenames, return_wc=False):
                             wcs = WCS(hdul[1].header)
                             # Return function for determining RA and Dec from pixel coords
                             def pix_to_radec(x, y):
-                                # X is the column and Y is the row
-                                return wcs.all_pix2world(y, x, 0)
+                                # The ordering of the axes in the fits files is a bit 
+                                # confusing to me, but I'm pretty sure this is right...
+                                return wcs.all_pix2world(x, y, 0)
                         else:
                             pix_to_radec = None
                         wc_collected = True
