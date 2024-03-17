@@ -399,7 +399,7 @@ class MaskedAutoencoderViT(nn.Module):
 
         if self.ra_dec:
             # Normalize between -1 and 1
-            ra_dec = normalize_ra_dec(ra_dec)
+            ra_dec = self.normalize_ra_dec(ra_dec)
             # Append RA and Dec token
             ra_dec = self.ra_dec_embed(ra_dec).unsqueeze(1)
             x = torch.cat((ra_dec, x), dim=1)
