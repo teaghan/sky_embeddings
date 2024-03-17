@@ -398,6 +398,8 @@ class MaskedAutoencoderViT(nn.Module):
             x, mask, ids_restore = self.random_masking(x, mask_ratio)
 
         if self.ra_dec:
+            # Normalize between -1 and 1
+            ra_dec = normalize_ra_dec(ra_dec)
             # Append RA and Dec token
             ra_dec = self.ra_dec_embed(ra_dec).unsqueeze(1)
             x = torch.cat((ra_dec, x), dim=1)
@@ -517,6 +519,25 @@ class MaskedAutoencoderViT(nn.Module):
             # Undo pixel norm
             x = undo_pixel_norm(orig_imgs, x, self)
         return x * self.pixel_std + self.pixel_mean
+
+    def normalize_ra_dec(self, ra_dec):
+        """
+        Normalize RA and Dec values in degrees to be between -1 and 1.
+        
+        Parameters:
+        ra_dec (tf.Tensor): A tensor of shape (batch_size, 2) where the first column is RA and the second is Dec.
+        
+        Returns:
+        tf.Tensor: Normalized RA and Dec values.
+        """
+        # RA normalization from 0-360 to -1 to 1
+        ra_normalized = (ra_dec[:, 0] / 180.0) - 1.0
+        
+        # Dec normalization from -90-90 to -1 to 1
+        dec_normalized = ra_dec[:, 1] / 90.0
+        
+        # Stack the normalized RA and Dec back into a single tensor
+        return tf.stack([ra_normalized, dec_normalized], axis=1)
 
     def forward(self, imgs, ra_dec=None, mask_ratio=0.75, mask=None, denorm_out=False):
         latent, mask, ids_restore = self.forward_encoder(imgs, ra_dec=ra_dec,
