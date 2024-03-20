@@ -65,7 +65,7 @@ def main(args):
     num_workers = min([os.cpu_count(),12*n_gpu])
 
     dataloader_val = build_h5_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
-                                        batch_size=batch_size, 
+                                        batch_size=int(config['TRAINING']['batch_size']), 
                                         num_workers=num_workers,
                                         label_keys=eval(config['DATA']['label_keys']),
                                         img_size=int(config['ARCHITECTURE']['img_size']),
