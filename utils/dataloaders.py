@@ -144,7 +144,7 @@ def build_h5_dataloader(filename, batch_size, num_workers, patch_size=8, num_cha
                                        shuffle=shuffle, num_workers=num_workers,
                                        pin_memory=True)
 
-def build_unions_stream(filename, batch_size, num_workers, patch_size=8, num_channels=5, 
+def build_unions_stream(batch_size, num_workers, patch_size=8, num_channels=5, 
                         max_mask_ratio=None, label_keys=None, img_size=64,
                         num_patches=None, augment=False, shuffle=True, indices=None, transforms=None):
     '''

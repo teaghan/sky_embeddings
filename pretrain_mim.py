@@ -70,10 +70,12 @@ def main(args):
         max_mask_ratio = None
 
     # Build dataloaders
+    print(config['DATA'])
+    print('survey' in config['DATA'])
+    print(config['DATA']['survey'] == 'UNIONS')
     if 'survey' in config['DATA'] and config['DATA']['survey'] == 'UNIONS': 
         # Using Nick's data streaming method
-        dataloader_train = build_unions_stream(os.path.join(data_dir, config['DATA']['train_data_file']), 
-                                                batch_size=int(config['TRAINING']['batch_size']), 
+        dataloader_train = build_unions_stream(batch_size=int(config['TRAINING']['batch_size']), 
                                                 num_workers=num_workers,
                                                 patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(config['ARCHITECTURE']['num_channels']), 
