@@ -165,8 +165,7 @@ def build_unions_stream(batch_size, num_workers, patch_size=8, num_channels=5,
                         label_keys=label_keys, transform=transforms, indices=indices)
 
     # Build dataloader
-    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, 
-                                       shuffle=shuffle, num_workers=0, #TEMP, num_workers,
+    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=0, #TEMP, num_workers,
                                        pin_memory=True)
 
 class MaskGenerator:
@@ -411,9 +410,10 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
     
     def __iter__(self): # only considering 1 worker now
 
-        # Load cutouts if queue is out
+        # Load cutouts if queue is out and shuffle them
         if self.cutout_count == 0:
             self.cutout_batch, _, _ = self.dataset.__next__() 
+            self.cutout_batch = np.random.shuffle(self.cutout_batch) 
             self.cutout_count = len(self.cutout_batch) 
 
         # Grab just one cutout at a time
