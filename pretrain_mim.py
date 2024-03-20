@@ -82,7 +82,7 @@ def main(args):
         print('The training set streaming has begun') 
         train_nested_batches = False
 
-        #  NEED TO THINK ON THIS PART - very band aid solution for now
+        #  NEED TO THINK ON THIS PART - very band aid solution for now - also to center or not to center?
         dataloader_val = build_unions_stream(batch_size=int(config['TRAINING']['batch_size']), 
                                                 num_workers=num_workers,
                                                 patch_size=int(config['ARCHITECTURE']['patch_size']), 
