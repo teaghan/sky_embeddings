@@ -78,7 +78,6 @@ def main(args):
                                            num_workers=num_workers,
                                            label_keys=eval(config['DATA']['label_keys']),
                                            img_size=int(config['ARCHITECTURE']['img_size']),
-                                           pos_channel=str2bool(mae_config['DATA']['pos_channel']), 
                                            patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
                                            num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
                                            num_patches=model.module.patch_embed.num_patches,
@@ -91,12 +90,10 @@ def main(args):
                                         num_workers=num_workers,
                                         label_keys=eval(config['DATA']['label_keys']),
                                         img_size=int(config['ARCHITECTURE']['img_size']),
-                                        pos_channel=str2bool(mae_config['DATA']['pos_channel']), 
                                         patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
                                          num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
                                         num_patches=model.module.patch_embed.num_patches,
                                         shuffle=True)
-    
     
     print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
 
@@ -119,11 +116,12 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
     cp_start_time = time.time()
     while cur_iter < (total_batch_iters):
         # Iterate through training dataset
-        for input_samples, sample_masks, sample_labels in dataloader_train:
+        for input_samples, sample_masks, ra_decs, sample_labels in dataloader_train:
             
             # Switch to GPU if available
             input_samples = input_samples.to(device, non_blocking=True)
             sample_masks = sample_masks.to(device, non_blocking=True)
+            ra_decs = ra_decs.to(device, non_blocking=True)
             sample_labels = sample_labels.to(device, non_blocking=True)
 
             if use_label_errs:
@@ -135,7 +133,7 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                 sample_label_errs = None
             
             # Run an iteration of training
-            model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, sample_masks, sample_labels,
+            model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, sample_masks, ra_decs, sample_labels,
                                                                  optimizer, 
                                                                  lr_scheduler, 
                                                                  losses_cp, 
@@ -146,10 +144,11 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
             if cur_iter % verbose_iters == 0:
 
                 with torch.no_grad():
-                    for i, (input_samples, sample_masks, sample_labels) in enumerate(dataloader_val):
+                    for i, (input_samples, sample_masks, ra_decs, sample_labels) in enumerate(dataloader_val):
                         # Switch to GPU if available
                         input_samples = input_samples.to(device, non_blocking=True)
                         sample_masks = sample_masks.to(device, non_blocking=True)
+                        ra_decs = ra_decs.to(device, non_blocking=True)
                         sample_labels = sample_labels.to(device, non_blocking=True)
 
 
@@ -162,7 +161,7 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                             sample_label_errs = None
 
                         # Run an iteration
-                        model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, sample_masks, sample_labels,
+                        model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, sample_masks, ra_decs, sample_labels,
                                                                              optimizer, 
                                                                              lr_scheduler, 
                                                                              losses_cp, 

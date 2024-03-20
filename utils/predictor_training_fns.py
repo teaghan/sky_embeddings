@@ -1,6 +1,6 @@
 import torch
 
-def run_iter(model, samples, masks, labels, optimizer, lr_scheduler,
+def run_iter(model, samples, masks, ra_decs, labels, optimizer, lr_scheduler,
              losses_cp, label_uncertainties=None, mode='train'):
         
     if mode=='train':
@@ -9,7 +9,7 @@ def run_iter(model, samples, masks, labels, optimizer, lr_scheduler,
         model.train(False)
         
     # Run forward prop
-    model_output = model(samples, mask=masks)
+    model_output = model(samples, mask=masks, ra_dec=ra_decs)
 
     # Compute loss
     labels = model.module.normalize_labels(labels)

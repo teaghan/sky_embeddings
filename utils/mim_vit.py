@@ -208,8 +208,8 @@ class MaskedAutoencoderViT(nn.Module):
         # Class token that is the same size as the embeddings
         # This CLS token is prepended to the sequence of patch embeddings before the sequence is fed into the transformer encoder. 
         # The purpose of the CLS token is to aggregate information from the entire image as it passes through the transformer layers. 
-        # By the end of the transformer layers, the CLS token's embedding is expected to contain a global representation of the input image,
-        # which can be used for image classification or other downstream tasks.
+        # By the end of the transformer layers, the CLS token's embedding is expected to contain a global representation of the input
+        # image, which can be used for image classification or other downstream tasks.
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
 
         # Fixed sin-cos embedding to identify the spatial position of each patch
@@ -383,8 +383,6 @@ class MaskedAutoencoderViT(nn.Module):
             ids_restore = None
             
             # Image is masked where mask==1 and replaced with the values in patch_mask_values
-            # Additionally, replace NaN values with patch_mask_values
-            x = torch.where(torch.isnan(x), patch_mask_values, x)
             if mask is not None:
                 x = x * (1 - mask) + patch_mask_values * mask
         
@@ -398,8 +396,8 @@ class MaskedAutoencoderViT(nn.Module):
             x, mask, ids_restore = self.random_masking(x, mask_ratio)
 
         if self.ra_dec:
-            # Normalize between -1 and 1
-            ra_dec = self.normalize_ra_dec(ra_dec)
+            # Normalize between -1 and 1 and add positional embedding
+            ra_dec = self.normalize_ra_dec(ra_dec) #+ self.pos_embed[:, 1]
             # Append RA and Dec token
             ra_dec = self.ra_dec_embed(ra_dec).unsqueeze(1)
             x = torch.cat((ra_dec, x), dim=1)

@@ -33,6 +33,7 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
     label_means = len(eval(config['DATA']['label_means']))
     label_stds = len(eval(config['DATA']['label_stds']))
     dropout = float(eval(config['ARCHITECTURE']['dropout']))
+    ra_dec = str2bool(mae_config['ARCHITECTURE']['ra_dec'])
 
     # Construct the model
     if model_type=='base':
@@ -46,7 +47,8 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                          patch_size=patch_size,
                          num_classes=num_labels,
                          global_pool=global_pool,
-                         drop_rate=dropout)
+                         drop_rate=dropout,
+                             ra_dec=ra_dec)
     elif model_type=='large':
         model = vit_large(label_means=label_means,
                           label_stds=label_stds,
@@ -58,7 +60,8 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                           patch_size=patch_size,
                           num_classes=num_labels,
                           global_pool=global_pool,
-                          drop_rate=dropout)
+                          drop_rate=dropout,
+                             ra_dec=ra_dec)
     elif model_type=='huge':
         model = vit_huge(label_means=label_means,
                          label_stds=label_stds,
@@ -70,7 +73,8 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                          patch_size=patch_size,
                          num_classes=num_labels,
                          global_pool=global_pool,
-                         drop_rate=dropout)
+                         drop_rate=dropout,
+                             ra_dec=ra_dec)
     elif model_type=='simmim':
         model = vit_base(label_means=label_means,
                          label_stds=label_stds,
@@ -83,7 +87,8 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                          patch_size=patch_size,
                          num_classes=num_labels,
                          global_pool=global_pool,
-                         drop_rate=dropout)
+                         drop_rate=dropout,
+                             ra_dec=ra_dec)
     elif model_type=='mimlarge':
         model = vit_large(label_means=label_means,
                          label_stds=label_stds,
@@ -96,7 +101,8 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                          patch_size=patch_size,
                          num_classes=num_labels,
                          global_pool=global_pool,
-                         drop_rate=dropout)
+                         drop_rate=dropout,
+                             ra_dec=ra_dec)
     elif model_type=='mimhuge':
         model = vit_huge(label_means=label_means,
                          label_stds=label_stds,
@@ -109,7 +115,8 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                          patch_size=patch_size,
                          num_classes=num_labels,
                          global_pool=global_pool,
-                         drop_rate=dropout)
+                         drop_rate=dropout,
+                             ra_dec=ra_dec)
     model.to(device)
 
     # Use multiple GPUs if available
@@ -238,6 +245,7 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
     """Vision Transformer with the option of an additional input norm layer."""
     
     def __init__(self, label_means, label_stds, pixel_mean, pixel_std, simmim=False,
+                 ra_dec=False,
                  **kwargs):
         # Call the superclass constructor
         super(VisionTransformer, self).__init__(**kwargs)
@@ -245,17 +253,33 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
         # Pixel normalization values
         self.pixel_mean = pixel_mean
         self.pixel_std = pixel_std
+        self.ra_dec = ra_dec
         
         # Label normalization values
         self.label_means = torch.tensor(label_means)
         self.label_stds = torch.tensor(label_stds)
 
         self.simmim = simmim
-        if self.simmim:
-            # Trainable pixel values that replace the masked pixels
-            self.mask_token = nn.Parameter(torch.zeros((kwargs['in_chans'], 
-                                                        self.patch_embed.patch_size[0], 
-                                                        self.patch_embed.patch_size[0])))
+
+        if self.ra_dec:
+            # Mapping for Right Ascension and Dec to the Embedding space
+            self.ra_dec_embed = nn.Linear(2, kwargs['embed_dim'], bias=True)
+            self.num_extra_tokens = 2
+        else:
+            self.num_extra_tokens = 1
+
+        # Fixed sin-cos embedding to identify the spatial position of each patch
+        self.pos_embed = nn.Parameter(torch.zeros(1, self.patch_embed.num_patches + self.num_extra_tokens, 
+                                                  kwargs['embed_dim']), requires_grad=False)
+
+        # Trainable pixel values that replace the masked pixels
+        self.patch_mask_values = nn.Parameter(torch.zeros((kwargs['in_chans'], 
+                                                           self.patch_embed.patch_size[0], 
+                                                           self.patch_embed.patch_size[0])))
+        
+        # Pre-compute the tile size based on expected image dimensions
+        self.tile_size = (kwargs['img_size'])//(self.patch_embed.patch_size[0])
+
 
     def norm_inputs(self, x):
         return (x - self.pixel_mean) / self.pixel_std
@@ -267,50 +291,92 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
     def denormalize_labels(self, labels):
         '''Rescale the labels back to their original units.'''
         return labels * self.label_stds + self.label_means
-        
-    def forward(self, x: torch.Tensor, mask=None) -> torch.Tensor:
-        if self.simmim:
-            # Mask input image
-            B, C, H, W = x.shape
 
-            # Compute the tile size based on expected image dimensions
-            tile_size = (H // self.mask_token.shape[1], W // self.mask_token.shape[2])
-            # Expand the masking values to match the size of the batch of images
-            patch_mask_values = self.mask_token.repeat(1, tile_size[0], tile_size[1])
-            patch_mask_values = patch_mask_values.expand(B, -1, -1, -1)
-            
-            # Image is masked where mask==1 and replaced with the values in patch_mask_values
-            # Additionally, replace NaN values with patch_mask_values
-            x = torch.where(torch.isnan(x), patch_mask_values, x)
-            
-            if mask is not None:
-                x = x * (1 - mask) + patch_mask_values * mask
+    def normalize_ra_dec(self, ra_dec):
+        """
+        Normalize RA and Dec values in a tensor to be between -1 and 1.
         
+        Parameters:
+        - ra_dec_tensor: A tensor of shape (batch_size, 2) where the first column contains RA and the second contains Dec,
+          both in degrees.
+          
+        Returns:
+        - A tensor of the same shape where RA and Dec values are normalized to the range [-1, 1].
+        """
+        # RA: Scale from [0, 360] to [-1, 1]
+        normalized_ra = (ra_dec[:, 0] / 180.0) - 1.0
+        
+        # Dec: Scale from [-90, 90] to [-1, 1]
+        normalized_dec = ra_dec[:, 1] / 90.0
+        
+        # Stack the normalized RA and Dec back into a tensor of the same shape
+        return torch.stack((normalized_ra, normalized_dec), dim=1)
+
+    def forward_features(self, x, ra_dec=None, mask=None):
+
+        B, C, H, W = x.shape
+        # Normalize input images
         x = self.norm_inputs(x)
-        x = self.forward_features(x)
+        
+        # Expand the masking values to match the size of the batch of images
+        patch_mask_values = self.patch_mask_values.repeat(1, self.tile_size, self.tile_size)
+        patch_mask_values = patch_mask_values.expand(B, -1, -1, -1)
+        
+        # Replace NaN values with patch_mask_values
+        x = torch.where(torch.isnan(x), patch_mask_values, x)
+        # Image is masked where mask==1 and replaced with the values in patch_mask_values
+        if mask is not None:
+            x = x * (1 - mask) + patch_mask_values * mask
+        
+        # Embed patches
+        x = self.patch_embed(x)
+        x = x + self.pos_embed[:, self.num_extra_tokens:, :]
+
+        if self.ra_dec:
+            # Normalize between -1 and 1 and add positional embedding
+            ra_dec = self.normalize_ra_dec(ra_dec) #+ self.pos_embed[:, 1]
+            # Append RA and Dec token
+            ra_dec = self.ra_dec_embed(ra_dec).unsqueeze(1)
+            x = torch.cat((ra_dec, x), dim=1)
+        
+        # Append cls token
+        cls_token = self.cls_token + self.pos_embed[:, :1, :]
+        cls_tokens = cls_token.expand(x.shape[0], -1, -1)
+        x = torch.cat((cls_tokens, x), dim=1)
+
+        # apply Transformer blocks
+        for blk in self.blocks:
+            x = blk(x)
+        
+        x = self.norm(x)
+
+        return x
+    
+    def forward(self, x: torch.Tensor, mask=None, ra_dec=None) -> torch.Tensor:
+        x = self.forward_features(x, ra_dec=ra_dec)
         x = self.forward_head(x)
         return x
 
 def vit_base(label_means, label_stds, 
-             pixel_mean, pixel_std, simmim=False, **kwargs):
+             pixel_mean, pixel_std, ra_dec, simmim=False, **kwargs):
     model = VisionTransformer(label_means, label_stds,
-                              pixel_mean, pixel_std, simmim,
+                              pixel_mean, pixel_std, simmim, ra_dec=ra_dec,
                               depth=12, num_heads=12, mlp_ratio=4, qkv_bias=True,
                               norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
 
 def vit_large(label_means, label_stds, 
-             pixel_mean, pixel_std,  **kwargs):
+             pixel_mean, pixel_std,  ra_dec, **kwargs):
     model = VisionTransformer(label_means, label_stds, 
-                              pixel_mean, pixel_std,
+                              pixel_mean, pixel_std, ra_dec=ra_dec,
                               depth=24, num_heads=16, mlp_ratio=4, qkv_bias=True,
                               norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
 
 def vit_huge(label_means, label_stds, 
-             pixel_mean, pixel_std,  **kwargs):
+             pixel_mean, pixel_std,  ra_dec, **kwargs):
     model = VisionTransformer(label_means, label_stds, 
-                              pixel_mean, pixel_std,
+                              pixel_mean, pixel_std, ra_dec=ra_dec,
                               depth=32, num_heads=16, mlp_ratio=4, qkv_bias=True,
                               norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
