@@ -13,7 +13,7 @@ from astropy.wcs import WCS
 # TEMP
 import sys
 src = '/home/a4ferrei/scratch/' 
-cc_dataloader_path = '/github/TileSlicer/'
+cc_dataloader_path = '/github/extra/TileSlicer/'
 sys.path.insert(0, src+cc_dataloader_path)
 from dataloader import dataset_wrapper
 
