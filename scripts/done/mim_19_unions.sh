@@ -2,7 +2,7 @@
 
 # Module loads
 module load python/3.11.5
-source source ~/mae_env/bin/activate
+source /home/a4ferrei/mae_env/bin/activate
 module load hdf5/1.10.6
 
 # Run MAE training
