@@ -159,7 +159,7 @@ def build_unions_stream(batch_size, num_workers, patch_size=8, num_channels=5,
 
     
     # Build dataset
-    dataset = StreamDataset_UNIONS(filename, img_size=img_size, patch_size=patch_size, 
+    dataset = StreamDataset_UNIONS(img_size=img_size, patch_size=patch_size, 
                         num_channels=num_channels, max_mask_ratio=max_mask_ratio,
                         num_patches=num_patches, 
                         label_keys=label_keys, transform=transforms, indices=indices)
@@ -383,11 +383,10 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
                           (either RA and Dec or those specified by `label_keys`).
     """
 
-    def __init__(self, data_file, img_size, patch_size, num_channels, max_mask_ratio, 
+    def __init__(self, img_size, patch_size, num_channels, max_mask_ratio, 
                  num_patches=None, label_keys=None, 
                  transform=None, pixel_min=-3., pixel_max=None, indices=None):
         
-        self.data_file = data_file
         self.transform = transform
         self.img_size = img_size
         self.num_patches = num_patches
