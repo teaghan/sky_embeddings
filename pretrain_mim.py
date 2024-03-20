@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 from utils.misc import str2bool, parseArguments
 from utils.pretrain_fns import run_iter, linear_probe
 from utils.mim_vit import build_model
-from utils.dataloaders import build_h5_dataloader, build_fits_dataloader
+from utils.dataloaders import build_unions_stream, build_h5_dataloader, build_fits_dataloader
 from utils.plotting_fns import plot_progress, plot_batch
 from utils.eval_fns import mae_predict
 
@@ -70,7 +70,20 @@ def main(args):
         max_mask_ratio = None
 
     # Build dataloaders
-    if 'train_data_file' in config['DATA']:
+    if config['DATA']['survey'] == 'UNIONS': 
+        # Using Nick's data streaming method
+        dataloader_train = build_unions_stream(os.path.join(data_dir, config['DATA']['train_data_file']), 
+                                                batch_size=int(config['TRAINING']['batch_size']), 
+                                                num_workers=num_workers,
+                                                patch_size=int(config['ARCHITECTURE']['patch_size']), 
+                                                num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                                max_mask_ratio=max_mask_ratio, 
+                                                img_size=int(config['ARCHITECTURE']['img_size']),
+                                                num_patches=model.module.patch_embed.num_patches,
+                                                shuffle=True)
+        print('The training set streaming has begun') 
+        train_nested_batches = False
+    elif 'train_data_file' in config['DATA']:
         # Using .h5 training file
         dataloader_train = build_h5_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
                                                 batch_size=int(config['TRAINING']['batch_size']), 

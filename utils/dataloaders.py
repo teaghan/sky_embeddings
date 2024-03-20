@@ -10,6 +10,13 @@ import glob
 from astropy.io import fits
 from astropy.wcs import WCS
 
+# TEMP
+import sys
+src = '/home/a4ferrei/scratch/' 
+cc_dataloader_path = '/github/TileSlicer/'
+sys.path.insert(0, src+cc_dataloader_path)
+from dataloader import dataset_wrapper
+
 # Custom brightness adjustment for images
 def adjust_brightness(img, brightness_factor):
     return img * brightness_factor
@@ -135,6 +142,31 @@ def build_h5_dataloader(filename, batch_size, num_workers, patch_size=8, num_cha
     # Build dataloader
     return torch.utils.data.DataLoader(dataset, batch_size=batch_size, 
                                        shuffle=shuffle, num_workers=num_workers,
+                                       pin_memory=True)
+
+def build_unions_stream(filename, batch_size, num_workers, patch_size=8, num_channels=5, 
+                        max_mask_ratio=None, label_keys=None, img_size=64,
+                        num_patches=None, augment=False, shuffle=True, indices=None, transforms=None):
+    '''
+    under development, not all unputs are currently used
+    '''
+
+    if (transforms is None) and augment:
+        #transforms = get_augmentations(img_size=img_size)
+        transforms = v2.Compose([ v2.RandomResizedCrop(img_size), 
+                                  v2.ToTensor()]) 
+        # add normalization if not already done
+
+    
+    # Build dataset
+    dataset = StreamDataset_UNIONS(filename, img_size=img_size, patch_size=patch_size, 
+                        num_channels=num_channels, max_mask_ratio=max_mask_ratio,
+                        num_patches=num_patches, 
+                        label_keys=label_keys, transform=transforms, indices=indices)
+
+    # Build dataloader
+    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, 
+                                       shuffle=shuffle, num_workers=0, #TEMP, num_workers,
                                        pin_memory=True)
 
 class MaskGenerator:
@@ -308,6 +340,115 @@ class H5Dataset(torch.utils.data.Dataset):
             return cutout, mask, ra_dec
         else:
             return cutout, mask, ra_dec, labels
+        
+
+class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
+    
+    """
+    A UNIONS-specific version of H5Dataset with streaming. --> under development
+
+    Currently not including:
+    - Pixel value clip 
+    - Select central cutout
+
+    ---------------------------------------
+    
+    A PyTorch dataset class for loading and transforming data from H5 files, specifically designed for astronomical
+    cutouts or similar types of image datasets. This dataset loader supports dynamic masking, pixel value clipping,
+    optional positional channels, and custom transformations.
+
+    The class can handle datasets where each sample consists of an image (cutout) and optionally additional labels,
+    such as RA (Right Ascension) and Dec (Declination) or other specified metadata. It also supports generating masks
+    for images dynamically using a `MaskGenerator` instance based on specified criteria like image size, patch size,
+    and maximum mask ratio.
+
+    Parameters:
+        data_file (str): Path to the H5 file containing the dataset.
+        img_size (int): The size to which images will be resized or cropped.
+        patch_size (int): The size of each patch for the purpose of mask generation.
+        num_channels (int): The number of channels in the images.
+        max_mask_ratio (float, optional): The maximum ratio of the image that can be masked by the `MaskGenerator`.
+        num_patches (int, optional): The number of patches into which the positional channel is divided.
+        label_keys (list of str, optional): Keys to retrieve additional labels from the H5 file.
+        transform (callable, optional): A function/transform that takes in an image and returns a transformed version.
+        pixel_min (float, optional): The minimum pixel value for clipping.
+        pixel_max (float, optional): The maximum pixel value for clipping.
+        indices (list of int, optional): A list of indices specifying which samples to include in the dataset.
+                                         If None, all samples in the file are included.
+
+    Methods:
+        __len__(): Returns the number of samples in the dataset.
+        __getitem__(idx): Returns the sample at index `idx` along with its mask and labels. The sample consists of an
+                          image (cutout), a dynamically generated mask if `max_mask_ratio` is specified, and labels
+                          (either RA and Dec or those specified by `label_keys`).
+    """
+
+    def __init__(self, data_file, img_size, patch_size, num_channels, max_mask_ratio, 
+                 num_patches=None, label_keys=None, 
+                 transform=None, pixel_min=-3., pixel_max=None, indices=None):
+        
+        self.data_file = data_file
+        self.transform = transform
+        self.img_size = img_size
+        self.num_patches = num_patches
+        self.label_keys = label_keys
+        self.pixel_min = pixel_min
+        self.pixel_max = pixel_max
+        self.indices = indices
+        self.max_mask_ratio = max_mask_ratio
+        self.cutout_count = 0
+
+        if max_mask_ratio is not None:
+            self.mask_generator = MaskGenerator(input_size=img_size,
+                                                patch_size=patch_size,
+                                                max_mask_ratio=max_mask_ratio,
+                                                num_mask_chans=num_channels)
+        else:
+            self.mask_generator = None
+
+        # ADDED
+        self.dataset = dataset_wrapper()
+    
+    def __iter__(self): # only considering 1 worker now
+
+        # Load cutouts if queue is out
+        if self.cutout_count == 0:
+            self.cutout_batch, _, _ = self.dataset.__next__() 
+            self.cutout_count = len(self.cutout_batch) 
+
+        # Grab just one cutout at a time
+        cutout = self.cutout_batch[self.cutout_count-1]
+        self.cutout_count -= 1
+        
+        # Load metadata
+        # TEMP
+        ra_dec = None
+        labels = None
+        '''
+        # Load RA and Dec
+        ra_dec = torch.from_numpy(np.asarray([f['ra'][idx], f['dec'][idx]]).astype(np.float32))
+
+        # Load labels
+        if self.label_keys is not None:
+            labels = [f[k][idx] for k in self.label_keys]
+            labels = torch.from_numpy(np.asarray(labels).astype(np.float32))
+        '''
+        # BELOW IS KEPT THE SAME
+        cutout = torch.from_numpy(cutout).to(torch.float32)
+        # Apply any augmentations, etc.
+        if self.transform is not None:
+            cutout = self.transform(cutout)
+
+        if self.mask_generator is not None:
+            # Generate random mask
+            mask = self.mask_generator()
+        else:
+            mask = torch.zeros_like(cutout)
+
+        if self.label_keys is None:
+            return cutout, mask, ra_dec
+        else:
+            return cutout, mask, ra_dec, labels
             
 
 def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True):
@@ -463,6 +604,121 @@ def random_cutouts(input_array, img_size, n_cutouts, pix_to_radec=None):
 class FitsDataset(torch.utils.data.Dataset):
     
     """
+    A PyTorch dataset class for loading astronomical image data from FITS files, designed to handle multi-band 
+    astronomical images and generate cutouts of a specified size. This dataset supports dynamic mask generation, 
+    pixel value clipping, and custom transformations. It's particularly suited for tasks involving astronomical 
+    image analysis where inputs are large sky surveys in FITS format.
+
+    Parameters:
+        fits_paths (list of str): A list of directories containing the FITS files.
+        patch_size (int, optional): The size of each square patch for the purpose of mask generation. Defaults to 8.
+        max_mask_ratio (float, optional): The maximum ratio of the cutout that can be masked. If None, masking is disabled.
+        bands (list of str, optional): The list of colour bands to include in the dataset. Defaults to ['G','R','I','Z','Y'].
+        img_size (int, optional): The size of the square cutouts to generate from the FITS tiles, in pixels. Defaults to 64.
+        cutouts_per_tile (int, optional): The number of cutouts to generate from each FITS tile. Defaults to 1024.
+        batch_size (int, optional): The number of cutouts per batch. Defaults to 64.
+        transform (callable, optional): A function/transform that takes in a PyTorch tensor and returns a transformed version.
+        pixel_min (float, optional): The minimum pixel value for clipping. Defaults to -3.
+        pixel_max (float, optional): The maximum pixel value for clipping. If None, no upper clipping is applied.
+
+    Attributes:
+        band_filenames (list of lists): A nested list where each sublist contains the paths to the FITS files of the requested bands for a single tile.
+        mask_generator (MaskGenerator or None): An instance of MaskGenerator used to create masks for the cutouts if max_mask_ratio is specified; otherwise None.
+
+    Methods:
+        __len__(): Returns the total number of FITS tiles with all requested bands available.
+        __getitem__(idx): Returns a batch of cutouts and their corresponding masks (if mask generation is enabled) from the FITS tile at the specified index.
+
+    Note:
+        The actual loading of FITS files and generation of cutouts involve significant preprocessing, including 
+        handling of NaN values, pixel value clipping, optional data augmentation, and dynamic mask generation. The 
+        dataset is designed to work with batches of cutouts, facilitating efficient loading and processing of 
+        large-scale astronomical data for deep learning models.
+    """
+
+    def __init__(self, fits_paths,  patch_size=8, max_mask_ratio=None, bands=['G','R','I','Z','Y'], min_bands=5,
+                 img_size=64, cutouts_per_tile=1024, batch_size=64, ra_dec=False,
+                 transform=None, pixel_min=-3., pixel_max=None, use_calexp=True):
+        
+        self.fits_paths = fits_paths
+        self.img_size = img_size
+        self.cutouts_per_tile = cutouts_per_tile
+        self.batch_size = batch_size
+        self.ra_dec = ra_dec
+        self.transform = transform
+        self.pixel_min = pixel_min
+        self.pixel_max = pixel_max
+        self.use_calexp = use_calexp
+
+        # Find names of patch fits files
+        self.band_filenames = find_HSC_bands(fits_paths, bands, min_bands, use_calexp=use_calexp)
+
+        if max_mask_ratio is not None:
+            num_channels = len(bands)
+            self.mask_generator = MaskGenerator(input_size=img_size,
+                                                patch_size=patch_size,
+                                                max_mask_ratio=max_mask_ratio,
+                                                num_mask_chans=num_channels)
+        else:
+            self.mask_generator = None
+                        
+    def __len__(self):
+        # The number of fits patches with all of the requested bands
+        return len(self.band_filenames)
+    
+    def __getitem__(self, idx):
+
+        # Grab fits filenames
+        patch_filenames = self.band_filenames[idx]
+        
+        # Load all channels of the patch of sky
+        # Any missing channels will be filled with np.nan
+        cutouts, pix_to_radec = load_fits_bands(patch_filenames, return_wc=self.ra_dec)
+
+        # Split into a grid of cutouts based on img_size and overlap
+        if self.ra_dec:
+            cutouts, ra_dec = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, pix_to_radec)
+            ra_dec = torch.from_numpy(ra_dec.astype(np.float32))
+        else:
+            cutouts = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, pix_to_radec)
+
+        # Clip pixel values
+        if self.pixel_min is not None:
+            cutouts[cutouts<self.pixel_min] = self.pixel_min
+        if self.pixel_max is not None:
+            cutouts[cutouts>self.pixel_max] = self.pixel_max
+
+        # Apply any augmentations
+        cutouts = torch.from_numpy(cutouts).to(torch.float32)
+        if self.transform is not None:
+            cutouts = self.transform(cutouts)
+
+        if self.mask_generator is not None:
+            # Generate random mask
+            masks = torch.stack([self.mask_generator() for i in range(len(cutouts))])
+        
+        # Sort into M batches of batch_size
+        M = cutouts.shape[0] // self.batch_size
+        C = cutouts.shape[1]
+        cutouts = cutouts[:M * self.batch_size].reshape((M, self.batch_size, C, self.img_size, self.img_size))
+        if self.mask_generator is not None:
+            masks = masks[:M * self.batch_size].reshape((M, self.batch_size, C, self.img_size, self.img_size))
+        else:
+            masks = torch.zeros((M, self.batch_size))
+
+        if self.ra_dec:
+            ra_dec = ra_dec[:M * self.batch_size].reshape((M, self.batch_size, 2))
+            return cutouts, masks, ra_dec
+        else:
+            return cutouts, masks
+
+class FitsDataset_UNIONS(torch.utils.data.Dataset):
+    
+    """
+    A UNIONS-specific version of FitsDataset. --> currently untouched
+
+    ---------------------------------------
+
     A PyTorch dataset class for loading astronomical image data from FITS files, designed to handle multi-band 
     astronomical images and generate cutouts of a specified size. This dataset supports dynamic mask generation, 
     pixel value clipping, and custom transformations. It's particularly suited for tasks involving astronomical 
