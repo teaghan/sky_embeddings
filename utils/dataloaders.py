@@ -153,7 +153,7 @@ def build_unions_stream(filename, batch_size, num_workers, patch_size=8, num_cha
 
     if (transforms is None) and augment:
         #transforms = get_augmentations(img_size=img_size)
-        transforms = v2.Compose([ v2.RandomResizedCrop(img_size), 
+        transforms = v2.Compose([ v2.RandomResizedCrop(img_size), # turn on/off for centering instead
                                   v2.ToTensor()]) 
         # add normalization if not already done
 
@@ -408,6 +408,7 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
 
         # ADDED
         self.dataset = dataset_wrapper()
+        self.label_keys = None
     
     def __iter__(self): # only considering 1 worker now
 
@@ -423,7 +424,7 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
         # Load metadata
         # TEMP
         ra_dec = None
-        labels = None
+        #labels = None
         '''
         # Load RA and Dec
         ra_dec = torch.from_numpy(np.asarray([f['ra'][idx], f['dec'][idx]]).astype(np.float32))
@@ -432,7 +433,7 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
         if self.label_keys is not None:
             labels = [f[k][idx] for k in self.label_keys]
             labels = torch.from_numpy(np.asarray(labels).astype(np.float32))
-        '''
+        '''    
         # BELOW IS KEPT THE SAME
         cutout = torch.from_numpy(cutout).to(torch.float32)
         # Apply any augmentations, etc.
@@ -447,8 +448,8 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
 
         if self.label_keys is None:
             return cutout, mask, ra_dec
-        else:
-            return cutout, mask, ra_dec, labels
+        #else:
+        #    return cutout, mask, ra_dec, labels
             
 
 def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True):
