@@ -66,10 +66,6 @@ def main(args):
     num_workers = min([os.cpu_count(),12*n_gpu])
     if num_workers>1:
         num_workers -=1
-    if n_gpu>1:
-        batch_size = int(int(config['TRAINING']['batch_size'])/n_gpu)
-    else:
-        batch_size = int(config['TRAINING']['batch_size'])
 
     num_train = int(config['TRAINING']['num_train'])
     train_indices = range(num_train) if num_train>-1 else None

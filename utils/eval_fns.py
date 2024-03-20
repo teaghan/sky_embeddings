@@ -146,11 +146,12 @@ def ft_predict(model, dataloader, device, num_batches=None, return_images=False,
 
     print(f'Running predictions on {num_batches} batches...')
     
-    for i, (samples, masks, labels) in enumerate(dataloader):
+    for i, (samples, masks, ra_decs, labels) in enumerate(dataloader):
         
         # Switch to GPU if available
         samples = samples.to(device, non_blocking=True)
         masks = masks.to(device, non_blocking=True)
+        ra_decs = ra_decs.to(device, non_blocking=True)
         labels = labels.to(device, non_blocking=True)
         if use_label_errs:
             # Don't need label uncertainties
@@ -158,7 +159,7 @@ def ft_predict(model, dataloader, device, num_batches=None, return_images=False,
             labels = labels[:,:num_labels]
     
         # Run predictions
-        model_outputs = model(samples, mask=masks)
+        model_outputs = model(samples, mask=masks, ra_dec=ra_decs)
 
         if hasattr(model, 'module'):
             model = model.module
