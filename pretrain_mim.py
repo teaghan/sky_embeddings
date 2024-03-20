@@ -78,50 +78,60 @@ def main(args):
                                                 num_channels=int(config['ARCHITECTURE']['num_channels']), 
                                                 max_mask_ratio=max_mask_ratio, 
                                                 img_size=int(config['ARCHITECTURE']['img_size']),
-                                                num_patches=model.module.patch_embed.num_patches,
-                                                shuffle=True)
+                                                num_patches=model.module.patch_embed.num_patches)
         print('The training set streaming has begun') 
         train_nested_batches = False
-    elif 'train_data_file' in config['DATA']:
-        # Using .h5 training file
-        dataloader_train = build_h5_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
-                                                batch_size=int(config['TRAINING']['batch_size']), 
+
+        #  NEED TO THINK ON THIS PART - very band aid solution for now
+        dataloader_val = build_unions_stream(batch_size=int(config['TRAINING']['batch_size']), 
                                                 num_workers=num_workers,
                                                 patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(config['ARCHITECTURE']['num_channels']), 
                                                 max_mask_ratio=max_mask_ratio, 
                                                 img_size=int(config['ARCHITECTURE']['img_size']),
-                                                num_patches=model.module.patch_embed.num_patches,
-                                                shuffle=True)
-        print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
-        train_nested_batches = False
-    else:
-        # Using fits files in training directory
-        # Might need to decrease num_workers and increase cutouts_per_tile
-        dataloader_train =  build_fits_dataloader(eval(config['DATA']['train_data_paths']), 
-                                                  bands=eval(config['DATA']['bands']), 
-                                                  min_bands=int(config['DATA']['min_bands']), 
-                                                  batch_size=int(config['TRAINING']['batch_size']),
-                                                  num_workers=num_workers,
-                                                  patch_size=int(config['ARCHITECTURE']['patch_size']), 
-                                                  max_mask_ratio=max_mask_ratio, 
-                                                  img_size=int(config['ARCHITECTURE']['img_size']), 
-                                                  cutouts_per_tile=int(config['DATA']['cutouts_per_tile']), 
-                                                  use_calexp=str2bool(config['DATA']['use_calexp']),
-                                                  ra_dec=True,
-                                                  augment=False, 
-                                                  shuffle=True)
-        train_nested_batches = True
+                                                num_patches=model.module.patch_embed.num_patches)     
     
-    dataloader_val = build_h5_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
-                                          batch_size=int(config['TRAINING']['batch_size']), 
-                                          num_workers=num_workers,
-                                          patch_size=int(config['ARCHITECTURE']['patch_size']), 
-                                          num_channels=int(config['ARCHITECTURE']['num_channels']), 
-                                          max_mask_ratio=max_mask_ratio, 
-                                          img_size=int(config['ARCHITECTURE']['img_size']),
-                                          num_patches=model.module.patch_embed.num_patches,
-                                          shuffle=True)
+    else: 
+        if 'train_data_file' in config['DATA']:
+            # Using .h5 training file
+            dataloader_train = build_h5_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
+                                                    batch_size=int(config['TRAINING']['batch_size']), 
+                                                    num_workers=num_workers,
+                                                    patch_size=int(config['ARCHITECTURE']['patch_size']), 
+                                                    num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                                    max_mask_ratio=max_mask_ratio, 
+                                                    img_size=int(config['ARCHITECTURE']['img_size']),
+                                                    num_patches=model.module.patch_embed.num_patches,
+                                                    shuffle=True)
+            print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
+            train_nested_batches = False
+        else:
+            # Using fits files in training directory
+            # Might need to decrease num_workers and increase cutouts_per_tile
+            dataloader_train =  build_fits_dataloader(eval(config['DATA']['train_data_paths']), 
+                                                    bands=eval(config['DATA']['bands']), 
+                                                    min_bands=int(config['DATA']['min_bands']), 
+                                                    batch_size=int(config['TRAINING']['batch_size']),
+                                                    num_workers=num_workers,
+                                                    patch_size=int(config['ARCHITECTURE']['patch_size']), 
+                                                    max_mask_ratio=max_mask_ratio, 
+                                                    img_size=int(config['ARCHITECTURE']['img_size']), 
+                                                    cutouts_per_tile=int(config['DATA']['cutouts_per_tile']), 
+                                                    use_calexp=str2bool(config['DATA']['use_calexp']),
+                                                    ra_dec=True,
+                                                    augment=False, 
+                                                    shuffle=True)
+            train_nested_batches = True
+        
+        dataloader_val = build_h5_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
+                                            batch_size=int(config['TRAINING']['batch_size']), 
+                                            num_workers=num_workers,
+                                            patch_size=int(config['ARCHITECTURE']['patch_size']), 
+                                            num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                            max_mask_ratio=max_mask_ratio, 
+                                            img_size=int(config['ARCHITECTURE']['img_size']),
+                                            num_patches=model.module.patch_embed.num_patches,
+                                            shuffle=True)
 
     # Linear probing validation data files
     lp_class_data_file = os.path.join(data_dir, config['DATA']['lp_class_data_file']) if 'lp_class_data_file' in config['DATA'] else None
