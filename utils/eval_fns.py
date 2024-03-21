@@ -70,15 +70,19 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
     return pred_imgs, mask_imgs, orig_imgs
 
 def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_images=False, verbose=1, 
-               apply_augmentations=False, num_augmentations=16, remove_cls=True):
+               apply_augmentations=False, num_augmentations=16, remove_cls=True, eval=False):
     
-    if n_batches is None:
-        n_batches = len(dataloader)
     if verbose > 0:
         print(f'Encoding {min(len(dataloader), n_batches)} batches...')
     model.eval()
-
     latents = []
+
+    if eval:
+    
+    else: 
+        if n_batches is None:
+            n_batches = len(dataloader)
+
     images = []
     
     # Conditional application of augmentations

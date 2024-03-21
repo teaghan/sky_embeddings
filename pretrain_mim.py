@@ -83,13 +83,7 @@ def main(args):
         train_nested_batches = False
 
         #  NEED TO THINK ON THIS PART - very band aid solution for now - also to center or not to center?
-        dataloader_val = build_unions_stream(batch_size=int(config['TRAINING']['batch_size']), 
-                                                num_workers=num_workers,
-                                                patch_size=int(config['ARCHITECTURE']['patch_size']), 
-                                                num_channels=int(config['ARCHITECTURE']['num_channels']), 
-                                                max_mask_ratio=max_mask_ratio, 
-                                                img_size=int(config['ARCHITECTURE']['img_size']),
-                                                num_patches=model.module.patch_embed.num_patches)     
+        dataloader_val = None
     
     else: 
         if 'train_data_file' in config['DATA']:
@@ -172,7 +166,7 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
 
         # Iterate through training dataset
         for samples, masks, ra_decs in get_train_samples(dataloader_train, train_nested_batches):
-            
+                
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
             masks = masks.to(device, non_blocking=True)
@@ -180,24 +174,32 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
             
             # Run an iteration of training
             model, optimizer, lr_scheduler, losses_cp = run_iter(model, samples, ra_decs, masks,
-                                                                 mask_ratio, optimizer, 
-                                                                 lr_scheduler, 
-                                                                 losses_cp, mode='train')
+                                                                mask_ratio, optimizer, 
+                                                                lr_scheduler, 
+                                                                losses_cp, mode='train')
             
             #if cur_iter % 100 == 0:
             #    time_el = time.time()-time1
             #    print(f'{time_el:0.1f} seconds elapsed.')
             #    time1 = time.time()
             # Evaluate validation set and display losses
-            if cur_iter % verbose_iters == 0:
+            ##if cur_iter % verbose_iters == 0:
+
+            # TEMP
+            if cur_iter % verbose_iters == 0: 
 
                 with torch.no_grad():
                     # Calculate average loss on validation set
-                    for i, (samples, masks, ra_decs) in enumerate(dataloader_val):
+                    cutouts, zspec = [], []
+                    for i, (samples, masks, ra_decs, zspec_labels) in enumerate(dataloader_train):
+                        cutouts.append(samples)
+                        zspec.append(zspec_labels)
+                        
                         # Switch to GPU if available
                         samples = samples.to(device, non_blocking=True)
                         masks = masks.to(device, non_blocking=True)
                         ra_decs = ra_decs.to(device, non_blocking=True)
+
 
                         # Run an iteration
                         model, optimizer, lr_scheduler, losses_cp = run_iter(model, samples, ra_decs, masks,
@@ -205,13 +207,12 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                                                                              lr_scheduler, 
                                                                              losses_cp, mode='val')
                         # Don't bother with the whole dataset
-                        if i>=200:
+                        if i>=100:
                             break
                 
-                    if lp_class_data_file or lp_regress_data_file:
+                    if True:
                         # Run Linear Probing tests
-                        linear_probe(model, losses_cp, device, dataloader_val, 
-                                     lp_class_data_file, lp_regress_data_file, combine=lp_combine)
+                        linear_probe(model, losses_cp, device, cutouts, zspec, combine=lp_combine)
                 
                 # Calculate averages
                 for k in losses_cp.keys():
