@@ -67,7 +67,7 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
             ax.set_xlim(x_lim[0], x_lim[1])
         else:
             ax.set_xlim(losses['batch_iters'][0], losses['batch_iters'][-1])
-        ax.set_ylim(*y_lims[i])
+        #TEMP, ax.set_ylim(*y_lims[i])
         ax.set_xlabel('Batch Iterations',fontsize=fontsize)
         ax.tick_params(labelsize=fontsize_small)
         ax.grid(True)
