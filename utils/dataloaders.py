@@ -416,7 +416,7 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
 
         # ADDED
         self.dataset = dataset_wrapper()
-        self.label_keys = None
+        #self.label_keys = None
     
     def __iter__(self): # only considering 1 worker now
 
