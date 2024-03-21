@@ -424,13 +424,17 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
         while self.cutout_count == 0:
             self.cutout_batch, self.catalog, self.tile = self.dataset.__next__() 
             np.random.shuffle(self.cutout_batch)
-            if not self.tile in self.off_limit_tiles and self.cutout_barch is not None: 
+
+            print('##################')
+            print(self.tile)
+            print(self.catalog.head())
+            print('##################')
+
+            if not self.tile in self.off_limit_tiles and self.cutout_batch is not None: # why was this just hit now?
                 self.cutout_count = len(self.cutout_batch) 
+                print('Good to go!')
             else:
                 print('None or off-limits:', self.tile)
-
-        print(self.tile)
-        print(self.catalog.head())
 
         # Grab just one cutout at a time
         cutout = self.cutout_batch[self.cutout_count-1]
