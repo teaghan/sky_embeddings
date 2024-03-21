@@ -423,9 +423,11 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
         # Load cutouts if queue is out and shuffle them
         while self.cutout_count == 0:
             self.cutout_batch, self.catalog, self.tile = self.dataset.__next__() 
-            if not self.tile in self.off_limit_tiles: 
-                self.cutout_batch = np.random.shuffle(self.cutout_batch)
+            np.random.shuffle(self.cutout_batch)
+            if not self.tile in self.off_limit_tiles and self.cutout_barch is not None: 
                 self.cutout_count = len(self.cutout_batch) 
+            else:
+                print('None or off-limits:', self.tile)
 
         print(self.tile)
         print(self.catalog.head())
