@@ -418,7 +418,7 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
         self.dataset = dataset_wrapper()
         #self.label_keys = None
     
-    def __getitem__(self, idx): # only considering 1 worker now
+    def __iter__(self): # only considering 1 worker now
 
         # Load cutouts if queue is out and shuffle them
         while self.cutout_count == 0:
@@ -461,9 +461,9 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
             mask = torch.zeros_like(cutout)
 
         if self.label_keys is None:
-            return cutout, mask, ra_dec
+            yield cutout, mask, ra_dec
         else:
-            return cutout, mask, ra_dec, labels
+            yield cutout, mask, ra_dec, labels 
         
 
 class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
