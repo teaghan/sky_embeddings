@@ -159,7 +159,7 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
         dataset = EvaluationDataset_UNIONS(eval_dataset_path, img_size=img_size, patch_size=patch_size, 
                         num_channels=num_channels, max_mask_ratio=max_mask_ratio,
                         num_patches=num_patches, 
-                        label_keys=['zspec'], transform=transforms, indices=indices)
+                        label_keys=label_keys, transform=transforms, indices=indices)
 
     else:
         #if (transforms is None) and augment:
@@ -172,7 +172,7 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
         dataset = StreamDataset_UNIONS(img_size=img_size, patch_size=patch_size, 
                             num_channels=num_channels, max_mask_ratio=max_mask_ratio,
                             num_patches=num_patches, 
-                            label_keys=label_keys, transform=transforms, indices=indices)
+                            label_keys=None, transform=transforms, indices=indices)
 
     # Build dataloader
     return torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=0, #TEMP, num_workers,
