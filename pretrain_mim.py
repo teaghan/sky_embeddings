@@ -172,6 +172,7 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
 
         # Iterate through training dataset
         for samples, masks, ra_decs in get_train_samples(dataloader_train, train_nested_batches):
+            print('cur_iter:', cur_iter)
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)

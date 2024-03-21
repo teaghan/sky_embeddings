@@ -463,7 +463,7 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
         if self.label_keys is None:
             yield cutout, mask, ra_dec
         else:
-            yield cutout, mask, ra_dec, labels 
+            yield cutout, mask, ra_dec, labels
         
 
 class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
