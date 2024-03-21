@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 from utils.misc import str2bool, parseArguments
 from utils.pretrain_fns import run_iter, linear_probe
 from utils.mim_vit import build_model
-from utils.dataloaders import build_unions_stream, build_h5_dataloader, build_fits_dataloader
+from utils.dataloaders import build_unions_dataloader, build_h5_dataloader, build_fits_dataloader
 from utils.plotting_fns import plot_progress, plot_batch
 from utils.eval_fns import mae_predict
 
@@ -72,7 +72,7 @@ def main(args):
     # Build dataloaders
     if 'survey' in config['DATA'] and config['DATA']['survey'] == 'UNIONS': 
         # Using Nick's data streaming method
-        dataloader_train = build_unions_stream(batch_size=int(config['TRAINING']['batch_size']), 
+        dataloader_train = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
                                                 num_workers=num_workers,
                                                 patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(config['ARCHITECTURE']['num_channels']), 
@@ -83,7 +83,7 @@ def main(args):
         train_nested_batches = False
 
         #  NEED TO THINK ON THIS PART - very band aid solution for now - also to center or not to center?
-        dataloader_val = build_unions_stream(batch_size=int(config['TRAINING']['batch_size']), 
+        dataloader_val = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
                                                 num_workers=num_workers,
                                                 patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(config['ARCHITECTURE']['num_channels']), 

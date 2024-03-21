@@ -144,25 +144,35 @@ def build_h5_dataloader(filename, batch_size, num_workers, patch_size=8, num_cha
                                        shuffle=shuffle, num_workers=num_workers,
                                        pin_memory=True)
 
-def build_unions_stream(batch_size, num_workers, patch_size=8, num_channels=5, 
-                        max_mask_ratio=None, label_keys=None, img_size=64,
+def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=5, 
+                        max_mask_ratio=None, label_keys=None, img_size=64, eval=False,
                         num_patches=None, augment=False, shuffle=True, indices=None, transforms=None):
     '''
     under development, not all unputs are currently used
     '''
 
-    if (transforms is None) and augment:
+    if eval:
+        transforms = v2.Compose([ v2.CenterCrop(img_size),
+                                  v2.ToTensor()]) 
+
+        eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set.h5'
+        dataset = EvaluationDataset_UNIONS(eval_dataset_path, img_size=img_size, patch_size=patch_size, 
+                        num_channels=num_channels, max_mask_ratio=max_mask_ratio,
+                        num_patches=num_patches, 
+                        label_keys='zspec', transform=transforms, indices=indices)
+
+    else:
+        #if (transforms is None) and augment:
         #transforms = get_augmentations(img_size=img_size)
         transforms = v2.Compose([ v2.RandomResizedCrop(img_size), # turn on/off for centering instead
                                   v2.ToTensor()]) 
         # add normalization if not already done
 
-    
-    # Build dataset
-    dataset = StreamDataset_UNIONS(img_size=img_size, patch_size=patch_size, 
-                        num_channels=num_channels, max_mask_ratio=max_mask_ratio,
-                        num_patches=num_patches, 
-                        label_keys=label_keys, transform=transforms, indices=indices)
+        # Build dataset
+        dataset = StreamDataset_UNIONS(img_size=img_size, patch_size=patch_size, 
+                            num_channels=num_channels, max_mask_ratio=max_mask_ratio,
+                            num_patches=num_patches, 
+                            label_keys=label_keys, transform=transforms, indices=indices)
 
     # Build dataloader
     return torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=0, #TEMP, num_workers,
@@ -342,7 +352,6 @@ class H5Dataset(torch.utils.data.Dataset):
         
 
 class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
-    
     """
     A UNIONS-specific version of H5Dataset with streaming. --> under development
 
@@ -395,6 +404,7 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
         self.indices = indices
         self.max_mask_ratio = max_mask_ratio
         self.cutout_count = 0
+        self.off_limit_tiles = [(285, 281)] # this one was saved for eval dataset, ideally use more in future
 
         if max_mask_ratio is not None:
             self.mask_generator = MaskGenerator(input_size=img_size,
@@ -411,28 +421,27 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
     def __iter__(self): # only considering 1 worker now
 
         # Load cutouts if queue is out and shuffle them
-        if self.cutout_count == 0:
-            self.cutout_batch, _, _ = self.dataset.__next__() 
-            self.cutout_batch = np.random.shuffle(self.cutout_batch) 
-            self.cutout_count = len(self.cutout_batch) 
+        while self.cutout_count == 0:
+            self.cutout_batch, self.catalog, self.tile = self.dataset.__next__() 
+            if not self.tile in self.off_limit_tiles: 
+                self.cutout_batch = np.random.shuffle(self.cutout_batch)
+                self.cutout_count = len(self.cutout_batch) 
+
+        print(self.tile)
+        print(self.catalog.head())
 
         # Grab just one cutout at a time
         cutout = self.cutout_batch[self.cutout_count-1]
         self.cutout_count -= 1
         
-        # Load metadata
-        # TEMP
-        ra_dec = None
-        #labels = None
-        '''
-        # Load RA and Dec
-        ra_dec = torch.from_numpy(np.asarray([f['ra'][idx], f['dec'][idx]]).astype(np.float32))
+        # Load metadata        
+        ra = np.array(self.catalog['ra'])[self.cutout_count-1]
+        dec = np.array(self.catalog['dec'])[self.cutout_count-1]
+        ra_dec = torch.from_numpy(np.asarray([ra, dec]).astype(np.float32))
 
-        # Load labels
-        if self.label_keys is not None:
-            labels = [f[k][idx] for k in self.label_keys]
-            labels = torch.from_numpy(np.asarray(labels).astype(np.float32))
-        '''    
+        # what is this when not defined?
+        labels = torch.from_numpy(np.asarray([self.catalog['zspec']])[self.cutout_count-1].astype(np.float32))
+        
         # BELOW IS KEPT THE SAME
         cutout = torch.from_numpy(cutout).to(torch.float32)
         # Apply any augmentations, etc.
@@ -447,8 +456,122 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
 
         if self.label_keys is None:
             return cutout, mask, ra_dec
-        #else:
-        #    return cutout, mask, ra_dec, labels
+        else:
+            return cutout, mask, ra_dec, labels
+        
+
+class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
+    """
+    A UNIONS-specific version of H5Dataset without streaming. --> under development
+
+    Currently not including:
+    - Pixel value clip 
+    - Select central cutout
+
+    ---------------------------------------
+    
+    A PyTorch dataset class for loading and transforming data from H5 files, specifically designed for astronomical
+    cutouts or similar types of image datasets. This dataset loader supports dynamic masking, pixel value clipping,
+    optional positional channels, and custom transformations.
+
+    The class can handle datasets where each sample consists of an image (cutout) and optionally additional labels,
+    such as RA (Right Ascension) and Dec (Declination) or other specified metadata. It also supports generating masks
+    for images dynamically using a `MaskGenerator` instance based on specified criteria like image size, patch size,
+    and maximum mask ratio.
+
+    Parameters:
+        data_file (str): Path to the H5 file containing the dataset.
+        img_size (int): The size to which images will be resized or cropped.
+        patch_size (int): The size of each patch for the purpose of mask generation.
+        num_channels (int): The number of channels in the images.
+        max_mask_ratio (float, optional): The maximum ratio of the image that can be masked by the `MaskGenerator`.
+        num_patches (int, optional): The number of patches into which the positional channel is divided.
+        label_keys (list of str, optional): Keys to retrieve additional labels from the H5 file.
+        transform (callable, optional): A function/transform that takes in an image and returns a transformed version.
+        pixel_min (float, optional): The minimum pixel value for clipping.
+        pixel_max (float, optional): The maximum pixel value for clipping.
+        indices (list of int, optional): A list of indices specifying which samples to include in the dataset.
+                                         If None, all samples in the file are included.
+
+    Methods:
+        __len__(): Returns the number of samples in the dataset.
+        __getitem__(idx): Returns the sample at index `idx` along with its mask and labels. The sample consists of an
+                          image (cutout), a dynamically generated mask if `max_mask_ratio` is specified, and labels
+                          (either RA and Dec or those specified by `label_keys`).
+    """
+
+    def __init__(self, data_file, img_size, patch_size, num_channels, max_mask_ratio, 
+                 num_patches=None, label_keys=None, 
+                 transform=None, pixel_min=-3., pixel_max=None, indices=None):
+        
+        self.data_file = data_file
+        self.transform = transform
+        self.img_size = img_size
+        self.num_patches = num_patches
+        self.label_keys = label_keys
+        self.pixel_min = pixel_min
+        self.pixel_max = pixel_max
+        self.indices = indices
+        self.max_mask_ratio = max_mask_ratio
+
+        if max_mask_ratio is not None:
+            self.mask_generator = MaskGenerator(input_size=img_size,
+                                                patch_size=patch_size,
+                                                max_mask_ratio=max_mask_ratio,
+                                                num_mask_chans=num_channels)
+        else:
+            self.mask_generator = None
+                        
+    def __len__(self):
+        if self.indices is not None:
+            # Custom set of indices
+            return len(self.indices)
+        else:
+            with h5py.File(self.data_file, "r") as f:    
+                num_samples = len(f['cutouts'])
+            return num_samples
+    
+    def __getitem__(self, idx):
+        if self.indices is not None:
+            # Use custom set of indices
+            idx = self.indices[idx]
+        with h5py.File(self.data_file, "r") as f: 
+            # Load cutout
+            cutout = f['cutouts'][idx]
+
+            # Clip pixel values
+            if self.pixel_min is not None:
+                cutout[cutout<self.pixel_min] = self.pixel_min
+            if self.pixel_max is not None:
+                cutout[cutout>self.pixel_max] = self.pixel_max
+
+            if (np.array(cutout.shape[1:])>self.img_size).any():
+                # Select central cutout
+                cutout = extract_center(cutout, self.img_size)
+
+            # Load RA and Dec
+            ra_dec = torch.from_numpy(np.asarray([f['ra'][idx], f['dec'][idx]]).astype(np.float32))
+
+            # Load labels
+            if self.label_keys is not None:
+                labels = [f[k][idx] for k in self.label_keys]
+                labels = torch.from_numpy(np.asarray(labels).astype(np.float32))
+
+        cutout = torch.from_numpy(cutout).to(torch.float32)
+        # Apply any augmentations, etc.
+        if self.transform is not None:
+            cutout = self.transform(cutout)
+
+        if self.mask_generator is not None:
+            # Generate random mask
+            mask = self.mask_generator()
+        else:
+            mask = torch.zeros_like(cutout)
+
+        if self.label_keys is None:
+            return cutout, mask, ra_dec
+        else:
+            return cutout, mask, ra_dec, labels
             
 
 def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True):
