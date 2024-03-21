@@ -49,8 +49,8 @@ def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler
                 
     return model, optimizer, lr_scheduler, losses_cp
 
-def linear_probe(model, losses_cp, device, cutouts, labels, class_data_path=None,
-                 regress_data=True, combine='central', remove_cls=True):
+def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=None,
+                 regress_data_path=None, combine='central', remove_cls=True):
     '''Train a quick linear probing model to evaluate the quality of the embeddings.'''
 
     if combine=='token':
@@ -59,7 +59,8 @@ def linear_probe(model, losses_cp, device, cutouts, labels, class_data_path=None
     model.train(False)
     if class_data_path:
         # Classifier task
-        x,y = get_embeddings(model, device, cutouts, labels,
+        x,y = get_embeddings(class_data_path, 
+                             model, device, dataloader_template,
                              y_label='class', combine=combine, remove_cls=remove_cls)
         
         # Splitting the dataset into training and testing sets
@@ -79,9 +80,10 @@ def linear_probe(model, losses_cp, device, cutouts, labels, class_data_path=None
     
         losses_cp['train_lp_acc'].append(float(train_accuracy))
         losses_cp['val_lp_acc'].append(float(test_accuracy))
-    if regress_data:
+    if regress_data_path:
         # Regression task
-        x,y = get_embeddings(model, device, cutouts, labels,
+        x,y = get_embeddings(regress_data_path, 
+                             model, device, dataloader_template,
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
     
         # Splitting the dataset into training and testing sets
@@ -104,12 +106,27 @@ def linear_probe(model, losses_cp, device, cutouts, labels, class_data_path=None
         losses_cp['train_lp_r2'].append(float(r2_train))
         losses_cp['val_lp_r2'].append(float(r2_test))
 
-def get_embeddings(model, device, cutouts, labels,
-                   y_label='class', combine='central', remove_cls=True):
+def get_embeddings(data_path, model, device, 
+                   dataloader_template, y_label='class', combine='central', remove_cls=True):
+
+    # Data loader
+    dataloader = build_h5_dataloader(data_path, 
+                                         batch_size=64, 
+                                         num_workers=dataloader_template.num_workers,
+                                         img_size=dataloader_template.dataset.img_size,
+                                         num_patches=dataloader_template.dataset.num_patches,
+                                         patch_size=model.module.patch_embed.patch_size[0], 
+                                         num_channels=model.module.in_chans, 
+                                         max_mask_ratio=None,
+                                         shuffle=False)
 
     # Map target samples to latent-space
-    latent_features = mae_latent(model, cutouts, device, verbose=0, remove_cls=remove_cls, eval=True)
+    latent_features = mae_latent(model, dataloader, device, verbose=0, remove_cls=remove_cls)
     latent_features = latent_features.data.cpu().numpy()
+
+    # Collect targets
+    with h5py.File(data_path, "r") as f:
+        y = f[y_label][:]
 
     if model.module.attn_pool:
         # There is only one output set of features if there is an attention pooling layer
@@ -139,4 +156,4 @@ def get_embeddings(model, device, cutouts, labels,
         scaler = StandardScaler()
         x = scaler.fit_transform(x)
 
-    return x, labels
+    return x, y

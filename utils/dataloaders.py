@@ -412,7 +412,7 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
 
         # Load cutouts if queue is out and shuffle them
         if self.cutout_count == 0:
-            self.cutout_batch, self.catalog, _ = self.dataset.__next__() 
+            self.cutout_batch, _, _ = self.dataset.__next__() 
             self.cutout_batch = np.random.shuffle(self.cutout_batch) 
             self.cutout_count = len(self.cutout_batch) 
 
@@ -422,14 +422,8 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
         
         # Load metadata
         # TEMP
-        print(self.catalog.head())
-        
-        ra = np.array(self.catalog['ra'])[self.cutout_count-1]
-        dec = np.array(self.catalog['dec'])[self.cutout_count-1]
-        ra_dec = torch.from_numpy(np.asarray([ra, dec]).astype(np.float32))
-
-        # what is this when not defined?
-        labels = torch.from_numpy(np.asarray(self.catalog['zspec'])[self.cutout_count-1].astype(np.float32))
+        ra_dec = None
+        #labels = None
         '''
         # Load RA and Dec
         ra_dec = torch.from_numpy(np.asarray([f['ra'][idx], f['dec'][idx]]).astype(np.float32))
@@ -453,8 +447,8 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
 
         if self.label_keys is None:
             return cutout, mask, ra_dec
-        else:
-            return cutout, mask, ra_dec, labels
+        #else:
+        #    return cutout, mask, ra_dec, labels
             
 
 def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True):
