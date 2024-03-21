@@ -446,7 +446,7 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
         ra_dec = torch.from_numpy(np.asarray([ra, dec]).astype(np.float32))
 
         # what is this when not defined?
-        labels = torch.from_numpy(np.asarray([self.catalog['zspec']])[self.cutout_count-1].astype(np.float32))
+        labels = torch.from_numpy(np.asarray([self.catalog['zspec'][self.cutout_count-1]]).astype(np.float32))
         
         # BELOW IS KEPT THE SAME
         cutout = torch.from_numpy(cutout).to(torch.float32)
