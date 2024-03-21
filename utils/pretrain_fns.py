@@ -87,7 +87,8 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
         
         # remove entries where y is NaN (because that means we don't have zspec)
-        unknown_y = np.where(np.isnan(y))[0] # tensors? why is this a tuple?
+        unknown_y = np.where(np.isnan(y))[0] # tensors? 
+        print(x.shape, y.shape, unknown_y.shape)
         x = np.delete(x, unknown_y, axis=0)
         y = np.delete(y, unknown_y, axis=0)
     
