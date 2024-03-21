@@ -87,7 +87,7 @@ def main(args):
                                                 num_workers=num_workers,
                                                 patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(config['ARCHITECTURE']['num_channels']), 
-                                                max_mask_ratio=max_mask_ratio, 
+                                                max_mask_ratio=max_mask_ratio, eval=True,
                                                 img_size=int(config['ARCHITECTURE']['img_size']),
                                                 num_patches=model.module.patch_embed.num_patches)     
     
