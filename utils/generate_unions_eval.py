@@ -43,7 +43,7 @@ while found < len(eval_tiles):
                 zspec_lst.append(zspec[i])
                 cutout_lst.append(cutouts[i])
 
-                print(len(ra_lst)) # is everything being appended?
+                print(len(zspec_lst)) # is everything being appended?
 
 with h5py.File(eval_dataset_path, 'w') as f: 
     dset1 = f.create_dataset("cutouts", data = np.array(cutout_lst))
