@@ -14,6 +14,8 @@ from sklearn.linear_model import LogisticRegression, ElasticNet
 from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
 from sklearn.preprocessing import StandardScaler
 
+from matplotlib import pyplot as plt
+
 def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler,
              losses_cp, mode='train'):
         
@@ -87,6 +89,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
         
         # remove entries where y is NaN (because that means we don't have zspec)
+        # make validation set of just known zspec ones?
         unknown_y = np.where(np.isnan(y))[0] 
         print(f'removing {len(unknown_y)} examples from validation set due to unknown zspec')
         print(x.shape, y.shape, unknown_y.shape)
@@ -105,6 +108,10 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
         # Predicting the continuous values 
         y_pred_test = regressor.predict(X_test)
         y_pred_train = regressor.predict(X_train)
+
+        fig = plt.figure()
+        fig.scatter(y_test, y_pred_test, alpha=0.4)
+        fig.savefig('/home/a4ferrei/scratch/github/sky_embeddings/figures/temp_fig.png')
         
         # Evaluating the regressor
         #mse_test = mean_squared_error(y_test, y_pred_test)
