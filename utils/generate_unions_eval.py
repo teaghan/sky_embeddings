@@ -29,6 +29,7 @@ while found < len(eval_tiles):
     cutouts, catalog, tile = dataset.__next__() 
     if tile in eval_tiles: 
         found +=1 
+        print(found)
 
         ra = np.array(catalog['ra'])
         dec = np.array(catalog['dec'])
@@ -41,6 +42,7 @@ while found < len(eval_tiles):
                 zspec_lst.append(zspec[i])
                 cutout_lst.append(cutouts[i])
 
+                print(len(ra_lst))
 
 with h5py.File(eval_dataset_path, 'w') as f: 
     dset1 = f.create_dataset("cutouts", data = np.array(cutout_lst))
