@@ -206,7 +206,7 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                                                                              lr_scheduler, 
                                                                              losses_cp, mode='val')
                         # Don't bother with the whole dataset
-                        if i>=200:
+                        if i>=1000:
                             break
                 
                     if lp_class_data_file or lp_regress_data_file:

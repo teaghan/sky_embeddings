@@ -110,7 +110,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
         y_pred_train = regressor.predict(X_train)
 
         fig = plt.figure()
-        fig.scatter(y_test, y_pred_test, alpha=0.4)
+        plt.scatter(y_test, y_pred_test, alpha=0.4)
         fig.savefig('/home/a4ferrei/scratch/github/sky_embeddings/figures/temp_fig.png')
         
         # Evaluating the regressor

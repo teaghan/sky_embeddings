@@ -156,10 +156,10 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
         transforms = v2.Compose([ v2.CenterCrop(img_size),
                                   v2.ToTensor()]) 
 
-        eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set.h5'
+        eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_2.h5'
         dataset = EvaluationDataset_UNIONS(eval_dataset_path, img_size=img_size, patch_size=patch_size, 
                         num_channels=num_channels, max_mask_ratio=max_mask_ratio,
-                        num_patches=num_patches, 
+                        num_patches=num_patches,
                         label_keys=label_keys, transform=transforms, indices=indices)
 
     else:
