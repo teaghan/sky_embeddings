@@ -35,10 +35,11 @@ while found < len(eval_tiles):
         zspec = np.array(catalog['zspec'])
 
         for i in range(len(ra)):
-            ra_lst.append(ra[i])
-            dec_lst.append(dec[i])
-            zspec_lst.append(zspec[i])
-            cutout_lst.append(cutouts[i])
+            if np.isfinite(ra[i]) and ra[i]>0.1:
+                ra_lst.append(ra[i])
+                dec_lst.append(dec[i])
+                zspec_lst.append(zspec[i])
+                cutout_lst.append(cutouts[i])
 
 
 with h5py.File(eval_dataset_path, 'w') as f: 
