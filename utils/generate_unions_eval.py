@@ -35,14 +35,15 @@ while found < len(eval_tiles):
         dec = np.array(catalog['dec'])
         zspec = np.array(catalog['zspec'])
 
-        for i in range(len(ra)):
-            if np.isfinite(ra[i]) and ra[i]>0.1:
+        for i in range(len(zspec)):
+            #if np.isfinite(zspec[i]) and zspec[i]>0.1:
+            if not np.isnan(zspec[i]) and zspec[i]>0.1:
                 ra_lst.append(ra[i])
                 dec_lst.append(dec[i])
                 zspec_lst.append(zspec[i])
                 cutout_lst.append(cutouts[i])
 
-                print(len(ra_lst))
+                print(len(ra_lst)) # is everything being appended?
 
 with h5py.File(eval_dataset_path, 'w') as f: 
     dset1 = f.create_dataset("cutouts", data = np.array(cutout_lst))
