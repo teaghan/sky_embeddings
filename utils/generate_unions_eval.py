@@ -21,8 +21,8 @@ eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_2.h5'
 # dr5_eval_set.h5 just has (285, 281)
 
 found = 0
-#eval_tiles = [(285, 281), (150, 322), (183, 270), ()] 
-eval_tiles = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+#eval_tiles = [(285, 281), (150, 322), (183, 270), (144, 278)] 
+eval_tiles = [1,2,3,4,5,6,7,8,9]# gets killed beyond even with high ram - may want to write in batches,10,11,12,13,14,15]
 dataset = dataset_wrapper()
 
 tiles = []
@@ -32,8 +32,8 @@ while found < len(eval_tiles):
     #if tile in eval_tiles: 
     if True:
         tiles.append(tile)
-        found +=1 
-        print(found)
+        found +=1
+        print('#######', found)
 
         ra = np.array(catalog['ra'])
         dec = np.array(catalog['dec'])
@@ -47,7 +47,7 @@ while found < len(eval_tiles):
                 zspec_lst.append(zspec[i])
                 cutout_lst.append(cutouts[i])
 
-                print(len(zspec_lst)) # is everything being appended?
+        print(len(zspec_lst))
 
 with h5py.File(eval_dataset_path, 'w') as f: 
     dset1 = f.create_dataset("cutouts", data = np.array(cutout_lst))
