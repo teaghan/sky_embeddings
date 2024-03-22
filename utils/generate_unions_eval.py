@@ -17,7 +17,8 @@ cc_dataloader_path = '/github/extra/TileSlicer/'
 sys.path.insert(0, src+cc_dataloader_path)
 from dataloader import dataset_wrapper
 
-eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set.h5'
+eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_2.h5'
+# dr5_eval_set_2.h5 just has (285, 281)
 
 found = 0
 eval_tiles = [(285, 281)] # only doing this with one tile in mind now

@@ -87,10 +87,12 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
         
         # remove entries where y is NaN (because that means we don't have zspec)
-        unknown_y = np.where(np.isnan(y))[0] # tensors? 
+        unknown_y = np.where(np.isnan(y))[0] 
+        print(f'removing {len(unknown_y)} examples from validation set due to unknown zspec')
         print(x.shape, y.shape, unknown_y.shape)
         x = np.delete(x, unknown_y, axis=0)
         y = np.delete(y, unknown_y, axis=0)
+        print(x.shape, y.shape, unknown_y.shape)
     
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
