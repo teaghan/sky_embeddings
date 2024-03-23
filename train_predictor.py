@@ -96,12 +96,13 @@ def main(args):
     train_network(model, dataloader_train, dataloader_val, 
                   optimizer, lr_scheduler, device,
                   losses, cur_iter, 
+                  config['TRAINING']['loss_fn'],
                   int(float(config['TRAINING']['total_batch_iters'])),
                   args.verbose_iters, args.cp_time, model_filename, fig_dir,
                  str2bool(config['TRAINING']['use_label_errs']))
 
 def train_network(model, dataloader_train, dataloader_val, optimizer, lr_scheduler, device, 
-                  losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir,
+                  losses, cur_iter, loss_fn, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir,
                   use_label_errs):
     print('Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size))
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
@@ -133,6 +134,7 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                                                                  optimizer, 
                                                                  lr_scheduler, 
                                                                  losses_cp, 
+                                                                 loss_fn,
                                                                  label_uncertainties=sample_label_errs,
                                                                  mode='train')
                             
@@ -157,10 +159,12 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                             sample_label_errs = None
 
                         # Run an iteration
-                        model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, sample_masks, ra_decs, sample_labels,
+                        model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, 
+                                                                             sample_masks, ra_decs, sample_labels,
                                                                              optimizer, 
                                                                              lr_scheduler, 
                                                                              losses_cp, 
+                                                                             loss_fn,
                                                                              label_uncertainties=sample_label_errs,
                                                                              mode='val')
                 

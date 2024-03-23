@@ -1,7 +1,7 @@
 import torch
 
 def run_iter(model, samples, masks, ra_decs, labels, optimizer, lr_scheduler,
-             losses_cp, label_uncertainties=None, mode='train'):
+             losses_cp, loss_fn='mse', label_uncertainties=None, mode='train'):
         
     if mode=='train':
         model.train(True)
@@ -12,15 +12,18 @@ def run_iter(model, samples, masks, ra_decs, labels, optimizer, lr_scheduler,
     model_output = model(samples, mask=masks, ra_dec=ra_decs)
 
     # Compute loss
-    labels = model.module.normalize_labels(labels)
-    if label_uncertainties is None:
-        loss = torch.nn.MSELoss()(model_output, labels)
-    else:
-        # Inverse uncertainties used as weights
-        weights = 1.0 / (label_uncertainties + 1e-5)
-        loss = torch.nn.functional.mse_loss(model_output, labels, reduction='none')
-        weighted_loss = loss * weights
-        loss = weighted_loss.mean()
+    if 'crossentropy' in loss_fn.lower():
+        loss = torch.nn.CrossEntropyLoss()(model_output, labels)
+    if 'mse' in loss_fn.lower():
+        labels = model.module.normalize_labels(labels)
+        if label_uncertainties is None:
+            loss = torch.nn.MSELoss()(model_output, labels)
+        else:
+            # Inverse uncertainties used as weights
+            weights = 1.0 / (label_uncertainties + 1e-5)
+            loss = torch.nn.functional.mse_loss(model_output, labels, reduction='none')
+            weighted_loss = loss * weights
+            loss = weighted_loss.mean()
     
     if loss.numel()>1:
         # In case of multiple GPUs
