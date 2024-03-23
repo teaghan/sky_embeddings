@@ -13,8 +13,7 @@ def run_iter(model, samples, masks, ra_decs, labels, optimizer, lr_scheduler,
 
     # Compute loss
     if 'crossentropy' in loss_fn.lower():
-        print(model_output, labels)
-        loss = torch.nn.CrossEntropyLoss()(model_output, labels)
+        loss = torch.nn.CrossEntropyLoss()(model_output, labels.squeeze(1))
     if 'mse' in loss_fn.lower():
         labels = model.module.normalize_labels(labels)
         if label_uncertainties is None:

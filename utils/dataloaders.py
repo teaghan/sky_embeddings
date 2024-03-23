@@ -123,7 +123,8 @@ def build_h5_dataloader(filename, batch_size, num_workers, patch_size=8, num_cha
                         num_patches=None, augment=False, shuffle=True, indices=None, transforms=None):
 
     if (transforms is None) and augment:
-        transforms = get_augmentations(img_size=img_size)
+        transforms = get_augmentations(img_size=img_size, flip=True, crop=True, 
+                                       brightness=True, noise=True, nan_channels=True)
 
     
     # Build dataset
@@ -291,7 +292,10 @@ class H5Dataset(torch.utils.data.Dataset):
             # Load labels
             if self.label_keys is not None:
                 labels = [f[k][idx] for k in self.label_keys]
-                labels = torch.from_numpy(np.asarray(labels).astype(np.float32))
+                if 'class' in self.label_keys:
+                    labels = torch.from_numpy(np.asarray(labels).astype(np.int64)).long()
+                else:
+                    labels = torch.from_numpy(np.asarray(labels).astype(np.float32))
 
         cutout = torch.from_numpy(cutout).to(torch.float32)
         # Apply any augmentations, etc.
