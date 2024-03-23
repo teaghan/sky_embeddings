@@ -33,6 +33,7 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
         num_labels = len(eval(config['DATA']['label_keys']))
         if str2bool(config['TRAINING']['use_label_errs']):
             num_labels = num_labels//2
+    print(num_labels)
     label_means = len(eval(config['DATA']['label_means']))
     label_stds = len(eval(config['DATA']['label_stds']))
     dropout = float(eval(config['ARCHITECTURE']['dropout']))
