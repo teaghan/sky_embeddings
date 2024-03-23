@@ -179,7 +179,7 @@ def build_model(config, mae_config, model_filename, mae_filename, device, build_
                                                            three_phase=False)
         lr_scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, 
                                                          start_factor=1.0, 
-                                                         end_factor=final_lr_factor, 
+                                                         end_factor=1/final_lr_factor, 
                                                          total_iters=int(total_batch_iters))
 
 
