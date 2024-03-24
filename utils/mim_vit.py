@@ -13,6 +13,8 @@ cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)
 from pos_embed import get_2d_sincos_pos_embed
 from misc import str2bool
+from location_encoder import LocationEncoder
+
 
 def build_model(config, model_filename, device, build_optimizer=False):
 
@@ -127,6 +129,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
         optimizer = torch.optim.AdamW(param_groups, lr=init_lr, betas=(0.9, 0.95))
 
         # Learning rate scheduler
+        '''
         lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, init_lr,
                                                            total_steps=int(total_batch_iters), 
                                                            pct_start=0.05, anneal_strategy='cos', 
@@ -135,6 +138,11 @@ def build_model(config, model_filename, device, build_optimizer=False):
                                                            max_momentum=0.95, div_factor=25.0, 
                                                            final_div_factor=final_lr_factor, 
                                                            three_phase=False)
+        '''
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 
+                                                                  int(total_batch_iters), 
+                                                                  eta_min=init_lr/final_lr_factor)
+
         model, losses, cur_iter = load_model(model, model_filename, optimizer, lr_scheduler)
         
         return model, losses, cur_iter, optimizer, lr_scheduler
@@ -200,7 +208,11 @@ class MaskedAutoencoderViT(nn.Module):
 
         if self.ra_dec:
             # Mapping for Right Ascension and Dec to the Embedding space
-            self.ra_dec_embed = nn.Linear(2, embed_dim, bias=True)
+            self.ra_dec_embed = LocationEncoder(neural_network_name="siren", 
+                                                legendre_polys=5,
+                                                dim_hidden=8,
+                                                num_layers=1,
+                                                num_classes=embed_dim)
             self.num_extra_tokens = 2
         else:
             self.num_extra_tokens = 1
@@ -396,11 +408,10 @@ class MaskedAutoencoderViT(nn.Module):
             x, mask, ids_restore = self.random_masking(x, mask_ratio)
 
         if self.ra_dec:
-            # Normalize between -1 and 1 and add positional embedding
-            ra_dec = self.normalize_ra_dec(ra_dec) #+ self.pos_embed[:, 1]
+            # Map RA and Dec to embedding space and add positional embedding
+            ra_dec = self.ra_dec_embed(ra_dec) + self.pos_embed[:, 1]
             # Append RA and Dec token
-            ra_dec = self.ra_dec_embed(ra_dec).unsqueeze(1)
-            x = torch.cat((ra_dec, x), dim=1)
+            x = torch.cat((ra_dec.unsqueeze(1), x), dim=1)
         
         # Append cls token
         cls_token = self.cls_token + self.pos_embed[:, :1, :]
