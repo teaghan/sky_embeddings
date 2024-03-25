@@ -8,7 +8,7 @@ cc_dataloader_path = '/github/extra/TileSlicer/'
 sys.path.insert(0, src+cc_dataloader_path)
 from dataloader import dataset_wrapper
 
-eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_validation.h5' 
+eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_validation.h5' # just a 10k sample
 eval_tile = (285, 281)  # specify the tile to evaluate
 
 # Initialize dataset wrapper
