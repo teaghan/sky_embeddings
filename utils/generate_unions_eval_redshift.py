@@ -31,7 +31,8 @@ with h5py.File(eval_dataset_path, 'w') as f:
         cutouts, catalog, tile = dataset.__next__()
 
         # Check if tile is in eval_tiles
-        if tile in eval_tiles:
+        #if tile in eval_tiles:
+        if True: # since not specifying specific tiles, just doing a range
             print('######', tile, index)
             tiles_written.append(tile)
 
