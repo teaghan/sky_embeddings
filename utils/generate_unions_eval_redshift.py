@@ -32,7 +32,7 @@ with h5py.File(eval_dataset_path, 'w') as f:
 
         # Check if tile is in eval_tiles
         if tile in eval_tiles:
-            print('######', tile)
+            print('######', tile, index)
             tiles_written.append(tile)
 
             # Process catalog data and store directly in datasets
