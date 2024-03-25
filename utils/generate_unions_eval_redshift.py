@@ -17,7 +17,7 @@ dataset = dataset_wrapper()
 with h5py.File(eval_dataset_path, 'w') as f:
     # Create datasets
     max_length = 6000
-    dset_cutouts = f.create_dataset("cutouts", (max_length,), dtype=h5py.special_dtype(vlen=np.uint8))
+    dset_cutouts = f.create_dataset("cutouts", (max_length, 5, 224, 224), dtype=np.float32)
     dset_ra = f.create_dataset("ra", (max_length,), dtype='f')
     dset_dec = f.create_dataset("dec", (max_length,), dtype='f')
     dset_zspec = f.create_dataset("zspec", (max_length,), dtype='f')
@@ -40,7 +40,7 @@ with h5py.File(eval_dataset_path, 'w') as f:
             for i in range(len(catalog)):
                 zspec = catalog['zspec'].iloc[i]
                 if np.isfinite(zspec) and zspec > 0.002:
-                    dset_cutouts[index] = cutouts[i].astype(np.uint8)
+                    dset_cutouts[index] = cutouts[i]
                     dset_ra[index] = catalog['ra'].iloc[i]
                     dset_dec[index] = catalog['dec'].iloc[i]
                     dset_zspec[index] = zspec
@@ -55,7 +55,7 @@ with h5py.File(eval_dataset_path, 'w') as f:
         print('Processed', len(tiles_written), 'out of', len(eval_tiles), 'tiles')
 
     # Resize datasets to actual length
-    dset_cutouts.resize(index)
+    dset_cutouts.resize(index, axis=0)
     dset_ra.resize(index)
     dset_dec.resize(index)
     dset_zspec.resize(index)
