@@ -8,7 +8,7 @@ sys.path.insert(0, src+cc_dataloader_path)
 from dataloader import dataset_wrapper
 
 eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_redshift.h5'
-eval_tiles = set(range(30))  # specify tiles to evaluate, only taking 10k of each
+eval_tiles = set(range(50))  # specify tiles to evaluate, only taking 10k of each
 
 # Initialize dataset wrapper
 dataset = dataset_wrapper()
@@ -32,7 +32,8 @@ with h5py.File(eval_dataset_path, 'w') as f:
 
         # Check if tile is in eval_tiles
         #if tile in eval_tiles:
-        if True: # since not specifying specific tiles, just doing a range
+        # index 0 gave an error so skipping for now
+        if index > 0: # since not specifying specific tiles, just doing a range
             print('######', tile, index)
             tiles_written.append(tile)
 
@@ -40,7 +41,7 @@ with h5py.File(eval_dataset_path, 'w') as f:
             for i in range(len(catalog)):
                 zspec = catalog['zspec'].iloc[i]
                 if np.isfinite(zspec) and zspec > 0.002:
-                    dset_cutouts[index] = cutouts[i]
+                    dset_cutouts[index] = cutouts[i] 
                     dset_ra[index] = catalog['ra'].iloc[i]
                     dset_dec[index] = catalog['dec'].iloc[i]
                     dset_zspec[index] = zspec
@@ -50,14 +51,9 @@ with h5py.File(eval_dataset_path, 'w') as f:
 
                     # Check if index exceeds max_length
                     if index >= max_length:
+                        print('HIT MAX LEN, ran successfully')
                         break
 
         print('Processed', len(tiles_written), 'out of', len(eval_tiles), 'tiles')
-
-    # Resize datasets to actual length
-    dset_cutouts.resize(index, axis=0)
-    dset_ra.resize(index)
-    dset_dec.resize(index)
-    dset_zspec.resize(index)
 
 print("Tiles written:", tiles_written)
