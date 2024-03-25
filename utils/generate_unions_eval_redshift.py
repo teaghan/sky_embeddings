@@ -1,14 +1,5 @@
-import random
 import numpy as np
-import torch
 import h5py
-import torchvision
-torchvision.disable_beta_transforms_warning()
-from torchvision.transforms import v2
-import os
-import glob
-from astropy.io import fits
-from astropy.wcs import WCS
 
 # TEMP
 import sys
