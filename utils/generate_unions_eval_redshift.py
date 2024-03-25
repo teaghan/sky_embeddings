@@ -33,7 +33,8 @@ with h5py.File(eval_dataset_path, 'w') as f:
         # Check if tile is in eval_tiles
         #if tile in eval_tiles:
         # index 0 gave an error so skipping for now
-        if index > 0: # since not specifying specific tiles, just doing a range
+        #if index > 0: # since not specifying specific tiles, just doing a range
+        if tile != (285, 281):
             print('######', tile, index)
             tiles_written.append(tile)
 
