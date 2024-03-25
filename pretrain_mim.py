@@ -82,14 +82,23 @@ def main(args):
         print('The training set streaming has begun') 
         train_nested_batches = False
 
-        #  NEED TO THINK ON THIS PART - very band aid solution for now - also to center or not to center?
         dataloader_val = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
                                                 num_workers=num_workers,
                                                 patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(config['ARCHITECTURE']['num_channels']), 
                                                 max_mask_ratio=max_mask_ratio, eval=True,
                                                 img_size=int(config['ARCHITECTURE']['img_size']),
-                                                num_patches=model.module.patch_embed.num_patches)     
+                                                num_patches=model.module.patch_embed.num_patches,
+                                                eval_data_file=(config['DATA']['val_data_file']))     
+
+        dataloader_regress = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
+                                                num_workers=num_workers,
+                                                patch_size=int(config['ARCHITECTURE']['patch_size']), 
+                                                num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                                max_mask_ratio=max_mask_ratio, eval=True,
+                                                img_size=int(config['ARCHITECTURE']['img_size']),
+                                                num_patches=model.module.patch_embed.num_patches,
+                                                eval_data_file=(config['DATA']['lp_regress_data_file']))
     
     else: 
         if 'train_data_file' in config['DATA']:
@@ -133,12 +142,14 @@ def main(args):
                                             num_patches=model.module.patch_embed.num_patches,
                                             shuffle=True)
 
+        dataloader_regess = dataloader_val
+
     # Linear probing validation data files
     lp_class_data_file = os.path.join(data_dir, config['DATA']['lp_class_data_file']) if 'lp_class_data_file' in config['DATA'] else None
     lp_regress_data_file = os.path.join(data_dir, config['DATA']['lp_regress_data_file']) if 'lp_regress_data_file' in config['DATA'] else None
         
-    train_network(model, dataloader_train, dataloader_val, train_nested_batches,
-                  optimizer, lr_scheduler, device,
+    train_network(model, dataloader_train, dataloader_val, dataloader_regress,
+                  train_nested_batches, optimizer, lr_scheduler, device,
                   mask_ratio,
                   losses, cur_iter, 
                   int(float(config['TRAINING']['total_batch_iters'])),
@@ -157,7 +168,7 @@ def get_train_samples(dataloader, train_nested_batches):
         for samples, mask, ra_dec in dataloader:
             yield samples, mask, ra_dec
 
-def train_network(model, dataloader_train, dataloader_val, train_nested_batches, optimizer, lr_scheduler, device, mask_ratio, 
+def train_network(model, dataloader_train, dataloader_val, dataloader_regress, train_nested_batches, optimizer, lr_scheduler, device, mask_ratio, 
                   losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir, 
                   lp_class_data_file, lp_regress_data_file, lp_combine):
     print('Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size))
@@ -211,7 +222,7 @@ def train_network(model, dataloader_train, dataloader_val, train_nested_batches,
                 
                     if lp_class_data_file or lp_regress_data_file:
                         # Run Linear Probing tests
-                        linear_probe(model, losses_cp, device, dataloader_val, 
+                        linear_probe(model, losses_cp, device, dataloader_regress, 
                                      lp_class_data_file, lp_regress_data_file, combine=lp_combine)
                 
                 # Calculate averages

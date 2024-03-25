@@ -146,7 +146,8 @@ def build_h5_dataloader(filename, batch_size, num_workers, patch_size=8, num_cha
 
 def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=5, 
                         max_mask_ratio=None, label_keys=None, img_size=64, eval=False,
-                        num_patches=None, augment=False, shuffle=True, indices=None, transforms=None):
+                        num_patches=None, augment=False, shuffle=True, indices=None, transforms=None,
+                        eval_data_file='/home/a4ferrei/scratch/data/dr5_eval_set_validation.h5'):
     '''
     under development, not all unputs are currently used
     '''
@@ -156,8 +157,8 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
         transforms = v2.Compose([ v2.CenterCrop(img_size),
                                   v2.ToTensor()]) 
 
-        eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set.h5'
-        dataset = EvaluationDataset_UNIONS(eval_dataset_path, img_size=img_size, patch_size=patch_size, 
+
+        dataset = EvaluationDataset_UNIONS(eval_data_file, img_size=img_size, patch_size=patch_size, 
                         num_channels=num_channels, max_mask_ratio=max_mask_ratio,
                         num_patches=num_patches,
                         label_keys=label_keys, transform=transforms, indices=indices)

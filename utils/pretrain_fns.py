@@ -127,18 +127,22 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
         losses_cp['val_lp_r2'].append(float(r2_test))
 
 def get_embeddings(data_path, model, device, 
-                   dataloader_template, y_label='class', combine='central', remove_cls=True):
+                   dataloader_template, y_label='class', combine='central', remove_cls=True, new_loader=False):
 
-    # Data loader
-    dataloader = build_h5_dataloader(data_path, 
-                                         batch_size=64, 
-                                         num_workers=dataloader_template.num_workers,
-                                         img_size=dataloader_template.dataset.img_size,
-                                         num_patches=dataloader_template.dataset.num_patches,
-                                         patch_size=model.module.patch_embed.patch_size[0], 
-                                         num_channels=model.module.in_chans, 
-                                         max_mask_ratio=None,
-                                         shuffle=False)
+    if new_loader:
+        # Data loader
+        dataloader = build_h5_dataloader(data_path, 
+                                            batch_size=64, 
+                                            num_workers=dataloader_template.num_workers,
+                                            img_size=dataloader_template.dataset.img_size,
+                                            num_patches=dataloader_template.dataset.num_patches,
+                                            patch_size=model.module.patch_embed.patch_size[0], 
+                                            num_channels=model.module.in_chans, 
+                                            max_mask_ratio=None,
+                                            shuffle=False)
+        
+    else:
+        dataloader = dataloader_template
 
     # Map target samples to latent-space
     latent_features = mae_latent(model, dataloader, device, verbose=0, remove_cls=remove_cls)
