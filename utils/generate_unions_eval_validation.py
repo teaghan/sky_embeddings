@@ -12,23 +12,27 @@ eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_validation.h5'
 
 found = 0
 eval_tiles = [(285, 281)]#, (150, 322), (183, 270), (144, 278)] # these become off limit tiles in main code
+
+# Initialize dataset wrapper
 dataset = dataset_wrapper()
 
-tiles = []
-ra_lst, dec_lst, zspec_lst, cutout_lst = [], [], [], []
-while found < len(eval_tiles):
-    cutouts, catalog, tile = dataset.__next__() 
-
-    tiles.append(tile)
-    found +=1
-    print('#######', found)
-
-    ra = np.array(catalog['ra'])
-    dec = np.array(catalog['dec'])
-
+# Open HDF5 file for writing
 with h5py.File(eval_dataset_path, 'w') as f: 
-    dset1 = f.create_dataset("cutouts", data = np.array(cutouts))
-    dset2 = f.create_dataset("ra", data = np.array(ra))
-    dset3 = f.create_dataset("dec", data = np.array(dec))
+    # Create datasets
+    dset_cutouts = f.create_dataset("cutouts", (len(eval_tiles),), dtype=h5py.special_dtype(vlen=np.float64))
+    dset_ra = f.create_dataset("ra", (len(eval_tiles),), dtype='f')
+    dset_dec = f.create_dataset("dec", (len(eval_tiles),), dtype='f')
 
-print(tiles) # these are then the off limit tiles
+    # Iterate over tiles
+    for i, tile in enumerate(eval_tiles):
+        cutouts, catalog, _ = dataset.__next__()  # Load next tile
+
+        # Store cutouts
+        dset_cutouts[i] = cutouts.astype(np.float64)
+
+        # Store RA and Dec
+        dset_ra[i] = catalog['ra']
+        dset_dec[i] = catalog['dec']
+
+# Print tiles
+print("Evaluated Tiles:", eval_tiles)
