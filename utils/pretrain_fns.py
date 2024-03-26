@@ -111,9 +111,10 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
 
         # TEMP
         fig = plt.figure()
-        plt.scatter(y_test, y_pred_test, alpha=0.4)
-        line = np.linspace(0,max(y_test),10)
-        plt.plot(line, '--')
+        plt.scatter(y_test, y_pred_test, alpha=0.1)
+        print('max(y_test):', max(y_test))
+        line = np.linspace(0,max(y_test), num=5)
+        plt.plot(line, line, '--')
         plt.xlabel('true zspec')
         plt.ylabel('predicted zspec')
         fig.savefig('/home/a4ferrei/scratch/github/sky_embeddings/figures/zspec_predictions.png')
