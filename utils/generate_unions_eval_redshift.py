@@ -23,7 +23,7 @@ with h5py.File(eval_dataset_path, 'w') as f:
     dset_zspec = f.create_dataset("zspec", (max_length,), dtype='f')
 
     # Initialize counters
-    index = 0
+    index = 1
     tiles_written = []
 
     # Iterate over tiles

@@ -400,7 +400,7 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
         self.transform = transform
         self.img_size = img_size
         self.num_patches = num_patches
-        self.label_keys = label_keys
+        self.label_keys = None #label_keys
         self.pixel_min = pixel_min
         self.pixel_max = pixel_max
         self.indices = indices
@@ -434,13 +434,12 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
 
             if not self.tile in self.off_limit_tiles and self.cutout_batch is not None: # why was this just hit now?
                 self.cutout_count = len(self.cutout_batch) 
-                print('Good to go!')
+                print('Good to go!', self.tile)
             else:
                 print('None or off-limits:', self.tile)
 
         # Grab just one cutout at a time
         cutout = self.cutout_batch[self.cutout_count-1]
-        self.cutout_count -= 1
         
         # Load metadata        
         ra = np.array(self.catalog['ra'])[self.cutout_count-1]
@@ -448,7 +447,8 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
         ra_dec = torch.from_numpy(np.asarray([ra, dec]).astype(np.float32))
 
         # what is this when not defined?
-        labels = torch.from_numpy(np.asarray([self.catalog['zspec'][self.cutout_count-1]]).astype(np.float32))
+        #labels = torch.from_numpy(np.asarray([self.catalog['zspec'][self.cutout_count-1]]).astype(np.float32)) 
+        self.cutout_count -= 1 # this goes down less easy then? maybe subtract later on? force labels to be none
         
         # BELOW IS KEPT THE SAME
         cutout = torch.from_numpy(cutout).to(torch.float32)
