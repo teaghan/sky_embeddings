@@ -91,7 +91,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
         # remove entries where y is NaN (because that means we don't have zspec)
         # make validation set of just known zspec ones?
         unknown_y = np.where(np.isnan(y))[0] 
-        print(f'removing {len(unknown_y)} examples from validation set due to unknown zspec')
+        print(f'removing {len(unknown_y)} examples from linear probe set due to unknown zspec')
         print(x.shape, y.shape, unknown_y.shape)
         x = np.delete(x, unknown_y, axis=0)
         y = np.delete(y, unknown_y, axis=0)
@@ -112,7 +112,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
         # TEMP
         fig = plt.figure()
         plt.scatter(y_test, y_pred_test, alpha=0.4)
-        line = range(0,max(y_test))
+        line = np.linspace(0,max(y_test),10)
         plt.plot(line, '--')
         plt.xlabel('true zspec')
         plt.ylabel('predicted zspec')
