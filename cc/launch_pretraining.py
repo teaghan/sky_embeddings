@@ -25,45 +25,45 @@ def parseArguments():
                         type=int, default=7)
     parser.add_argument("-acc", "--account", 
                         help="Compute Canada account to run jobs under.", 
-                        type=str, default='def-sfabbro')
+                        type=str, default='rrg-kyi')
     parser.add_argument("-mem", "--memory", 
                         help="Memory per job in GB.", 
                         type=int, default=60)
     parser.add_argument("-ngpu", "--num_gpu", 
                         help="Number of GPUs per job.", 
-                        type=int, default=2)
+                        type=int, default=1)
     parser.add_argument("-ncp", "--num_cpu", 
                         help="Number of CPU cores per job.", 
-                        type=int, default=24)
+                        type=int, default=6)
     parser.add_argument("-jt", "--job_time", 
                         help="Number of hours per job.", 
                         type=int, default=3)
     
     # Config params
-    parser.add_argument("-tfp", "--train_data_paths", 
+    parser.add_argument("-tfp", "--train_data_paths", # not used
                         help="List of directories for training fits files.", 
                         default="['/home/obriaint/scratch/sky_embeddings/data/pdr3_wide','/home/obriaint/scratch/sky_embeddings/data/pdr3_dud']") 
     parser.add_argument("-bnd", "--bands", 
                         help="List of fits colour bands.", 
-                        default="['G','I','R','Y','Z']") 
+                        default="['cfis-u', 'whigs-g', 'cfis_lsb-r', 'ps-i', 'wishes-z']") 
     parser.add_argument("-mbnd", "--min_bands", 
                         help="The minimum number of bands required to include a given patch of sky in the training.", 
                         type=int, default="5") 
     parser.add_argument("-cpt", "--cutouts_per_tile", 
                         help="Number of random cutouts to create per fits tile.", 
-                        type=int, default=2048)
+                        type=int, default=10000)
     parser.add_argument("-pc", "--pos_channel", 
                         help="Whether or not to use the positional channel.", 
                         type=str, default='False')
     parser.add_argument("-vfn", "--val_data_file", 
                         help="Filename for validation samples.", 
-                        type=str, default='HSC_galaxies_GRIZY_64_val_new.h5') 
+                        type=str, default='/home/a4ferrei/scratch/data/dr5_eval_set_validation.h5') 
     parser.add_argument("-cfn", "--lp_class_data_file", 
                         help="Filename for linear probe classification samples.", 
-                        type=str, default='simple_classifier_data.h5') 
+                        type=str, default=None) 
     parser.add_argument("-rfn", "--lp_regress_data_file", 
                         help="Filename for linear probe regression samples.", 
-                        type=str, default='simple_regression_data.h5') 
+                        type=str, default='/home/a4ferrei/scratch/data/dr5_eval_set_redshift.h5') 
 
     parser.add_argument("-bs", "--batch_size", 
                         help="Training batchsize.", 
