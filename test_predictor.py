@@ -109,10 +109,11 @@ def main(args):
     else:
         # Turn logit predictions into classes
         pred_class = np.argmax(pred_labels, 1)
-        print(tgt_labels.shape)
+        tgt_class = tgt_labels[:,0]
+        print(tgt_class.shape, pred_class.shape)
         cm = confusion_matrix(tgt_labels, pred_class)
+        labels = ['galaxy', 'qso', 'star']
         sns.heatmap(cm, annot=True, fmt='d', xticklabels=labels, yticklabels=labels)
-        #sns.heatmap(cm, annot=True, fmt='d')
         plt.title(f'Classifier Confusion Matrix')
         plt.xlabel('Predicted Class')
         plt.ylabel('True Class')
