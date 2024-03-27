@@ -178,16 +178,28 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                 
                 # Print current status
                 print('\nBatch Iterations: %i/%i ' % (cur_iter, total_batch_iters))
-                print('Losses:')
                 print('\tTraining Dataset')
                 print('\t\tTotal Loss: %0.3f'% (losses['train_loss'][-1]))
+                if 'mse' in loss_fn.lower():
+                    print('\t\tMAE: %0.3f'% (losses['train_mae'][-1]))
+                else:
+                    print('\t\tAccuracy: %0.3f'% (losses['train_acc'][-1]))
                 print('\tValidation Dataset')
                 print('\t\tTotal Loss: %0.3f'% (losses['val_loss'][-1]))
+                if 'mse' in loss_fn.lower():
+                    print('\t\tMAE: %0.3f'% (losses['val_mae'][-1]))
+                else:
+                    print('\t\tAccuracy: %0.3f'% (losses['val_acc'][-1]))
 
                 # Reset checkpoint loss dictionary
                 losses_cp = defaultdict(list)
                 
                 if len(losses['batch_iters'])>1:
+
+                    if 'mse' in loss_fn.lower():
+                        y_lims = [(0,0.005), (0,0.1)]
+                    else:
+                        y_lims = [(0,0.2), (0.5,1)]
                     # Plot progress
                     plot_progress(losses, y_lims=[(0,0.005)], 
                                   savename=os.path.join(fig_dir, 

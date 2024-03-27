@@ -38,6 +38,10 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
         cur_ax +=1
         ax3 = plt.subplot(gs[cur_ax])
         axs.append(ax3)
+    if ('train_acc' in losses.keys()) or ('train_mae' in losses.keys()):
+        cur_ax +=1
+        ax4 = plt.subplot(gs[cur_ax])
+        axs.append(ax4)
     
     ax1.set_title('Objective Function', fontsize=fontsize)
     ax1.plot(losses['batch_iters'], losses['train_loss'],
@@ -61,6 +65,20 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
         ax3.plot(losses['batch_iters'], losses['val_lp_r2'],
                          label=r'Val', c='r')
         ax3.set_ylabel(r'$R^2$',fontsize=fontsize)
+    if 'train_acc' in losses.keys():
+        ax4.set_title('Classification Accuracy', fontsize=fontsize)
+        ax4.plot(losses['batch_iters'], losses['train_acc'],
+                     label=r'Train', c='k')
+        ax4.plot(losses['batch_iters'], losses['val_acc'],
+                         label=r'Val', c='r')
+        ax4.set_ylabel(r'Acc (\%)',fontsize=fontsize)
+    elif 'train_mae' in losses.keys():
+        ax4.set_title('Regression Error', fontsize=fontsize)
+        ax4.plot(losses['batch_iters'], losses['train_mae'],
+                     label=r'Train', c='k')
+        ax4.plot(losses['batch_iters'], losses['val_mae'],
+                         label=r'Val', c='r')
+        ax4.set_ylabel(r'MAE',fontsize=fontsize)
     
     for i, ax in enumerate(axs):
         if x_lim is not None:

@@ -14,6 +14,7 @@ def run_iter(model, samples, masks, ra_decs, labels, optimizer, lr_scheduler,
     # Compute loss
     if 'crossentropy' in loss_fn.lower():
         loss = torch.nn.CrossEntropyLoss()(model_output, labels.squeeze(1))
+        metric = (torch.max(model_output, 1)[1] == labels.squeeze(1)).float().mean()
     if 'mse' in loss_fn.lower():
         labels = model.module.normalize_labels(labels)
         if label_uncertainties is None:
@@ -24,10 +25,12 @@ def run_iter(model, samples, masks, ra_decs, labels, optimizer, lr_scheduler,
             loss = torch.nn.functional.mse_loss(model_output, labels, reduction='none')
             weighted_loss = loss * weights
             loss = weighted_loss.mean()
+        metric = torch.nn.L1Loss()(model_output, labels)
     
     if loss.numel()>1:
         # In case of multiple GPUs
         loss = loss.unsqueeze(0).mean()
+        metric = metric.unsqueeze(0).mean()
     
     if 'train' in mode:
         # Update the gradients
@@ -42,9 +45,17 @@ def run_iter(model, samples, masks, ra_decs, labels, optimizer, lr_scheduler,
         
         # Save loss and metrics
         losses_cp['train_loss'].append(float(loss))
+        if 'crossentropy' in loss_fn.lower():
+            losses_cp['train_acc'].append(float(metric))
+        else: 
+            losses_cp['train_mae'].append(float(metric))
 
     else:
         # Save loss and metrics
         losses_cp['val_loss'].append(float(loss))
+        if 'crossentropy' in loss_fn.lower():
+            losses_cp['val_acc'].append(float(metric))
+        else: 
+            losses_cp['val_mae'].append(float(metric))
                 
     return model, optimizer, lr_scheduler, losses_cp

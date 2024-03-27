@@ -15,6 +15,7 @@ sys.path.append(cur_dir)
 from utils.misc import str2bool
 from pos_embed import interpolate_pos_embed, crop_pos_embed
 from lr_decay import param_groups_lrd
+from location_encoder import LocationEncoder
 
 def build_model(config, mae_config, model_filename, mae_filename, device, build_optimizer=False):
 
@@ -233,7 +234,7 @@ def load_model(model, model_filename, mae_filename='None', optimizer=None, lr_sc
 
         # Load the pre-trained model weights
         msg = model.module.load_state_dict(checkpoint_model, strict=False)
-        #print(msg)
+        print(msg)
         #assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
         
         # Manually initialize the head layer weights
@@ -271,7 +272,11 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
 
         if self.ra_dec:
             # Mapping for Right Ascension and Dec to the Embedding space
-            self.ra_dec_embed = nn.Linear(2, kwargs['embed_dim'], bias=True)
+            self.ra_dec_embed = LocationEncoder(neural_network_name="siren", 
+                                                legendre_polys=5,
+                                                dim_hidden=8,
+                                                num_layers=1,
+                                                num_classes=kwargs['embed_dim'])
             self.num_extra_tokens = 2
         else:
             self.num_extra_tokens = 1
@@ -341,11 +346,10 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
         x = x + self.pos_embed[:, self.num_extra_tokens:, :]
 
         if self.ra_dec:
-            # Normalize between -1 and 1 and add positional embedding
-            ra_dec = self.normalize_ra_dec(ra_dec) #+ self.pos_embed[:, 1]
+            # Map RA and Dec to embedding space and add positional embedding
+            ra_dec = self.ra_dec_embed(ra_dec) + self.pos_embed[:, 1]
             # Append RA and Dec token
-            ra_dec = self.ra_dec_embed(ra_dec).unsqueeze(1)
-            x = torch.cat((ra_dec, x), dim=1)
+            x = torch.cat((ra_dec.unsqueeze(1), x), dim=1)
         
         # Append cls token
         cls_token = self.cls_token + self.pos_embed[:, :1, :]
