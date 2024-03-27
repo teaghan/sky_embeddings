@@ -32,6 +32,31 @@ def parseArguments():
     
     return parser
 
+def calculate_n_samples_per_class(class_counts, num_train):
+    total_samples = sum(class_counts.values())
+    n_samples_per_class = {cls: int((count / total_samples) * num_train) for cls, count in class_counts.items()}
+    return n_samples_per_class
+
+def select_training_indices(data_file_path, num_train):
+    # Load the 'class' dataset from the HDF5 file
+    with h5py.File(data_file_path, 'r') as f:
+        class_data = np.array(f['class'])
+    
+    # Determine the total number of samples for each class
+    unique, counts = np.unique(class_data, return_counts=True)
+    class_counts = dict(zip(unique, counts))
+    
+    # Calculate `n_samples` for each class
+    n_samples_per_class = calculate_n_samples_per_class(class_counts, num_train)
+    
+    # Collect the first `n_samples` indices for each class
+    training_indices = []
+    for cls, n_samples in n_samples_per_class.items():
+        indices_of_class = np.where(class_data == cls)[0][:n_samples]
+        training_indices.extend(indices_of_class.tolist())
+    
+    return training_indices
+
 def central_indices(tensor_2d, n):
     """
     Returns the indices of the central 'n' pixels of a 2D tensor.

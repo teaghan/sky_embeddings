@@ -5,7 +5,7 @@ import configparser
 from collections import defaultdict
 import torch
 
-from utils.misc import str2bool, parseArguments
+from utils.misc import str2bool, parseArguments, select_training_indices
 from utils.predictor_training_fns import run_iter
 from utils.vit import build_model
 from utils.dataloaders import build_h5_dataloader
@@ -68,7 +68,15 @@ def main(args):
         num_workers -=1
 
     num_train = int(config['TRAINING']['num_train'])
-    train_indices = range(num_train) if num_train>-1 else None
+    if num_train>-1:
+        if 'crossentropy' in config['TRAINING']['loss_fn'].lower():
+            train_indices = select_training_indices(os.path.join(data_dir, config['DATA']['train_data_file']), 
+                                                    num_train)
+        else:    
+            train_indices = range(num_train)
+    else:
+        train_indices = None
+
     dataloader_train = build_h5_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
                                            batch_size=int(config['TRAINING']['batch_size']), 
                                            num_workers=num_workers,
