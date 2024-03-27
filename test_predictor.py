@@ -9,6 +9,9 @@ from utils.dataloaders import build_h5_dataloader
 from utils.eval_fns import ft_predict
 from utils.plotting_fns import plot_resid_hexbin, evaluate_z, plot_progress
 
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
+
 def main(args):
     
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -89,14 +92,28 @@ def main(args):
     # Only display objects that are not super noisy
     snr_indices = snr>5
     print(len(np.where(snr_indices)[0]))
-    
-    plot_resid_hexbin([r'$Z$'], tgt_labels[snr_indices], pred_labels[snr_indices], y_lims=[1], 
-                      gridsize=(80,40), max_counts=5, cmap='ocean_r', n_std=4,
-                      savename=os.path.join(fig_dir, f'{model_name}_predictions.png'))
-    
-    evaluate_z(pred_labels[snr_indices], tgt_labels[snr_indices], n_bins=8, z_range=(0.2,1.6), threshold=0.1, 
-               y_lims=[(-0.08,0.08),(-0.02,0.02),(0,0.03),(0,0.1)], snr=snr[snr_indices],
-               savename=os.path.join(fig_dir, f'{model_name}_redshift.png'))
+
+    if 'mse' in config['TRAINING']['loss_fn'].lower():
+        plot_resid_hexbin([r'$Z$'], tgt_labels[snr_indices], pred_labels[snr_indices], y_lims=[1], 
+                          gridsize=(80,40), max_counts=5, cmap='ocean_r', n_std=4,
+                          savename=os.path.join(fig_dir, f'{model_name}_predictions.png'))
+        
+        evaluate_z(pred_labels[snr_indices], tgt_labels[snr_indices], n_bins=8, z_range=(0.2,1.6), threshold=0.1, 
+                   y_lims=[(-0.08,0.08),(-0.02,0.02),(0,0.03),(0,0.1)], snr=snr[snr_indices],
+                   savename=os.path.join(fig_dir, f'{model_name}_redshift.png'))
+    else:
+        # Turn logit predictions into classes
+        pred_class = np.argmax(pred_labels, 1)
+        print(tgt_labels.shape)
+        cm = confusion_matrix(tgt_labels, pred_class)
+        sns.heatmap(cm, annot=True, fmt='d', xticklabels=labels, yticklabels=labels)
+        #sns.heatmap(cm, annot=True, fmt='d')
+        plt.title(f'Classifier Confusion Matrix')
+        plt.xlabel('Predicted Class')
+        plt.ylabel('True Class')
+        plt.savefig(os.path.join(fig_dir, f'{model_name}_classes.png'), facecolor='white', 
+                    transparent=False, dpi=100,
+                    bbox_inches='tight', pad_inches=0.05)
 
 # Run the testing
 if __name__=="__main__":
