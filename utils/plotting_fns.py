@@ -20,6 +20,8 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
         num_ax += 1
     if 'train_lp_r2' in losses.keys():
         num_ax += 1
+    if ('train_acc' in losses.keys()) or ('train_mae' in losses.keys()):
+        num_ax += 1
         
     fig = plt.figure(figsize=(9,3*(num_ax)))
     
