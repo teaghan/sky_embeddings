@@ -9,6 +9,7 @@ import os
 import glob
 from astropy.io import fits
 from astropy.wcs import WCS
+from sklearn.utils import shuffle
 
 # TEMP
 import sys
@@ -425,7 +426,6 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
         # Load cutouts if queue is out and shuffle them
         while self.cutout_count == 0:
             self.cutout_batch, self.catalog, self.tile = self.dataset.__next__() 
-            #need to random shuffle other things if using this: np.random.shuffle(self.cutout_batch)
 
             print('##################')
             print(self.tile)
@@ -434,6 +434,10 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
 
             if not self.tile in self.off_limit_tiles and self.cutout_batch is not None: # why was this just hit now?
                 self.cutout_count = len(self.cutout_batch) 
+                #self.cutout_batch, self.catalog = shuffle(self.cutout_batch, self.catalog, random_state=0)
+                random_indices = np.random.permutation(self.cutout_count)
+                self.cutout_batch = [self.cutouts_batch[i] for i in random_indices]
+                self.catalog = self.catalog.iloc[random_indices].reset_index(drop=True)
                 print('Good to go!', self.tile)
             else:
                 print('None or off-limits:', self.tile)
