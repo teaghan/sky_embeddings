@@ -58,9 +58,14 @@ def main(args):
     model, losses, cur_iter = build_model(config, mae_config, 
                                           model_filename, mae_filename,
                                           device, build_optimizer=False)
+    loss_fn = config['TRAINING']['loss_fn']
+    if 'mse' in loss_fn.lower():
+        y_lims = [(0,0.005), (0,0.1)]
+    else:
+        y_lims = [(0,0.2), (0.7,1)]
 
     # Plot training progress
-    plot_progress(losses, y_lims=[(0,0.005)], 
+    plot_progress(losses, y_lims=y_lims, 
                   savename=os.path.join(fig_dir, 
                                         f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
     
@@ -93,7 +98,7 @@ def main(args):
     snr_indices = snr>5
     print(len(np.where(snr_indices)[0]))
 
-    if 'mse' in config['TRAINING']['loss_fn'].lower():
+    if 'mse' in loss_fn.lower():
         plot_resid_hexbin([r'$Z$'], tgt_labels[snr_indices], pred_labels[snr_indices], y_lims=[1], 
                           gridsize=(80,40), max_counts=5, cmap='ocean_r', n_std=4,
                           savename=os.path.join(fig_dir, f'{model_name}_predictions.png'))
