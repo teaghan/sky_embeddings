@@ -199,7 +199,7 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                     if 'mse' in loss_fn.lower():
                         y_lims = [(0,0.005), (0,0.1)]
                     else:
-                        y_lims = [(0,0.2), (0.5,1)]
+                        y_lims = [(0,0.2), (0.7,1)]
                     # Plot progress
                     plot_progress(losses, y_lims=[(0,0.005)], 
                                   savename=os.path.join(fig_dir, 
