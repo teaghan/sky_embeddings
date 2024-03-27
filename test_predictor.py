@@ -9,9 +9,6 @@ from utils.dataloaders import build_h5_dataloader
 from utils.eval_fns import ft_predict
 from utils.plotting_fns import plot_resid_hexbin, evaluate_z, plot_progress
 
-import seaborn as sns
-from sklearn.metrics import confusion_matrix
-
 def main(args):
     
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -109,17 +106,12 @@ def main(args):
     else:
         # Turn logit predictions into classes
         pred_class = np.argmax(pred_labels, 1)
-        tgt_class = tgt_labels[:,0]
-        print(tgt_class.shape, pred_class.shape)
-        cm = confusion_matrix(tgt_labels, pred_class)
+        tgt_class = tgt_labels[:,0]        
         labels = ['galaxy', 'qso', 'star']
-        sns.heatmap(cm, annot=True, fmt='d', xticklabels=labels, yticklabels=labels)
-        plt.title(f'Classifier Confusion Matrix')
-        plt.xlabel('Predicted Class')
-        plt.ylabel('True Class')
-        plt.savefig(os.path.join(fig_dir, f'{model_name}_classes.png'), facecolor='white', 
-                    transparent=False, dpi=100,
-                    bbox_inches='tight', pad_inches=0.05)
+        # Plot confusion Matrix
+        plot_conf_mat(tgt_class, pred_class, labels, 
+                      savename=os.path.join(fig_dir, f'{model_name}_classes.png'))
+        
 
 # Run the testing
 if __name__=="__main__":

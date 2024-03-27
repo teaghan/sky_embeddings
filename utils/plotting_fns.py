@@ -3,6 +3,8 @@ import math
 import os
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 
 plt.rcParams.update({
     "text.usetex": True,
@@ -286,7 +288,19 @@ def display_images(images, vmin=0., vmax=1., show_num=True, savename=None):
     else:
         plt.show()
 
-
+def plot_conf_mat(tgt_class, pred_class, labels, savename):
+    cm = confusion_matrix(tgt_class, pred_class)
+    sns.heatmap(cm, annot=True, fmt='d', xticklabels=labels, yticklabels=labels)
+    plt.title(f'Classifier Confusion Matrix')
+    plt.xlabel('Predicted Class')
+    plt.ylabel('True Class')
+    if savename is not None:
+        plt.savefig(savename, facecolor='white', 
+                    transparent=False, dpi=100,
+                    bbox_inches='tight', pad_inches=0.05)
+    else:
+        plt.show()
+    
 def plot_resid_hexbin(label_keys, tgt_stellar_labels, pred_stellar_labels,
                       y_lims=[2], 
                       gridsize=(100,50), max_counts=30, cmap='ocean_r', n_std=3,
