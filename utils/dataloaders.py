@@ -436,7 +436,7 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
                 self.cutout_count = len(self.cutout_batch) 
                 #self.cutout_batch, self.catalog = shuffle(self.cutout_batch, self.catalog, random_state=0)
                 random_indices = np.random.permutation(self.cutout_count)
-                self.cutout_batch = [self.cutouts_batch[i] for i in random_indices]
+                self.cutout_batch = [self.cutout_batch[i] for i in random_indices]
                 self.catalog = self.catalog.iloc[random_indices].reset_index(drop=True)
                 print('Good to go!', self.tile)
             else:
