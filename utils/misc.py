@@ -32,12 +32,20 @@ def parseArguments():
     
     return parser
 
-def calculate_n_samples_per_class(class_counts, num_train):
+def calculate_n_samples_per_class(class_counts, num_train, balanced=False):
     total_samples = sum(class_counts.values())
-    n_samples_per_class = {cls: int((count / total_samples) * num_train) for cls, count in class_counts.items()}
+    num_classes = len(class_counts)
+    
+    if balanced:
+        # Determine the maximum number of samples per class without exceeding num_train total
+        n_samples = min(num_train // num_classes, min(class_counts.values()))
+        n_samples_per_class = {cls: n_samples for cls in class_counts}
+    else:
+        n_samples_per_class = {cls: int((count / total_samples) * num_train) for cls, count in class_counts.items()}
+    
     return n_samples_per_class
 
-def select_training_indices(data_file_path, num_train):
+def select_training_indices(data_file_path, num_train, balanced=False):
     # Load the 'class' dataset from the HDF5 file
     with h5py.File(data_file_path, 'r') as f:
         class_data = np.array(f['class'])
@@ -46,8 +54,8 @@ def select_training_indices(data_file_path, num_train):
     unique, counts = np.unique(class_data, return_counts=True)
     class_counts = dict(zip(unique, counts))
     
-    # Calculate `n_samples` for each class
-    n_samples_per_class = calculate_n_samples_per_class(class_counts, num_train)
+    # Calculate `n_samples` for each class based on the balanced parameter
+    n_samples_per_class = calculate_n_samples_per_class(class_counts, num_train, balanced)
     
     # Collect the first `n_samples` indices for each class
     training_indices = []
