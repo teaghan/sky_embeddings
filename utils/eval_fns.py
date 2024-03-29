@@ -106,6 +106,8 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             samples = samples.to(device, non_blocking=True)
             ra_decs = ra_decs.to(device, non_blocking=True)
 
+            print(samples.shape, ra_decs.shape)
+
             if hasattr(model, 'module'):
                 latent, _, _ = model.module.forward_encoder(samples, ra_dec=ra_decs, 
                                                             mask_ratio=mask_ratio, mask=None, 
