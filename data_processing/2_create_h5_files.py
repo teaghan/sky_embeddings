@@ -205,9 +205,9 @@ if 'lense' in file_type:
 
 if 'unknown' in file_type:
     # Stars
-    for out_name, use_calexp in zip(['HSC_dud_unkown_calexp_GIRYZ7610_64', 'HSC_dud_unkown_GIRYZ7610_64'],
+    for out_name, use_calexp in zip(['HSC_dud_unknown_calexp_GIRYZ7610_64', 'HSC_dud_unknown_GIRYZ7610_64'],
                                     [True, False]):
-        labels_path = os.path.join(out_dir,'unkown.csv')
+        labels_path = os.path.join(out_dir,'HSC_unknown_dud.csv')
         patch_start = 0
         patch_end = 1515
         create_h5_subsets(fits_paths, out_name, labels_path, out_dir, patch_start, patch_end, batch_size,
