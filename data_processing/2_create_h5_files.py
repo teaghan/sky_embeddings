@@ -203,7 +203,7 @@ if 'lense' in file_type:
                               patch_strategy='all', n_patches=-1)
 
 
-if 'unkown' in file_type:
+if 'unknown' in file_type:
     # Stars
     for out_name, use_calexp in zip(['HSC_dud_unkown_calexp_GIRYZ7610_64', 'HSC_dud_unkown_GIRYZ7610_64'],
                                     [True, False]):
