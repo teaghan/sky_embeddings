@@ -90,17 +90,22 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
 
             # Apply augmentations if enabled
             augmented_samples = []
+            augmented_ra_decs = []  # Prepare to hold duplicated ra_decs
             if apply_augmentations:
-                for sample in samples:
+                for idx, sample in enumerate(samples):
                     # Add the original sample
                     augmented_samples.append(sample.unsqueeze(0))
+                    augmented_ra_decs.append(ra_decs[idx].unsqueeze(0))  # Duplicate ra_dec for the original sample
+                    
                     # Generate augmented versions of the sample
                     for _ in range(num_augmentations):
                         augmented_sample = augmentations(sample)
                         augmented_samples.append(augmented_sample.unsqueeze(0))
+                        augmented_ra_decs.append(ra_decs[idx].unsqueeze(0))  # Duplicate ra_dec for each augmented sample
                 
                 # Concatenate all augmented samples along the batch dimension
                 samples = torch.cat(augmented_samples, dim=0)
+                ra_decs = torch.cat(augmented_ra_decs, dim=0)  # Concatenate duplicated ra_decs
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
