@@ -1,48 +1,4 @@
-import random
-import numpy as np
 import torch
-import torchvision
-torchvision.disable_beta_transforms_warning()
-from torchvision.transforms import v2
-
-# Custom brightness adjustment for images
-def adjust_brightness(img, brightness_factor):
-    return img * brightness_factor
-
-# Custom transform that applies brightness adjustment with a random factor
-class RandomBrightnessAdjust:
-    def __init__(self, brightness_range=(0.8, 1.2)):
-        self.brightness_range = brightness_range
-
-    def __call__(self, img):
-        brightness_factor = random.uniform(*self.brightness_range)
-        return adjust_brightness(img, brightness_factor)
-
-# Custom brightness adjustment for images
-def add_noise(img, noise_factor):
-    return img + torch.randn_like(img) * noise_factor
-
-# Custom transform that applies random noise
-class RandomNoise:
-    def __init__(self, noise_range=(0., 0.1)):
-        self.noise_range = noise_range
-
-    def __call__(self, img):
-        noise_factor = random.uniform(*self.noise_range)
-        return add_noise(img, noise_factor)
-
-# Define the augmentation pipeline
-def get_augmentations(img_size=64):
-    return v2.Compose([
-        v2.RandomHorizontalFlip(),
-        v2.RandomVerticalFlip(),
-        #v2.RandomRotation(degrees=(0, 360)),
-        v2.RandomResizedCrop(size=(img_size, img_size), scale=(0.8, 1.0), ratio=(0.9, 1.1), antialias=True),
-        RandomBrightnessAdjust(brightness_range=(0.2, 5)),
-        RandomNoise(noise_range=(0., 0.1)),
-        #v2.GaussianBlur(kernel_size=(5, 5), sigma=(0.1, 2.0)),
-        #v2.Lambda(lambda img: img + torch.randn_like(img) * 0.05),
-    ])
 
 def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metric='cosine', combine='min', use_weights=True, max_pool=False):
     
@@ -58,17 +14,22 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
     sim_scores = []
     with torch.no_grad():
         # Loop through spectra in dataset
-        for i, (samples, _, _) in enumerate(dataloader):
+        for i, (samples, _, ra_decs) in enumerate(dataloader):
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
+            ra_decs = ra_decs.to(device, non_blocking=True)
 
             if hasattr(model, 'module'):
-                test_latent, _, _ = model.module.forward_encoder(samples, mask_ratio=0., reshape_out=False)
+                test_latent, _, _ = model.module.forward_encoder(samples, ra_dec=ra_decs, 
+                                                                 mask_ratio=0., reshape_out=False)
+                num_extra_tokens = model.module.num_extra_tokens
             else:
-                test_latent, _, _ = model.forward_encoder(samples, mask_ratio=0., reshape_out=False)
+                test_latent, _, _ = model.forward_encoder(samples, ra_dec=ra_decs, 
+                                                          mask_ratio=0., reshape_out=False)
+                num_extra_tokens = model.num_extra_tokens
             # Remove cls token
-            test_latent = test_latent[:,1:]
+            test_latent = test_latent[:,num_extra_tokens:]
 
             if max_pool:
                 test_latent, _ = torch.max(test_latent, dim=1, keepdim=True)
