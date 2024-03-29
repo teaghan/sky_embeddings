@@ -109,7 +109,7 @@ test_snr = np.min(test_snr, axis=(1))
 test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
 
 # Data loaders
-target_dataloader = build_dataloader(os.path.join(data_dir, target_fn), 
+target_dataloader = build_h5_dataloader(os.path.join(data_dir, target_fn), 
                                      batch_size=batch_size, 
                                      num_workers=num_workers,
                                      img_size=int(config['ARCHITECTURE']['img_size']),
@@ -120,7 +120,7 @@ target_dataloader = build_dataloader(os.path.join(data_dir, target_fn),
                                      shuffle=False,
                                      indices=target_indices)
 
-test_dataloader = build_dataloader(os.path.join(data_dir, test_fn), 
+test_dataloader = build_h5_dataloader(os.path.join(data_dir, test_fn), 
                                    batch_size=batch_size, 
                                    num_workers=num_workers,
                                    img_size=int(config['ARCHITECTURE']['img_size']),
@@ -153,7 +153,7 @@ if metric=='cosine':
 save_indices = test_indices[sim_order[:n_save]]
 
 # Create a new dataloader for these samples
-test_dataloader = build_dataloader(os.path.join(data_dir, test_fn), 
+test_dataloader = build_h5_dataloader(os.path.join(data_dir, test_fn), 
                                    batch_size=batch_size, 
                                    num_workers=num_workers,
                                    img_size=int(config['ARCHITECTURE']['img_size']),
