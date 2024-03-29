@@ -20,13 +20,12 @@ def parseArguments():
     parser.add_argument("model_name", help="Name of model.", type=str)
 
     # Optional arguments
-    
     parser.add_argument("-tgt_fn", "--target_fn", 
-                        type=str, default='HSC_dwarf_galaxies_GRIZY_64_new.h5')
+                        type=str, default='HSC_dud_dwarf_galaxy_calexp_GIRYZ7610_64.h5')
     parser.add_argument("-tst_fn", "--test_fn", 
-                        type=str, default='HSC_unkown_GRIZY_64_new.h5')
+                        type=str, default='HSC_dud_unknown_calexp_GIRYZ7610_64.h5')
     parser.add_argument("-tgt_i", "--target_indices", 
-                        default='[3,4]')
+                        default='[1,2,3,4,6,7]')
     parser.add_argument("-aug", "--augment_targets", 
                         type=str, default='True')
     parser.add_argument("-mp", "--max_pool", 
@@ -110,29 +109,27 @@ test_snr = np.min(test_snr, axis=(1))
 test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
 
 # Data loaders
-target_dataloader = build_h5_dataloader(os.path.join(data_dir, target_fn), 
-                                          batch_size=batch_size, 
-                                          num_workers=num_workers,
-                                          patch_size=int(config['ARCHITECTURE']['patch_size']), 
-                                          num_channels=int(config['ARCHITECTURE']['num_channels']), 
-                                          max_mask_ratio=None, 
-                                          img_size=int(config['ARCHITECTURE']['img_size']),
-                                          pos_channel=str2bool(config['DATA']['pos_channel']), 
-                                          num_patches=model.module.patch_embed.num_patches,
-                                          shuffle=False,
-                                        indices=target_indices)
+target_dataloader = build_dataloader(os.path.join(data_dir, target_fn), 
+                                     batch_size=batch_size, 
+                                     num_workers=num_workers,
+                                     img_size=int(config['ARCHITECTURE']['img_size']),
+                                     num_patches=model.module.patch_embed.num_patches,
+                                     patch_size=int(config['ARCHITECTURE']['patch_size']), 
+                                     num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                     max_mask_ratio=None,
+                                     shuffle=False,
+                                     indices=target_indices)
 
-test_dataloader = build_h5_dataloader(os.path.join(data_dir, test_fn), 
-                                          batch_size=batch_size, 
-                                          num_workers=num_workers,
-                                          patch_size=int(config['ARCHITECTURE']['patch_size']), 
-                                          num_channels=int(config['ARCHITECTURE']['num_channels']), 
-                                          max_mask_ratio=None, 
-                                          img_size=int(config['ARCHITECTURE']['img_size']),
-                                          pos_channel=str2bool(config['DATA']['pos_channel']), 
-                                          num_patches=model.module.patch_embed.num_patches,
-                                          shuffle=False,
-                                        indices=test_indices)
+test_dataloader = build_dataloader(os.path.join(data_dir, test_fn), 
+                                   batch_size=batch_size, 
+                                   num_workers=num_workers,
+                                   img_size=int(config['ARCHITECTURE']['img_size']),
+                                   num_patches=model.module.patch_embed.num_patches,
+                                   patch_size=int(config['ARCHITECTURE']['patch_size']), 
+                                   num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                   max_mask_ratio=None,
+                                   shuffle=False,
+                                   indices=test_indices)
 
 
 # Map target samples to latent-space
@@ -156,17 +153,16 @@ if metric=='cosine':
 save_indices = test_indices[sim_order[:n_save]]
 
 # Create a new dataloader for these samples
-test_dataloader = build_h5_dataloader(os.path.join(data_dir, test_fn), 
-                                          batch_size=batch_size, 
-                                          num_workers=num_workers,
-                                          patch_size=int(config['ARCHITECTURE']['patch_size']), 
-                                          num_channels=int(config['ARCHITECTURE']['num_channels']), 
-                                          max_mask_ratio=None, 
-                                          img_size=int(config['ARCHITECTURE']['img_size']),
-                                          pos_channel=str2bool(config['DATA']['pos_channel']), 
-                                          num_patches=model.module.patch_embed.num_patches,
-                                          shuffle=False,
-                                        indices=save_indices)
+test_dataloader = build_dataloader(os.path.join(data_dir, test_fn), 
+                                   batch_size=batch_size, 
+                                   num_workers=num_workers,
+                                   img_size=int(config['ARCHITECTURE']['img_size']),
+                                   num_patches=model.module.patch_embed.num_patches,
+                                   patch_size=int(config['ARCHITECTURE']['patch_size']), 
+                                   num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                   max_mask_ratio=None,
+                                   shuffle=False,
+                                   indices=save_indices)
 
 # Encode to latent features
 test_latent, test_images = mae_latent(model, test_dataloader, device, return_images=True)
