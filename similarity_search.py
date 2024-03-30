@@ -6,7 +6,8 @@ import numpy as np
 import ast
 
 from utils.misc import str2bool, h5_snr
-from utils.mim_vit import build_model
+from utils.mim_vit import build_model as build_mim
+from utils.vit import build_model as build_vit
 from utils.dataloaders import build_h5_dataloader
 from utils.plotting_fns import display_images, plot_dual_histogram, normalize_images
 from utils.eval_fns import mae_latent
@@ -98,17 +99,27 @@ print(f'Using a {device} device with {n_gpu} GPU(s)')
 config = configparser.ConfigParser()
 config.read(config_dir+model_name+'.ini')
 
+model_filename =  os.path.join(model_dir, model_name+'.pth.tar') 
+
 if 'pretained_mae' in config['TRAINING']:
     mae_name = config['TRAINING']['pretained_mae']
-    if mae_name!='None':
+    if mae_name=='None':
+        mae_filename = 'None'
+        mae_config = config
+    else:
         # Load pretrained MAE configuration
-        config = configparser.ConfigParser()
-        config.read(config_dir+mae_name+'.ini')
-        print('AA')
+        mae_config = configparser.ConfigParser()
+        mae_config.read(config_dir+mae_name+'.ini')
+        mae_filename =  os.path.join(model_dir, mae_name+'.pth.tar')
+        
+    # Construct the model and load pretrained weights
+    model, losses, cur_iter = build_vit(config, mae_config, 
+                                        model_filename, mae_filename,
+                                        device, build_optimizer=False)
 
-# Construct the model and load pretrained weights
-model_filename =  os.path.join(model_dir, model_name+'.pth.tar') 
-model, losses, cur_iter = build_model(config, model_filename, device, build_optimizer=False)
+else:
+    # Construct the model and load pretrained weights
+    model, losses, cur_iter = build_mim(config, model_filename, device, build_optimizer=False)
 
 # Calculate S/N of images in test dataset
 print('Estimating S/N for test dataset images...')
