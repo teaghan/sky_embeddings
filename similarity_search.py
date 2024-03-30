@@ -25,7 +25,7 @@ def parseArguments():
     parser.add_argument("-tst_fn", "--test_fn", 
                         type=str, default='HSC_dud_unknown_calexp_GIRYZ7610_64.h5')
     parser.add_argument("-tgt_i", "--target_indices", 
-                        default='[1,2,3,4,6,7]')
+                        default='[1,2]')
     parser.add_argument("-aug", "--augment_targets", 
                         type=str, default='True')
     parser.add_argument("-mp", "--max_pool", 
@@ -97,6 +97,14 @@ print(f'Using a {device} device with {n_gpu} GPU(s)')
 # Load model configuration
 config = configparser.ConfigParser()
 config.read(config_dir+model_name+'.ini')
+
+if 'pretained_mae' in config['TRAINING']:
+    mae_name = config['TRAINING']['pretained_mae']
+    if mae_name!='None':
+        # Load pretrained MAE configuration
+        config = configparser.ConfigParser()
+        config.read(config_dir+mae_name+'.ini')
+        print('AA')
 
 # Construct the model and load pretrained weights
 model_filename =  os.path.join(model_dir, model_name+'.pth.tar') 
