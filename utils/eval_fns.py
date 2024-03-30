@@ -112,14 +112,14 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             ra_decs = ra_decs.to(device, non_blocking=True)
 
             if hasattr(model, 'module'):
-                latent, _, _ = model.module.forward_encoder(samples, ra_dec=ra_decs, 
+                latent, _, _ = model.module.forward_features(samples, ra_dec=ra_decs, 
                                                             mask_ratio=mask_ratio, mask=None, 
                                                             reshape_out=False)
                 num_extra_tokens = model.module.num_extra_tokens
                 if model.module.attn_pool:
                     remove_cls = False 
             else:
-                latent, _, _ = model.forward_encoder(samples, ra_dec=ra_decs, 
+                latent, _, _ = model.forward_features(samples, ra_dec=ra_decs, 
                                                      mask_ratio=mask_ratio, mask=None, 
                                                     reshape_out=False)
                 num_extra_tokens = model.module.num_extra_tokens

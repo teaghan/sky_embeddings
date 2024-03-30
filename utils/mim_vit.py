@@ -378,7 +378,7 @@ class MaskedAutoencoderViT(nn.Module):
 
         return x_masked, mask, ids_restore
             
-    def forward_encoder(self, x, ra_dec=None, mask_ratio=0, mask=None, reshape_out=True):
+    def forward_features(self, x, ra_dec=None, mask_ratio=0, mask=None, reshape_out=True):
 
         B, C, H, W = x.shape
         # Normalize input images
@@ -550,7 +550,7 @@ class MaskedAutoencoderViT(nn.Module):
         return torch.stack((normalized_ra, normalized_dec), dim=1)
 
     def forward(self, imgs, ra_dec=None, mask_ratio=0.75, mask=None, denorm_out=False):
-        latent, mask, ids_restore = self.forward_encoder(imgs, ra_dec=ra_dec,
+        latent, mask, ids_restore = self.forward_features(imgs, ra_dec=ra_dec,
                                                          mask_ratio=mask_ratio, mask=mask)
         pred = self.forward_decoder(latent, ids_restore)  # [N, L, p*p*3]
         # Normalize inputs before computing loss

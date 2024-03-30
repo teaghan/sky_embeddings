@@ -212,9 +212,13 @@ def load_model(model, model_filename, mae_filename='None', optimizer=None, lr_sc
             optimizer.load_state_dict(checkpoint['optimizer'])
         if lr_scheduler is not None:
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+
+        # Interpolate the position embedding matrix
+        checkpoint_model = checkpoint['model']
+        interpolate_pos_embed(model.module, checkpoint_model)
         
         # Load model weights
-        model.module.load_state_dict(checkpoint['model'])
+        model.module.load_state_dict(checkpoint_model)
         
     elif mae_filename!='None':
         print('\nLoading pre-trained MAE model weights...')
@@ -228,9 +232,9 @@ def load_model(model, model_filename, mae_filename='None', optimizer=None, lr_sc
                 del checkpoint_model[k]
 
         # Crop the central positional embedding matrix
-        crop_pos_embed(model.module, checkpoint_model)
+        #crop_pos_embed(model.module, checkpoint_model)
         # Interpolate the position embedding matrix
-        #interpolate_pos_embed(model, checkpoint_model)
+        interpolate_pos_embed(model.module, checkpoint_model)
 
         # Load the pre-trained model weights
         msg = model.module.load_state_dict(checkpoint_model, strict=False)
@@ -325,14 +329,15 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
         # Stack the normalized RA and Dec back into a tensor of the same shape
         return torch.stack((normalized_ra, normalized_dec), dim=1)
 
-    def forward_features(self, x, ra_dec=None, mask=None):
+    def forward_features(self, x, ra_dec=None, mask=None, reshape_out=False):
 
         B, C, H, W = x.shape
         # Normalize input images
         x = self.norm_inputs(x)
         
         # Expand the masking values to match the size of the batch of images
-        patch_mask_values = self.patch_mask_values.repeat(1, self.tile_size, self.tile_size)
+        patch_mask_values = self.patch_mask_values.repeat(1, H//self.patch_embed.patch_size[0], 
+                                                          W//self.patch_embed.patch_size[1])
         patch_mask_values = patch_mask_values.expand(B, -1, -1, -1)
         
         # Replace NaN values with patch_mask_values
@@ -362,6 +367,12 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
         
         x = self.norm(x)
 
+        if reshape_out:
+            x = x[:, self.num_extra_tokens:]
+            B, L, C = x.shape
+            H = W = int(L ** 0.5)
+            x = x.permute(0, 2, 1).reshape(B, C, H, W)
+        
         return x
     
     def forward(self, x: torch.Tensor, mask=None, ra_dec=None) -> torch.Tensor:
