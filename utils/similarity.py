@@ -16,10 +16,10 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None,
     target_latent = target_latent.to(device, non_blocking=True)
     if cls_token:
         # Use cls token
-        target_latent = target_latent[:,:num_extra_tokens]
+        target_latent = target_latent[:,:1]
         print(target_latent.shape)
     else:
-        # Remove cls token
+        # Remove cls token and any other extra tokens
         target_latent = target_latent[:,num_extra_tokens:]
         if max_pool:
             # Select max feature across all samples
@@ -44,7 +44,7 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None,
 
             if cls_token:
                 # Use cls token
-                test_latent = test_latent[:,:num_extra_tokens]
+                test_latent = test_latent[:,:1]
             else:
                 # Remove cls token
                 test_latent = test_latent[:,num_extra_tokens:]

@@ -31,7 +31,7 @@ def parseArguments():
     parser.add_argument("-mp", "--max_pool", 
                         type=str, default='True')
     parser.add_argument("-ct", "--cls_token", 
-                        type=str, default='True')
+                        type=str, default='False')
     parser.add_argument("-snr", "--snr_range", 
                         default='[2,7]')
     parser.add_argument("-bs", "--batch_size", 
