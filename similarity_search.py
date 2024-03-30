@@ -118,6 +118,7 @@ if 'pretained_mae' in config['TRAINING']:
                                         device, build_optimizer=False)
 
 else:
+    mae_config = config
     # Construct the model and load pretrained weights
     model, losses, cur_iter = build_mim(config, model_filename, device, build_optimizer=False)
 
@@ -137,8 +138,8 @@ target_dataloader = build_h5_dataloader(os.path.join(data_dir, target_fn),
                                      num_workers=num_workers,
                                      img_size=int(config['ARCHITECTURE']['img_size']),
                                      num_patches=model.module.patch_embed.num_patches,
-                                     patch_size=int(config['ARCHITECTURE']['patch_size']), 
-                                     num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                     patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
+                                     num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
                                      max_mask_ratio=None,
                                      shuffle=False,
                                      indices=target_indices)
@@ -148,8 +149,8 @@ test_dataloader = build_h5_dataloader(os.path.join(data_dir, test_fn),
                                    num_workers=num_workers,
                                    img_size=int(config['ARCHITECTURE']['img_size']),
                                    num_patches=model.module.patch_embed.num_patches,
-                                   patch_size=int(config['ARCHITECTURE']['patch_size']), 
-                                   num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                   patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
+                                   num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
                                    max_mask_ratio=None,
                                    shuffle=False,
                                    indices=test_indices)
@@ -183,8 +184,8 @@ test_dataloader = build_h5_dataloader(os.path.join(data_dir, test_fn),
                                    num_workers=num_workers,
                                    img_size=int(config['ARCHITECTURE']['img_size']),
                                    num_patches=model.module.patch_embed.num_patches,
-                                   patch_size=int(config['ARCHITECTURE']['patch_size']), 
-                                   num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                   patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
+                                   num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
                                    max_mask_ratio=None,
                                    shuffle=False,
                                    indices=save_indices)
