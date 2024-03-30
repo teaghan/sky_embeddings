@@ -1,16 +1,29 @@
 import torch
 
-def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metric='cosine', combine='min', use_weights=True, max_pool=False):
+def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, 
+                  metric='cosine', combine='min', use_weights=True, max_pool=False, cls_token=False):
     
     if n_batches is None:
         n_batches = len(dataloader)
     print(f'Performing similarity search on {min(len(dataloader), n_batches)} batches...')
     model.eval()
 
+    if hasattr(model, 'module'):
+        num_extra_tokens = model.module.num_extra_tokens
+    else:
+        num_extra_tokens = model.num_extra_tokens
+    
     target_latent = target_latent.to(device, non_blocking=True)
-    if max_pool:
-        # Select max feature across all samples
-        target_latent, _ = torch.max(target_latent, dim=1, keepdim=True)
+    if cls_token:
+        # Use cls token
+        target_latent = target_latent[:,:num_extra_tokens]
+        print(target_latent.shape)
+    else:
+        # Remove cls token
+        target_latent = target_latent[:,num_extra_tokens:]
+        if max_pool:
+            # Select max feature across all samples
+            target_latent, _ = torch.max(target_latent, dim=1, keepdim=True)
 
     sim_scores = []
     with torch.no_grad():
@@ -21,24 +34,29 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
             samples = samples.to(device, non_blocking=True)
             ra_decs = ra_decs.to(device, non_blocking=True)
 
+            # Map to latent space
             if hasattr(model, 'module'):
                 test_latent, _, _ = model.module.forward_encoder(samples, ra_dec=ra_decs, 
                                                                  mask_ratio=0., reshape_out=False)
-                num_extra_tokens = model.module.num_extra_tokens
             else:
                 test_latent, _, _ = model.forward_encoder(samples, ra_dec=ra_decs, 
                                                           mask_ratio=0., reshape_out=False)
-                num_extra_tokens = model.num_extra_tokens
-            # Remove cls token
-            test_latent = test_latent[:,num_extra_tokens:]
 
-            if max_pool:
-                test_latent, _ = torch.max(test_latent, dim=1, keepdim=True)
+            if cls_token:
+                # Use cls token
+                test_latent = test_latent[:,:num_extra_tokens]
+            else:
+                # Remove cls token
+                test_latent = test_latent[:,num_extra_tokens:]
+                if max_pool:
+                    # Select max feature across all samples
+                    test_latent, _ = torch.max(test_latent, dim=1, keepdim=True)
 
             # Try to put all features on the same scale
             if i==0:
                 mean_feats = test_latent.mean(dim=(0, 1))
                 std_feats = test_latent.std(dim=(0, 1), unbiased=True) 
+                print(mean_feats.shape, test_latent.shape)
                 target_latent = (target_latent - mean_feats) / (std_feats + 1e-8)
             test_latent = (test_latent - mean_feats) / (std_feats + 1e-8)
 

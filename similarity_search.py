@@ -30,6 +30,8 @@ def parseArguments():
                         type=str, default='True')
     parser.add_argument("-mp", "--max_pool", 
                         type=str, default='True')
+    parser.add_argument("-ct", "--cls_token", 
+                        type=str, default='True')
     parser.add_argument("-snr", "--snr_range", 
                         default='[2,7]')
     parser.add_argument("-bs", "--batch_size", 
@@ -64,6 +66,7 @@ else:
     target_indices = None
 augment_targets = str2bool(args.augment_targets)
 max_pool = str2bool(args.max_pool)
+cls_token = str2bool(args.cls_token)
 snr_range = ast.literal_eval(args.snr_range)
 batch_size = args.batch_size
 metric = args.metric
@@ -135,15 +138,17 @@ test_dataloader = build_h5_dataloader(os.path.join(data_dir, test_fn),
 
 # Map target samples to latent-space
 target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True, 
-                                          apply_augmentations=augment_targets, num_augmentations=64)
+                                          apply_augmentations=augment_targets, num_augmentations=64,
+                                         remove_cls=False)
 
 # Plot targets
 display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().numpy()), 
                                 vmin=0., vmax=1, savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_target.png'))
 
 # Compute similarity score for all test samples
-test_similarity = mae_simsearch(model, target_latent, test_dataloader, device, metric=metric, combine=combine, use_weights=True,
-                               max_pool=max_pool)
+test_similarity = mae_simsearch(model, target_latent, test_dataloader, 
+                                device, metric=metric, combine=combine, use_weights=True,
+                               max_pool=max_pool, cls_token=cls_token)
 
 # Sort by similarity score
 sim_order = torch.argsort(test_similarity).cpu()
