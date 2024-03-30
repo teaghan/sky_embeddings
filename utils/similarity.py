@@ -37,10 +37,10 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None,
             # Map to latent space
             if hasattr(model, 'module'):
                 test_latent, _, _ = model.module.forward_features(samples, ra_dec=ra_decs, 
-                                                                 mask_ratio=0., reshape_out=False)
+                                                                  reshape_out=False)
             else:
-                test_latent, _, _ = model.forward_features(samples, ra_dec=ra_decs, 
-                                                          mask_ratio=0., reshape_out=False)
+                test_latent, _, _ = model.forward_features(samples, ra_dec=ra_decs,
+                                                           reshape_out=False)
 
             if cls_token:
                 # Use cls token
