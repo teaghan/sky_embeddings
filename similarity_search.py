@@ -103,7 +103,8 @@ model, losses, cur_iter = build_model(config, model_filename, device, build_opti
 print('Estimating S/N for test dataset images...')
 test_snr = h5_snr(os.path.join(data_dir, test_fn), n_central_pix=8, batch_size=5000)
 # Calculate minimum snr of the 5 channels
-test_snr = np.min(test_snr, axis=(1))
+#test_snr = np.min(test_snr, axis=(1))
+test_snr = np.nanmin(snr_vals[:,:5], axis=(1))
 
 # Only use images in specified S/N range
 test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
