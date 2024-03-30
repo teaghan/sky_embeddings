@@ -373,10 +373,10 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             H = W = int(L ** 0.5)
             x = x.permute(0, 2, 1).reshape(B, C, H, W)
         
-        return x
+        return x, None, None
     
     def forward(self, x: torch.Tensor, mask=None, ra_dec=None) -> torch.Tensor:
-        x = self.forward_features(x, ra_dec=ra_dec)
+        x, _, _ = self.forward_features(x, ra_dec=ra_dec)
         x = self.forward_head(x)
         return x
 
