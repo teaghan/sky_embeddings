@@ -7,6 +7,7 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
     print(f'Performing similarity search on {min(len(dataloader), n_batches)} batches...')
     model.eval()
 
+    target_latent = target_latent.to(device, non_blocking=True)
     if max_pool:
         # Select max feature across all samples
         target_latent, _ = torch.max(target_latent, dim=1, keepdim=True)
