@@ -146,6 +146,39 @@ def plot_batch(orig_imgs, mask_imgs, pred_imgs,
 
     plt.close()
 
+
+def plot_batch_raw(orig_imgs, n_samples=5, channel_index=None, savename=None):
+    
+    if channel_index is not None:
+        # Select a single channel to display
+        orig_imgs = orig_imgs[:,:,:,channel_index]
+    
+    # Normalize the batch between 0 and 1
+    orig_imgs = normalize_images(orig_imgs)
+
+    # Create a figure with subplots
+    fig, axes = plt.subplots(n_samples, 1, figsize=(5, n_samples*5/1))
+    
+    # Loop through the images and display each one
+    for i in range(n_samples):
+        if i==0:
+            axes[i,0].set_title('Original', fontsize=12)
+        vmin = np.min(orig_imgs[i])
+        vmax = np.max(orig_imgs[i])
+        axes[i].imshow(orig_imgs[i], vmin=vmin, vmax=vmax)
+        axes[i].axis('off')  # Hide the axes
+
+    plt.tight_layout()
+    
+    if savename is not None:
+        plt.savefig(savename, facecolor='white', transparent=False, dpi=100,
+                    bbox_inches='tight', pad_inches=0.05)
+    
+    else:
+        plt.show()
+
+    plt.close()
+
 def tile_channels(image, grid_size=None):
     """
     Rearranges the channels of an image into a tiled grid on a single axis.

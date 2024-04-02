@@ -11,7 +11,7 @@ from utils.misc import str2bool, parseArguments
 from utils.pretrain_fns import run_iter, linear_probe
 from utils.mim_vit import build_model
 from utils.dataloaders import build_unions_dataloader, build_h5_dataloader, build_fits_dataloader
-from utils.plotting_fns import plot_progress, plot_batch
+from utils.plotting_fns import plot_progress, plot_batch, plot_batch_raw
 from utils.eval_fns import mae_predict
 
 def main(args):
@@ -259,9 +259,16 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, t
                                                               device, 
                                                               mask_ratio, 
                                                               single_batch=True)
-                plot_batch(orig_imgs, mask_imgs, pred_imgs, n_samples=5, channel_index=0,
+                
+                # make these more than just same old star-like thing (picked for UNIONS)
+                # [specific selection here]
+                plot_batch(orig_imgs, mask_imgs, pred_imgs, n_samples=32, channel_index=0,
                            savename=os.path.join(fig_dir, 
-                                                 f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters.png'))
+                                                 f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters_val.png'))
+                
+                if cur_iter // verbose_iters == 1:
+                    plot_batch_raw(samples, n_samples=32, channel_index=0, savename=os.path.join(fig_dir, 
+                                                 f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters_train.png'))
 
             # Increase the iteration
             cur_iter += 1

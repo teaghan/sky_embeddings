@@ -444,6 +444,11 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
 
         # Grab just one cutout at a time
         cutout = self.cutout_batch[self.cutout_count-1]
+
+        # normalize cutouts -> put into transforms
+        min_ = np.nanmin(cutout)
+        max_ = np.nanmax(cutout)
+        cutout = (cutout - min_) / (max_ - min_)
         
         # Load metadata        
         ra = np.array(self.catalog['ra'])[self.cutout_count-1]
@@ -568,8 +573,14 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
             if self.label_keys is not None:
                 labels = [f[k][idx] for k in self.label_keys]
                 labels = torch.from_numpy(np.asarray(labels).astype(np.float32))
-
+        
+        # normalize cutouts -> put into transforms
+        min_ = np.nanmin(cutout)
+        max_ = np.nanmax(cutout)
+        cutout = (cutout - min_) / (max_ - min_)
+        
         cutout = torch.from_numpy(cutout).to(torch.float32)
+
         # Apply any augmentations, etc.
         if self.transform is not None:
             cutout = self.transform(cutout)
