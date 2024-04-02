@@ -8,6 +8,7 @@ sys.path.append(cur_dir)
 from dataloaders import build_h5_dataloader
 from eval_fns import mae_latent
 from misc import select_centre
+from utils.plotting_fns import plot_batch
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression, ElasticNet
@@ -17,12 +18,15 @@ from sklearn.preprocessing import StandardScaler
 from matplotlib import pyplot as plt
 
 def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler,
-             losses_cp, mode='train'):
+             losses_cp, mode='train', save_sample=True):
         
     if mode=='train':
         model.train(True)
     else:
         model.train(False)
+
+    #if save_sample:
+    #    plot_batch()
         
     # Run predictions and calculate loss
     loss, _, _ = model(samples, ra_dec=ra_decs, mask_ratio=mask_ratio, mask=masks)
@@ -95,10 +99,10 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
         x = np.delete(x, unknown_y, axis=0)
         y = np.delete(y, unknown_y, axis=0)
 
-        indices = np.where((y > 0.1) & (y < 2))
-        print(f'removing {len(y)-len(indices)} examples where zspec is out of range')
-        x = x[indices]
-        y = y[indices]
+        #indices = np.where((y > 0.1) & (y < 2)) # too small of number
+        #print(f'removing {len(y)-len(indices)} examples where zspec is out of range')
+        #x = x[indices]
+        #y = y[indices]
     
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)

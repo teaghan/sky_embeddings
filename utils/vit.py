@@ -1,6 +1,8 @@
 from functools import partial
 from collections import defaultdict
 
+import numpy as np
+
 import torch
 import torch.nn as nn
 
@@ -259,9 +261,15 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
 
     def norm_inputs(self, x):
         #return (x - self.pixel_mean) / self.pixel_std
-        min_overall = torch.min(x)
-        max_overall = torch.max(x)
-        return (x - min_overall) / (max_overall - min_overall)
+        
+        #min_overall = torch.min(x)
+        #max_overall = torch.max(x)
+        #return (x - min_overall) / (max_overall - min_overall)
+
+        min_ = np.nanmin(x)
+        max_ = np.nanmax(x)
+            
+        return (x - min_) / (max_ - min_)
     
     def normalize_labels(self, labels):
         '''Normalize each label to have zero-mean and unit-variance.'''
