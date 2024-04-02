@@ -258,7 +258,10 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
                                                         self.patch_embed.patch_size[0])))
 
     def norm_inputs(self, x):
-        return (x - self.pixel_mean) / self.pixel_std
+        #return (x - self.pixel_mean) / self.pixel_std
+        min_overall = torch.min(x)
+        max_overall = torch.max(x)
+        return (x - min_overall) / (max_overall - min_overall)
     
     def normalize_labels(self, labels):
         '''Normalize each label to have zero-mean and unit-variance.'''
