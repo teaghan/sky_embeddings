@@ -262,13 +262,14 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, t
                 
                 # make these more than just same old star-like thing (picked for UNIONS)
                 # [specific selection here]
-                interesting_val_idx = [0, 6, 7, 8, 10, 12]
+                interesting_val_idx = [0, 1, 6, 7, 8, 10, 12]
                 plot_batch(orig_imgs[interesting_val_idx], mask_imgs[interesting_val_idx], pred_imgs[interesting_val_idx], n_samples=len(interesting_val_idx), 
                                                 channel_index=0, savename=os.path.join(fig_dir, 
                                                  f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters_val.png'))
                 
                 if cur_iter // verbose_iters == 1:
-                    plot_batch_raw(samples.cpu(), n_samples=32, channel_index=0, savename=os.path.join(fig_dir, 
+                    samples = torch.einsum('nchw->nhwc', samples)
+                    plot_batch_raw(samples.cpu().detach().numpy(), n_samples=32, channel_index=0, savename=os.path.join(fig_dir, 
                                                  f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters_train.png'))
 
             # Increase the iteration

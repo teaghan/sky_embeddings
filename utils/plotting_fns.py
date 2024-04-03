@@ -104,7 +104,8 @@ def normalize_images(images):
 
 def plot_batch(orig_imgs, mask_imgs, pred_imgs, 
                n_samples=5, channel_index=None, savename=None):
-    
+    print('val plotting')
+    print(orig_imgs.shape)
     if channel_index is not None:
         # Select a single channel to display
         orig_imgs = orig_imgs[:,:,:,channel_index]
