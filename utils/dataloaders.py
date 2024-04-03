@@ -430,14 +430,14 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
             print(self.cutout_batch.shape)
             self.mean = np.nanmean(self.cutout_batch, axis=(0, 2, 3)) 
             self.std = np.nanstd(self.cutout_batch, axis=(0, 2, 3))
-            print(f'mean:{self.mean}, std:{self.std} [per 5 chans]') # --> do for val too
+            print(f'PRE-TRAINING (non-centered): mean={self.mean}, std={self.std} [per 5 chans]')
 
             print('##################')
             print(self.tile)
             print(self.catalog.head())
             print('##################')
 
-            if not self.tile in self.off_limit_tiles and self.cutout_batch is not None: # why was this just hit now?
+            if not self.tile in self.off_limit_tiles and self.cutout_batch is not None: 
                 self.cutout_count = len(self.cutout_batch) 
                 #self.cutout_batch, self.catalog = shuffle(self.cutout_batch, self.catalog, random_state=0)
                 random_indices = np.random.permutation(self.cutout_count)
@@ -543,6 +543,8 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
                                                 num_mask_chans=num_channels)
         else:
             self.mask_generator = None
+
+        self.__printstats__()
                         
     def __len__(self):
         if self.indices is not None:
@@ -552,6 +554,14 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
             with h5py.File(self.data_file, "r") as f:    
                 num_samples = len(f['cutouts'])
             return num_samples
+
+    def __printstats__(self):
+        with h5py.File(self.data_file, "r") as f: 
+            all_cutouts = f['cutouts']
+            self.mean = np.nanmean(all_cutouts, axis=(0, 2, 3)) 
+            self.std = np.nanstd(all_cutouts, axis=(0, 2, 3))
+
+        print(f'VALIDATION (centered): mean={self.mean}, std={self.std} [per 5 chans]') 
     
     def __getitem__(self, idx):
         if self.indices is not None:

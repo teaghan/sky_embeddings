@@ -262,8 +262,9 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, t
                 
                 # make these more than just same old star-like thing (picked for UNIONS)
                 # [specific selection here]
-                plot_batch(orig_imgs, mask_imgs, pred_imgs, n_samples=32, channel_index=0,
-                           savename=os.path.join(fig_dir, 
+                interesting_val_idx = [0, 6, 7, 8, 10, 12]
+                plot_batch(orig_imgs[interesting_val_idx], mask_imgs[interesting_val_idx], pred_imgs[interesting_val_idx], n_samples=len(interesting_val_idx), 
+                                                channel_index=0, savename=os.path.join(fig_dir, 
                                                  f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters_val.png'))
                 
                 if cur_iter // verbose_iters == 1:
