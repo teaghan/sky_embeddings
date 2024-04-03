@@ -430,7 +430,7 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
             print(self.cutout_batch.shape)
             self.mean = np.nanmean(self.cutout_batch, axis=(0, 2, 3)) 
             self.std = np.nanstd(self.cutout_batch, axis=(0, 2, 3))
-            print(f'mean:{round(self.mean,2)}, std:{round(self.std,2)} [per 5 chans]') # --> do for val too
+            print(f'mean:{self.mean}, std:{self.std} [per 5 chans]') # --> do for val too
 
             print('##################')
             print(self.tile)
