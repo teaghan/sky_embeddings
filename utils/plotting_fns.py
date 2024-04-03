@@ -162,7 +162,7 @@ def plot_batch_raw(orig_imgs, n_samples=5, channel_index=None, savename=None):
     # Loop through the images and display each one
     for i in range(n_samples):
         if i==0:
-            axes[i,0].set_title('Original', fontsize=12)
+            axes[i].set_title('Original', fontsize=12)
         vmin = np.min(orig_imgs[i])
         vmax = np.max(orig_imgs[i])
         axes[i].imshow(orig_imgs[i], vmin=vmin, vmax=vmax)
