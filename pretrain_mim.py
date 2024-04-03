@@ -267,10 +267,10 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, t
                                                 channel_index=0, savename=os.path.join(fig_dir, 
                                                  f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters_val.png'))
                 
-                #if cur_iter // verbose_iters == 1:
-                #    samples = torch.einsum('nchw->nhwc', samples)
-                #    plot_batch_raw(samples.cpu().detach().numpy(), n_samples=32, channel_index=0, savename=os.path.join(fig_dir, 
-                #                                 f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters_train.png'))
+                if cur_iter // verbose_iters == 1:
+                    samples = torch.einsum('nchw->nhwc', samples)
+                    plot_batch_raw(samples.cpu().detach().numpy(), n_samples=32, channel_index=0, savename=os.path.join(fig_dir, 
+                                                 f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters_train.png'))
 
             # Increase the iteration
             cur_iter += 1
