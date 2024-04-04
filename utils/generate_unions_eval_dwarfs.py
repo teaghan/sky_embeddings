@@ -7,21 +7,25 @@ src = '/home/a4ferrei/scratch/'
 cc_dataloader_path = '/github/extra/TileSlicer/'
 sys.path.insert(0, src+cc_dataloader_path)
 from dataloader import dataset_wrapper
+print('done imports')
 
 eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_dwarfs_1k.h5' # lets see if we can fill 1k
 eval_tiles = set(range(50000))  
 
 # Initialize dataset wrapper
 dataset = dataset_wrapper()
+print('initialized dataloader')
 
 # Open HDF5 file for writing
 with h5py.File(eval_dataset_path, 'w') as f:
+    print('initialized file')
     # Create datasets
     max_length = 1000
     dset_cutouts = f.create_dataset("cutouts", (max_length, 5, 224, 224), dtype=np.float32)
     dset_ra = f.create_dataset("ra", (max_length,), dtype='f')
     dset_dec = f.create_dataset("dec", (max_length,), dtype='f')
     dset_dwarf = f.create_dataset("dwarf", (max_length,), dtype='f')
+    print('created dataset')
 
     # Initialize counters
     index = 1
