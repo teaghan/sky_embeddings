@@ -1,5 +1,6 @@
 import random
 import numpy as np
+from scipy.stats import median_abs_deviation
 import torch
 import h5py
 import torchvision
@@ -428,9 +429,9 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
             self.cutout_batch, self.catalog, self.tile = self.dataset.__next__() 
 
             print(self.cutout_batch.shape)
-            self.mean = np.nanmean(self.cutout_batch)#, axis=(0, 2, 3)) 
-            self.std = np.nanstd(self.cutout_batch)#, axis=(0, 2, 3))
-            print(f'PRE-TRAINING (non-centered): mean={self.mean}, std={self.std}') # [per 5 chans]')
+            self.median = np.nanmedian(self.cutout_batch)
+            self.mad = median_abs_deviation(self.cutout_batch, nan_policy='omit')
+            print(f'PRE-TRAINING (non-centered): median={self.median}, mad={self.mad}')
 
             print('##################')
             print(self.tile)
@@ -558,10 +559,10 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
     def __printstats__(self):
         with h5py.File(self.data_file, "r") as f: 
             all_cutouts = f['cutouts']
-            self.mean = np.nanmean(all_cutouts)#, axis=(0, 2, 3)) 
-            self.std = np.nanstd(all_cutouts)#, axis=(0, 2, 3))
+            self.median = np.nanmedian(all_cutouts) 
+            self.mad = median_abs_deviation(all_cutouts, nan_policy='omit')
 
-        print(f'VALIDATION (centered): mean={self.mean}, std={self.std}')# [per 5 chans]') 
+        print(f'VALIDATION (centered): median={self.median}, mad={self.mad}')
     
     def __getitem__(self, idx):
         if self.indices is not None:
