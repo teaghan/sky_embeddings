@@ -30,6 +30,7 @@ with h5py.File(eval_dataset_path, 'w') as f:
     # Iterate over tiles
     while len(tiles_written) < len(eval_tiles):
         cutouts, catalog, tile = dataset.__next__()
+        print(tile)
 
         # Check if tile is in eval_tiles
         if tile != (285, 281):
@@ -48,6 +49,7 @@ with h5py.File(eval_dataset_path, 'w') as f:
                     dset_dwarf[index] = 1
                     # Increment index
                     index += 1
+                    print(index)
 
                     lsb = catalog['lsb'].iloc[i+1]
                     gal = catalog['class'].iloc[i+1]
