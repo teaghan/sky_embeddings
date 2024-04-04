@@ -55,7 +55,7 @@ def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler
                 
     return model, optimizer, lr_scheduler, losses_cp
 
-def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=None,
+def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_template_class, class_data_path=None,
                  regress_data_path=None, combine='central', remove_cls=True):
     '''Train a quick linear probing model to evaluate the quality of the embeddings.'''
 
@@ -66,7 +66,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
     if class_data_path:
         # Classifier task
         x,y = get_embeddings(class_data_path, 
-                             model, device, dataloader_template,
+                             model, device, dataloader_template_class,
                              y_label='class', combine=combine, remove_cls=remove_cls)
         
         # Splitting the dataset into training and testing sets
@@ -89,7 +89,7 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
     if regress_data_path:
         # Regression task
         x,y = get_embeddings(regress_data_path, 
-                             model, device, dataloader_template,
+                             model, device, dataloader_template_reg,
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
         
         # remove entries where y is NaN (because that means we don't have zspec)

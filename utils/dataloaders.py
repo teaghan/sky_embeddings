@@ -430,7 +430,7 @@ class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
 
             print(self.cutout_batch.shape)
             self.median = np.nanmedian(self.cutout_batch)
-            self.mad = median_abs_deviation(self.cutout_batch, nan_policy='omit')
+            self.mad = median_abs_deviation(self.cutout_batch, nan_policy='omit', axis=None)
             print(f'PRE-TRAINING (non-centered): median={self.median}, mad={self.mad}')
 
             print('##################')
@@ -560,7 +560,7 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
         with h5py.File(self.data_file, "r") as f: 
             all_cutouts = f['cutouts']
             self.median = np.nanmedian(all_cutouts) 
-            self.mad = median_abs_deviation(all_cutouts, nan_policy='omit')
+            self.mad = median_abs_deviation(all_cutouts, nan_policy='omit', axis=None)
 
         print(f'VALIDATION (centered): median={self.median}, mad={self.mad}')
     
