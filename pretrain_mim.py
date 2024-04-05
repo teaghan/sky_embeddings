@@ -201,6 +201,7 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
     while cur_iter < (total_batch_iters):
 
         # Iterate through training dataset
+        # (this might return a batch and then it just iterates over that?)
         for samples, masks, ra_decs in get_train_samples(dataloader_train, train_nested_batches):
             print('cur_iter:', cur_iter)
             print(samples.shape)

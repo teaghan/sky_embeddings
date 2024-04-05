@@ -99,6 +99,11 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         x = np.delete(x, unknown_y, axis=0)
         y = np.delete(y, unknown_y, axis=0)
 
+        unknown_x = np.where(np.isnan(x))[0] 
+        print(f'removing {len(unknown_x)} examples from linear probe set due to nan in representation')
+        x = np.delete(x, unknown_x, axis=0)
+        y = np.delete(y, unknown_x, axis=0)
+
         #indices = np.where((y > 0.1) & (y < 2)) # too small of number
         #print(f'removing {len(y)-len(indices)} examples where zspec is out of range')
         #x = x[indices]
