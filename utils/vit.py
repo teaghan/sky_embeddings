@@ -281,7 +281,8 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
     def forward(self, x: torch.Tensor, mask=None) -> torch.Tensor:
         if self.simmim:
             # Mask input image
-            B, C, H, W = x.shape
+            print(x.shape)
+            B, C, H, W = 64, 5, 64, 64 #x.shape
 
             # Compute the tile size based on expected image dimensions
             tile_size = (H // self.mask_token.shape[1], W // self.mask_token.shape[2])

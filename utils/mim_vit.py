@@ -367,8 +367,8 @@ class MaskedAutoencoderViT(nn.Module):
         return x_masked, mask, ids_restore
             
     def forward_encoder(self, x, ra_dec=None, mask_ratio=0, mask=None, reshape_out=True):
-
-        B, C, H, W = x.shape
+        print(x.shape)
+        B, C, H, W = 64, 5, 64, 64 #x.shape
         # Normalize input images
         x = self.norm_inputs(x)
         
