@@ -203,6 +203,9 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
         # Iterate through training dataset
         for samples, masks, ra_decs in get_train_samples(dataloader_train, train_nested_batches):
             print('cur_iter:', cur_iter)
+            print(samples.shape)
+            print(masks.shape)
+            print(ra_decs.shape)
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
@@ -285,11 +288,12 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
                 plot_batch(orig_imgs[interesting_val_idx], mask_imgs[interesting_val_idx], pred_imgs[interesting_val_idx], n_samples=len(interesting_val_idx), 
                                                 channel_index=0, savename=os.path.join(fig_dir, 
                                                  f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters_val.png'))
-                
+                '''
                 if cur_iter // verbose_iters == 1:
                     samples = torch.einsum('nchw->nhwc', samples)
                     plot_batch_raw(samples.cpu().detach().numpy(), n_samples=32, channel_index=0, savename=os.path.join(fig_dir, 
                                                  f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters_train.png'))
+                '''
 
             # Increase the iteration
             cur_iter += 1
