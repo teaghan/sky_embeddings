@@ -355,10 +355,7 @@ class H5Dataset(torch.utils.data.Dataset):
             return cutout, mask, ra_dec, labels
         
 
-import torch
-from torch.utils.data import IterableDataset, DataLoader
-
-class StreamDataset_UNIONS(IterableDataset):
+class StreamDataset_UNIONS(torch.utils.data.IterableDataset):
     """
     A UNIONS-specific version of H5Dataset with streaming. --> under development
 
@@ -393,7 +390,9 @@ class StreamDataset_UNIONS(IterableDataset):
 
     Methods:
         __len__(): Returns the number of samples in the dataset.
-        __iter__(batch_size): Returns batches of samples along with their masks and labels.
+        __getitem__(idx): Returns the sample at index `idx` along with its mask and labels. The sample consists of an
+                          image (cutout), a dynamically generated mask if `max_mask_ratio` is specified, and labels
+                          (either RA and Dec or those specified by `label_keys`).
     """
 
     def __init__(self, img_size, patch_size, num_channels, max_mask_ratio, 
@@ -401,7 +400,6 @@ class StreamDataset_UNIONS(IterableDataset):
                  transform=None, pixel_min=-3., pixel_max=None, indices=None):
         
         self.transform = transform
-        self.batch_size = 64
         self.img_size = img_size
         self.num_patches = num_patches
         self.label_keys = None #label_keys
@@ -424,11 +422,7 @@ class StreamDataset_UNIONS(IterableDataset):
         self.dataset = dataset_wrapper()
         #self.label_keys = None
     
-    def __iter__(self, batch_size=None): # only considering 1 worker now
-
-        # Set batch size if specified, otherwise use default
-        if batch_size is None:
-            batch_size = self.batch_size
+    def __iter__(self): # only considering 1 worker now
 
         # Load cutouts if queue is out and shuffle them
         while self.cutout_count == 0:
@@ -454,43 +448,39 @@ class StreamDataset_UNIONS(IterableDataset):
             else:
                 print('None or off-limits:', self.tile)
 
-        # Number of batches
-        num_batches = (self.cutout_count + batch_size - 1) // batch_size
+        # Grab just one cutout at a time
+        cutout = self.cutout_batch[self.cutout_count-1]
 
-        for batch_idx in range(num_batches):
-            start_idx = batch_idx * batch_size
-            end_idx = min((batch_idx + 1) * batch_size, self.cutout_count)
+        # normalize cutouts -> put into transforms
+        min_ = np.nanmin(cutout)
+        max_ = np.nanmax(cutout)
+        cutout = (cutout - min_) / (max_ - min_)
+        
+        # Load metadata        
+        ra = np.array(self.catalog['ra'])[self.cutout_count-1]
+        dec = np.array(self.catalog['dec'])[self.cutout_count-1]
+        ra_dec = torch.from_numpy(np.asarray([ra, dec]).astype(np.float32))
 
-            batch_cutouts = self.cutout_batch[start_idx:end_idx]
+        # what is this when not defined?
+        #labels = torch.from_numpy(np.asarray([self.catalog['zspec'][self.cutout_count-1]]).astype(np.float32)) 
+        self.cutout_count -= 1 # this goes down less easy then? maybe subtract later on? force labels to be none
+        
+        # BELOW IS KEPT THE SAME
+        cutout = torch.from_numpy(cutout).to(torch.float32)
+        # Apply any augmentations, etc.
+        if self.transform is not None:
+            cutout = self.transform(cutout)
 
-            # Normalize cutouts
-            for i in range(len(batch_cutouts)):
-                min_ = np.nanmin(batch_cutouts[i])
-                max_ = np.nanmax(batch_cutouts[i])
-                batch_cutouts[i] = (batch_cutouts[i] - min_) / (max_ - min_)
+        if self.mask_generator is not None:
+            # Generate random mask
+            mask = self.mask_generator()
+        else:
+            mask = torch.zeros_like(cutout)
 
-            batch_ra_dec = torch.from_numpy(np.asarray(self.catalog[['ra', 'dec']][start_idx:end_idx]).astype(np.float32))
-
-            # what is this when not defined?
-            #labels = torch.from_numpy(np.asarray([self.catalog['zspec'][self.cutout_count-1]]).astype(np.float32)) 
-            #self.cutout_count -= 1 # this goes down less easy then? maybe subtract later on? force labels to be none
-
-            # BELOW IS KEPT THE SAME
-            batch_cutouts = torch.tensor(batch_cutouts, dtype=torch.float32)
-            # Apply any augmentations, etc.
-            if self.transform is not None:
-                batch_cutouts = torch.stack([self.transform(cutout) for cutout in batch_cutouts])
-
-            if self.mask_generator is not None:
-                # Generate random mask
-                batch_masks = torch.stack([self.mask_generator() for _ in range(len(batch_cutouts))])
-            else:
-                batch_masks = torch.zeros_like(batch_cutouts)
-
-            if self.label_keys is None:
-                yield batch_cutouts, batch_masks, batch_ra_dec
-            else:
-                yield batch_cutouts, batch_masks, batch_ra_dec, labels
+        if self.label_keys is None:
+            yield cutout, mask, ra_dec
+        else:
+            yield cutout, mask, ra_dec, labels
         
 
 class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
