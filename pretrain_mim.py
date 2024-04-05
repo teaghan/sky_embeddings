@@ -69,6 +69,10 @@ def main(args):
         mask_ratio = float(config['TRAINING']['mask_ratio'])
         max_mask_ratio = None
 
+    # Linear probing validation data files
+    lp_class_data_file = os.path.join(data_dir, config['DATA']['lp_class_data_file']) if 'lp_class_data_file' in config['DATA'] else None
+    lp_regress_data_file = os.path.join(data_dir, config['DATA']['lp_regress_data_file']) if 'lp_regress_data_file' in config['DATA'] else None
+
     # Build dataloaders
     if 'survey' in config['DATA'] and config['DATA']['survey'] == 'UNIONS': 
         # Using Nick's data streaming method
@@ -100,6 +104,8 @@ def main(args):
                                                 img_size=int(config['ARCHITECTURE']['img_size']),
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 eval_data_file=(config['DATA']['lp_regress_data_file']))
+        else: 
+            dataloader_regess = None
             
         if not lp_class_data_file == None:
             dataloader_classfication = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
@@ -110,6 +116,9 @@ def main(args):
                                                 img_size=int(config['ARCHITECTURE']['img_size']),
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 eval_data_file=(config['DATA']['lp_class_data_file']))
+            
+        else:
+            dataloader_classfication = None
     
     else: 
         if 'train_data_file' in config['DATA']:
@@ -156,10 +165,7 @@ def main(args):
         # just a band-aid fix for now
         dataloader_regess, dataloader_classfication = dataloader_val, dataloader_val
 
-    # Linear probing validation data files
-    lp_class_data_file = os.path.join(data_dir, config['DATA']['lp_class_data_file']) if 'lp_class_data_file' in config['DATA'] else None
-    lp_regress_data_file = os.path.join(data_dir, config['DATA']['lp_regress_data_file']) if 'lp_regress_data_file' in config['DATA'] else None
-        
+    
     train_network(model, dataloader_train, dataloader_val, dataloader_regress, dataloader_classfication,
                   train_nested_batches, optimizer, lr_scheduler, device,
                   mask_ratio,
