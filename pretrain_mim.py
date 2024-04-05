@@ -89,9 +89,10 @@ def main(args):
                                                 max_mask_ratio=max_mask_ratio, eval=True,
                                                 img_size=int(config['ARCHITECTURE']['img_size']),
                                                 num_patches=model.module.patch_embed.num_patches,
-                                                eval_data_file=(config['DATA']['val_data_file']))     
+                                                eval_data_file=(config['DATA']['val_data_file']))   
 
-        dataloader_regress = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
+        if not lp_regress_data_file == None:   
+            dataloader_regress = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
                                                 num_workers=num_workers,
                                                 patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(config['ARCHITECTURE']['num_channels']), 
@@ -99,8 +100,9 @@ def main(args):
                                                 img_size=int(config['ARCHITECTURE']['img_size']),
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 eval_data_file=(config['DATA']['lp_regress_data_file']))
-        
-        dataloader_classfication = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
+            
+        if not lp_class_data_file == None:
+            dataloader_classfication = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
                                                 num_workers=num_workers,
                                                 patch_size=int(config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(config['ARCHITECTURE']['num_channels']), 

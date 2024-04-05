@@ -67,7 +67,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         # Classifier task
         x,y = get_embeddings(class_data_path, 
                              model, device, dataloader_template_class,
-                             y_label='class', combine=combine, remove_cls=remove_cls)
+                             y_label='dwarf', combine=combine, remove_cls=remove_cls)
         
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
@@ -158,7 +158,7 @@ def get_embeddings(data_path, model, device,
 
     # Collect targets
     with h5py.File(data_path, "r") as f:
-        y = f[y_label][:]
+        y = f[y_label][:] 
 
     if model.module.attn_pool:
         # There is only one output set of features if there is an attention pooling layer
