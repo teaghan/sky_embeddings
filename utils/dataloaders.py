@@ -401,7 +401,7 @@ class StreamDataset_UNIONS(IterableDataset):
                  transform=None, pixel_min=-3., pixel_max=None, indices=None):
         
         self.transform = transform
-        self.batch_size = 64
+        self.batch_size = 1
         self.img_size = img_size
         self.num_patches = num_patches
         self.label_keys = None #label_keys
