@@ -429,33 +429,31 @@ class StreamDataset_UNIONS(IterableDataset):
         # Set batch size if specified, otherwise use default
         if batch_size is None:
             batch_size = self.batch_size
+        
+        self.cutout_batch, self.catalog, self.tile = self.dataset.__next__() 
 
-        # Load cutouts if queue is out and shuffle them
-        while self.cutout_count == 0:
-            self.cutout_batch, self.catalog, self.tile = self.dataset.__next__() 
+        print(self.cutout_batch.shape)
+        self.median = np.nanmedian(self.cutout_batch)
+        self.mad = median_abs_deviation(self.cutout_batch, nan_policy='omit', axis=None)
+        print(f'PRE-TRAINING (non-centered): median={self.median}, mad={self.mad}')
 
-            print(self.cutout_batch.shape)
-            self.median = np.nanmedian(self.cutout_batch)
-            self.mad = median_abs_deviation(self.cutout_batch, nan_policy='omit', axis=None)
-            print(f'PRE-TRAINING (non-centered): median={self.median}, mad={self.mad}')
+        print('##################')
+        print(self.tile)
+        print(self.catalog.head())
+        print('##################')
 
-            print('##################')
-            print(self.tile)
-            print(self.catalog.head())
-            print('##################')
-
-            if not self.tile in self.off_limit_tiles and self.cutout_batch is not None: 
-                self.cutout_count = len(self.cutout_batch) 
-                #self.cutout_batch, self.catalog = shuffle(self.cutout_batch, self.catalog, random_state=0)
-                random_indices = np.random.permutation(self.cutout_count)
-                self.cutout_batch = [self.cutout_batch[i] for i in random_indices]
-                self.catalog = self.catalog.iloc[random_indices].reset_index(drop=True)
-                print('Good to go!', self.tile)
-            else:
-                print('None or off-limits:', self.tile)
+        if not self.tile in self.off_limit_tiles and self.cutout_batch is not None: 
+            self.cutout_count = len(self.cutout_batch) 
+            #self.cutout_batch, self.catalog = shuffle(self.cutout_batch, self.catalog, random_state=0)
+            random_indices = np.random.permutation(self.cutout_count)
+            self.cutout_batch = [self.cutout_batch[i] for i in random_indices]
+            self.catalog = self.catalog.iloc[random_indices].reset_index(drop=True)
+            print('Good to go!', self.tile)
+        else:
+            print('None or off-limits:', self.tile)
 
         # Number of batches
-        num_batches = self.cutout_count // batch_size
+        num_batches = self.cutout_count // batch_size # why does this not solve things? no refresh?
 
         for batch_idx in range(num_batches):
             start_idx = batch_idx * batch_size
@@ -471,11 +469,6 @@ class StreamDataset_UNIONS(IterableDataset):
 
             batch_ra_dec = torch.from_numpy(np.asarray(self.catalog[['ra', 'dec']][start_idx:end_idx]).astype(np.float32))
 
-            # what is this when not defined?
-            #labels = torch.from_numpy(np.asarray([self.catalog['zspec'][self.cutout_count-1]]).astype(np.float32)) 
-            #self.cutout_count -= 1 # this goes down less easy then? maybe subtract later on? force labels to be none
-
-            # BELOW IS KEPT THE SAME
             batch_cutouts = torch.tensor(batch_cutouts, dtype=torch.float32)
             # Apply any augmentations, etc.
             if self.transform is not None:
