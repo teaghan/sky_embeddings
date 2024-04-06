@@ -78,7 +78,7 @@ class RandomChannelNaN:
         return img
 
 # Define the augmentation pipeline
-def get_augmentations(img_size=64, flip=True, crop=True, brightness=True, noise=True, nan_channels=True):
+def get_augmentations(img_size=64, flip=True, crop=True, brightness=0.8, noise=0.01, nan_channels=2):
     transforms = []
     if flip:
         transforms.append(v2.RandomHorizontalFlip())
@@ -87,23 +87,25 @@ def get_augmentations(img_size=64, flip=True, crop=True, brightness=True, noise=
         transforms.append(v2.RandomResizedCrop(size=(img_size, img_size), 
                                                scale=(0.8, 1.0), 
                                                ratio=(0.9, 1.1), antialias=True))
-    if brightness:
-        transforms.append(RandomBrightnessAdjust(brightness_range=(0.8, 1.2)))
-    if noise:
-        transforms.append(RandomNoise(noise_range=(0., 0.01)))
-    if nan_channels:
-        transforms.append(RandomChannelNaN(max_channels=2))
+    if brightness is not None:
+        transforms.append(RandomBrightnessAdjust(brightness_range=(brightness, 1/brightness)))
+    if noise is not None:
+        transforms.append(RandomNoise(noise_range=(0., noise)))
+    if nan_channels is not None:
+        transforms.append(RandomChannelNaN(max_channels=nan_channels))
         
     return v2.Compose(transforms)
 
 def build_fits_dataloader(fits_paths, bands, min_bands, batch_size, num_workers,
                           patch_size=8, max_mask_ratio=None, 
                           img_size=64, cutouts_per_tile=1024, use_calexp=True,
-                          augment=False, shuffle=True, ra_dec=True, transforms=None):
+                          augment=False, brightness=0.8, noise=0.01, nan_channels=2, 
+                          shuffle=True, ra_dec=True, transforms=None):
     '''Return a dataloader to be used during training.'''
 
     if (transforms is None) and augment:
-        transforms = get_augmentations(img_size=img_size)
+        transforms = get_augmentations(img_size=img_size, flip=True, crop=True, 
+                                       brightness=brightness, noise=noise, nan_channels=nan_channels)
     
     # Build dataset
     dataset = FitsDataset(fits_paths, patch_size=patch_size, 
@@ -119,12 +121,13 @@ def build_fits_dataloader(fits_paths, bands, min_bands, batch_size, num_workers,
                                        pin_memory=True)
 
 def build_h5_dataloader(filename, batch_size, num_workers, patch_size=8, num_channels=5, 
-                        max_mask_ratio=None, label_keys=None, img_size=64,
-                        num_patches=None, augment=False, shuffle=True, indices=None, transforms=None):
+                        max_mask_ratio=None, label_keys=None, img_size=64, num_patches=None, 
+                        augment=False, brightness=0.8, noise=0.01, nan_channels=2, 
+                        shuffle=True, indices=None, transforms=None):
 
     if (transforms is None) and augment:
         transforms = get_augmentations(img_size=img_size, flip=True, crop=True, 
-                                       brightness=True, noise=True, nan_channels=True)
+                                       brightness=brightness, noise=noise, nan_channels=nan_channels)
 
     
     # Build dataset

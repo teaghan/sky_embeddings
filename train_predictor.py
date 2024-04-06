@@ -86,6 +86,9 @@ def main(args):
                                            num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
                                            num_patches=model.module.patch_embed.num_patches,
                                            augment=str2bool(config['TRAINING']['augment']),
+                                           brightness=float(config['TRAINING']['brightness']), 
+                                           noise=float(config['TRAINING']['noise']), 
+                                           nan_channels=int(config['TRAINING']['nan_channels']),
                                            shuffle=True,
                                            indices=train_indices)
     
