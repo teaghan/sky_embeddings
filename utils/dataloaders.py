@@ -143,7 +143,7 @@ def build_h5_dataloader(filename, batch_size, num_workers, patch_size=8, num_cha
 
     # Build dataloader
     return torch.utils.data.DataLoader(dataset, batch_size=batch_size, 
-                                       shuffle=shuffle, num_workers=num_workers,
+                                       shuffle=shuffle, num_workers=0,
                                        pin_memory=True)
 
 def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=5, 
@@ -397,7 +397,7 @@ class StreamDataset_UNIONS(IterableDataset):
     """
 
     def __init__(self, img_size, patch_size, num_channels, max_mask_ratio, 
-                 num_patches=None, label_keys=None, 
+                 num_patches=None, label_keys=None, # take off workers
                  transform=None, pixel_min=-3., pixel_max=None, indices=None):
         
         self.transform = transform
