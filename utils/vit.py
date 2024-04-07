@@ -297,6 +297,17 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
         # Pre-compute the tile size based on expected image dimensions
         self.tile_size = (kwargs['img_size'])//(self.patch_embed.patch_size[0])
 
+        # Prediction Head
+        if kwargs['global_pool'] == 'map':
+            self.attn_pool = AttentionPoolLatent(
+                kwargs['embed_dim'],
+                num_heads=2,
+                mlp_ratio=kwargs['mlp_ratio'],
+                norm_layer=kwargs['norm_layer'],
+            )
+        else:
+            self.attn_pool = None
+
 
     def norm_inputs(self, x):
         return (x - self.pixel_mean) / self.pixel_std
