@@ -66,7 +66,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
     if class_data_path:
         # Classifier task
         x,y = get_embeddings(class_data_path, 
-                             model, device, dataloader_template_reg, dataloader_template_class,
+                             model, device, dataloader_template_class,
                              y_label='dwarf', combine=combine, remove_cls=remove_cls)
         
         # Splitting the dataset into training and testing sets
@@ -145,7 +145,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         losses_cp['train_lp_r2'].append(float(r2_train))
         losses_cp['val_lp_r2'].append(float(r2_test))
 
-def get_embeddings(data_path, model, device, dataloader_template_1, dataloader_template_2,
+def get_embeddings(data_path, model, device, dataloader_template_1,
                    y_label='class', combine='central', remove_cls=True, new_loader=False):
 
     if new_loader:
