@@ -456,9 +456,7 @@ class StreamDataset_UNIONS(IterableDataset):
         num_batches = (self.cutout_count // batch_size) - 1
 
         for batch_idx in range(num_batches):
-            print(batch_idx, num_batches, self.cutout_count)
             start_idx = batch_idx * batch_size
-            end_idx = (batch_idx + 1) * batch_size # how does this return 16?
 
             batch_cutouts = self.cutout_batch[start_idx:end_idx]
 

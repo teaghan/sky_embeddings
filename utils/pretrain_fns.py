@@ -66,7 +66,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
     if class_data_path:
         # Classifier task
         x,y = get_embeddings(class_data_path, 
-                             model, device, dataloader_template_class,
+                             model, device, dataloader_template_reg, dataloader_template_class,
                              y_label='dwarf', combine=combine, remove_cls=remove_cls)
         
         # Splitting the dataset into training and testing sets
@@ -92,6 +92,9 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              model, device, dataloader_template_reg,
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
         
+        print(x.shape)
+        print(y.shape)
+        
         # remove entries where y is NaN (because that means we don't have zspec)
         # make validation set of just known zspec ones?
         unknown_y = np.where(np.isnan(y))[0] 
@@ -103,6 +106,9 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         print(f'removing {len(unknown_x)} examples from linear probe set due to nan in representation')
         x = np.delete(x, unknown_x, axis=0)
         y = np.delete(y, unknown_x, axis=0)
+
+        print(x.shape)
+        print(y.shape)
 
         #indices = np.where((y > 0.1) & (y < 2)) # too small of number
         #print(f'removing {len(y)-len(indices)} examples where zspec is out of range')
@@ -139,23 +145,23 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         losses_cp['train_lp_r2'].append(float(r2_train))
         losses_cp['val_lp_r2'].append(float(r2_test))
 
-def get_embeddings(data_path, model, device, 
-                   dataloader_template, y_label='class', combine='central', remove_cls=True, new_loader=False):
+def get_embeddings(data_path, model, device, dataloader_template_1, dataloader_template_2,
+                   y_label='class', combine='central', remove_cls=True, new_loader=False):
 
     if new_loader:
         # Data loader
         dataloader = build_h5_dataloader(data_path, 
                                             batch_size=64, 
-                                            num_workers=dataloader_template.num_workers,
-                                            img_size=dataloader_template.dataset.img_size,
-                                            num_patches=dataloader_template.dataset.num_patches,
+                                            num_workers=dataloader_template_1.num_workers,
+                                            img_size=dataloader_template_1.dataset.img_size,
+                                            num_patches=dataloader_template_1.dataset.num_patches,
                                             patch_size=model.module.patch_embed.patch_size[0], 
                                             num_channels=model.module.in_chans, 
                                             max_mask_ratio=None,
                                             shuffle=False)
         
     else:
-        dataloader = dataloader_template
+        dataloader = dataloader_template_1 # go back to class later
 
     # Map target samples to latent-space
     latent_features = mae_latent(model, dataloader, device, verbose=0, remove_cls=remove_cls)

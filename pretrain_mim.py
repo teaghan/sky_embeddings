@@ -208,9 +208,9 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
             ra_decs = ra_decs.squeeze(1)
 
             print('cur_iter:', cur_iter)
-            print(samples.shape)
-            print(masks.shape)
-            print(ra_decs.shape)
+            #print(samples.shape)
+            #print(masks.shape)
+            #print(ra_decs.shape)
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
