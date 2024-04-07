@@ -71,7 +71,7 @@ def main(args):
     if num_train>-1:
         if 'crossentropy' in config['TRAINING']['loss_fn'].lower():
             train_indices = select_training_indices(os.path.join(data_dir, config['DATA']['train_data_file']), 
-                                                    num_train, balanced=False)
+                                                    num_train, balanced=True)
         else:    
             train_indices = range(num_train)
     else:
