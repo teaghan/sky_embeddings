@@ -180,7 +180,7 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
 
     # Build dataloader
     return torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=0, #TEMP, num_workers,
-                                       pin_memory=True)
+                                       pin_memory=True, drop_last=True)
 
 class MaskGenerator:
     """
@@ -453,12 +453,12 @@ class StreamDataset_UNIONS(IterableDataset):
             print('None or off-limits:', self.tile)
 
         # Number of batches
-        num_batches = self.cutout_count // batch_size
+        num_batches = (self.cutout_count // batch_size) - 1
 
         for batch_idx in range(num_batches):
             print(batch_idx, num_batches, self.cutout_count)
             start_idx = batch_idx * batch_size
-            end_idx = (batch_idx + 1) * batch_size
+            end_idx = (batch_idx + 1) * batch_size # how does this return 16?
 
             batch_cutouts = self.cutout_batch[start_idx:end_idx]
 
