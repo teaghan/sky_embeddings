@@ -7,6 +7,7 @@ import torch.nn as nn
 import timm.optim.optim_factory as optim_factory
 import timm.models.vision_transformer
 from timm.models.layers import trunc_normal_
+from timm.layers import AttentionPoolLatent
 
 import os
 import sys
