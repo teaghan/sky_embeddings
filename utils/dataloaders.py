@@ -34,6 +34,7 @@ class RandomNoise:
 
     def __call__(self, img):
         noise_factor = random.uniform(*self.noise_range)
+        print(noise_factor)
         return add_noise(img, noise_factor)
 
 class RandomChannelNaN:
