@@ -74,6 +74,7 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
     
     if n_batches is None:
         n_batches = len(dataloader)
+        print('len(dataloader):', n_batches)
     if verbose > 0:
         print(f'Encoding {min(len(dataloader), n_batches)} batches...')
     model.eval()
@@ -129,6 +130,8 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
                 images.append(samples.detach().cpu())
             if len(latents)>=n_batches:
                 break
+
+    print('len(latent):', len(latent))
     if return_images:
         return torch.cat(latents), torch.cat(images)
     else:

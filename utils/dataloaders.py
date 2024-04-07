@@ -159,7 +159,6 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
         transforms = v2.Compose([ v2.CenterCrop(img_size),
                                   v2.ToTensor()]) 
 
-
         dataset = EvaluationDataset_UNIONS(eval_data_file, img_size=img_size, patch_size=patch_size, 
                         num_channels=num_channels, max_mask_ratio=max_mask_ratio,
                         num_patches=num_patches,
@@ -168,7 +167,7 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
     else:
         #if (transforms is None) and augment:
         #transforms = get_augmentations(img_size=img_size)
-        transforms = v2.Compose([ v2.RandomResizedCrop(img_size), # turn on/off for centering instead
+        transforms = v2.Compose([ v2.RandomCrop(img_size), # turn on/off for centering instead
                                   v2.ToTensor()]) 
         # norm_pix_loss turned on so not applying addtional normalization
 

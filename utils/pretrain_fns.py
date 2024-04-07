@@ -92,8 +92,8 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              model, device, dataloader_template_reg,
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
         
-        print(x.shape)
-        print(y.shape)
+        print(x.shape) # lower than expected (5952, 3072)
+        print(y.shape) # correct
         
         # remove entries where y is NaN (because that means we don't have zspec)
         # make validation set of just known zspec ones?
@@ -106,9 +106,6 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         print(f'removing {len(unknown_x)} examples from linear probe set due to nan in representation')
         x = np.delete(x, unknown_x, axis=0)
         y = np.delete(y, unknown_x, axis=0)
-
-        print(x.shape)
-        print(y.shape)
 
         #indices = np.where((y > 0.1) & (y < 2)) # too small of number
         #print(f'removing {len(y)-len(indices)} examples where zspec is out of range')
@@ -166,6 +163,7 @@ def get_embeddings(data_path, model, device, dataloader_template_1,
     # Map target samples to latent-space
     latent_features = mae_latent(model, dataloader, device, verbose=0, remove_cls=remove_cls)
     latent_features = latent_features.data.cpu().numpy()
+    print('latent_features.shape:', latent_features.shape) 
 
     # Collect targets
     with h5py.File(data_path, "r") as f:
@@ -198,5 +196,7 @@ def get_embeddings(data_path, model, device, dataloader_template_1,
     if scale:
         scaler = StandardScaler()
         x = scaler.fit_transform(x)
+
+    print('x.shape:', x.shape)
 
     return x, y
