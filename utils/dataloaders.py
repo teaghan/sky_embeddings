@@ -432,15 +432,15 @@ class StreamDataset_UNIONS(IterableDataset):
         
         self.cutout_batch, self.catalog, self.tile = self.dataset.__next__() 
 
-        print(self.cutout_batch.shape)
-        self.median = np.nanmedian(self.cutout_batch)
-        self.mad = median_abs_deviation(self.cutout_batch, nan_policy='omit', axis=None)
-        print(f'PRE-TRAINING (non-centered): median={self.median}, mad={self.mad}')
+        #print(self.cutout_batch.shape)
+        #self.median = np.nanmedian(self.cutout_batch)
+        #self.mad = median_abs_deviation(self.cutout_batch, nan_policy='omit', axis=None)
+        #print(f'PRE-TRAINING (non-centered): median={self.median}, mad={self.mad}')
 
-        print('##################')
-        print(self.tile)
-        print(self.catalog.head())
-        print('##################')
+        #print('##################')
+        #print(self.tile)
+        #print(self.catalog.head())
+        #print('##################')
 
         if not self.tile in self.off_limit_tiles and self.cutout_batch is not None: 
             self.cutout_count = len(self.cutout_batch) 
@@ -453,11 +453,12 @@ class StreamDataset_UNIONS(IterableDataset):
             print('None or off-limits:', self.tile)
 
         # Number of batches
-        num_batches = self.cutout_count // batch_size # why does this not solve things? no refresh?
+        num_batches = self.cutout_count // batch_size
 
         for batch_idx in range(num_batches):
+            print(batch_idx, num_batches, self.cutout_count)
             start_idx = batch_idx * batch_size
-            end_idx = min((batch_idx + 1) * batch_size, self.cutout_count)
+            end_idx = (batch_idx + 1) * batch_size
 
             batch_cutouts = self.cutout_batch[start_idx:end_idx]
 
