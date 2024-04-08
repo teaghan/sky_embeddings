@@ -599,8 +599,8 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
         cutout = torch.from_numpy(cutout).to(torch.float32)
 
         # Apply any augmentations, etc.
-        #if self.transform is not None:
-        #    cutout = self.transform(cutout)
+        if self.transform is not None:
+            cutout = self.transform(cutout)
 
         if self.mask_generator is not None:
             # Generate random mask
