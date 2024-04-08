@@ -118,7 +118,7 @@ def build_fits_dataloader(fits_paths, bands, min_bands, batch_size, num_workers,
     # Build dataloader
     return torch.utils.data.DataLoader(dataset, batch_size=1, 
                                        shuffle=shuffle, num_workers=num_workers,
-                                       pin_memory=True)
+                                       drop_last=True, pin_memory=True)
 
 def build_h5_dataloader(filename, batch_size, num_workers, patch_size=8, num_channels=5, 
                         max_mask_ratio=None, label_keys=None, img_size=64, num_patches=None, 
