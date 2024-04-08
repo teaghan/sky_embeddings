@@ -174,11 +174,11 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
         # Build dataset
         dataset = StreamDataset_UNIONS(img_size=img_size, patch_size=patch_size, 
                             num_channels=num_channels, max_mask_ratio=max_mask_ratio,
-                            num_patches=num_patches, 
+                            num_patches=num_patches,
                             label_keys=None, transform=transforms, indices=indices)
         
     return torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=0, #TEMP, num_workers,
-                                       pin_memory=True, drop_last=True)
+                                       pin_memory=True, drop_last=True, shuffle=False)
 
 class MaskGenerator:
     """
@@ -574,14 +574,14 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
             cutout = f['cutouts'][idx]
 
             # Clip pixel values
-            if self.pixel_min is not None:
-                cutout[cutout<self.pixel_min] = self.pixel_min
-            if self.pixel_max is not None:
-                cutout[cutout>self.pixel_max] = self.pixel_max
+            #if self.pixel_min is not None:
+            #    cutout[cutout<self.pixel_min] = self.pixel_min
+            #if self.pixel_max is not None:
+            #    cutout[cutout>self.pixel_max] = self.pixel_max
 
-            if (np.array(cutout.shape[1:])>self.img_size).any():
-                # Select central cutout
-                cutout = extract_center(cutout, self.img_size)
+            #if (np.array(cutout.shape[1:])>self.img_size).any():
+            #    # Select central cutout
+            #    cutout = extract_center(cutout, self.img_size)
 
             # Load RA and Dec
             ra_dec = torch.from_numpy(np.asarray([f['ra'][idx], f['dec'][idx]]).astype(np.float32))
@@ -599,8 +599,8 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
         cutout = torch.from_numpy(cutout).to(torch.float32)
 
         # Apply any augmentations, etc.
-        if self.transform is not None:
-            cutout = self.transform(cutout)
+        #if self.transform is not None:
+        #    cutout = self.transform(cutout)
 
         if self.mask_generator is not None:
             # Generate random mask
