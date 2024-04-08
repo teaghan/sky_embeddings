@@ -218,6 +218,7 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                                                         f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
 
                 # Save best model
+                print(best_val_loss)
                 if losses['val_loss'][-1]<best_val_loss:
                     best_val_loss = losses['val_loss'][-1]
                     print('Saving network...')
