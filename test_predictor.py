@@ -43,6 +43,8 @@ def main(args):
     
     # Construct the model, optimizer, etc.
     model_filename =  os.path.join(model_dir, model_name+'.pth.tar')
+    if os.path.exists(model_filename.replace('.pth.tar', '_best.pth.tar')):
+        model_filename = model_filename.replace('.pth.tar', '_best.pth.tar')
     mae_name = config['TRAINING']['pretained_mae']
     if mae_name=='None':
         mae_filename = 'None'

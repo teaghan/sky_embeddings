@@ -226,7 +226,7 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                                     'optimizer' : optimizer.state_dict(),
                                     'lr_scheduler' : lr_scheduler.state_dict(),
                                     'model' : model.module.state_dict()},
-                                    model_filename.replace('..pth.tar', '_best..pth.tar'))
+                                    model_filename.replace('.pth.tar', '_best.pth.tar'))
 
             # Increase the iteration
             cur_iter += 1
