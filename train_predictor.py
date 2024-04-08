@@ -118,7 +118,8 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
     print('Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size))
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
           (verbose_iters, cp_time))
-    
+
+    best_val_loss = np.inf
     # Train the neural networks
     losses_cp = defaultdict(list)
     cp_start_time = time.time()
@@ -215,6 +216,17 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                     plot_progress(losses, y_lims=y_lims, 
                                   savename=os.path.join(fig_dir, 
                                                         f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
+
+                # Save best model
+                if losses['val_loss'][-1]<best_val_loss:
+                    best_val_loss = losses['val_loss'][-1]
+                    print('Saving network...')
+                    torch.save({'batch_iters': cur_iter,
+                                    'losses': losses,
+                                    'optimizer' : optimizer.state_dict(),
+                                    'lr_scheduler' : lr_scheduler.state_dict(),
+                                    'model' : model.module.state_dict()},
+                                    model_filename.replace('..pth.tar', '_best..pth.tar'))
 
             # Increase the iteration
             cur_iter += 1
