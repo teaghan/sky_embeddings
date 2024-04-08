@@ -163,9 +163,6 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
                         num_channels=num_channels, max_mask_ratio=max_mask_ratio,
                         num_patches=num_patches,
                         label_keys=label_keys, transform=transforms, indices=indices)
-        
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=0, #TEMP, num_workers,
-                                       pin_memory=True)
 
     else:
         #if (transforms is None) and augment:
@@ -180,11 +177,8 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
                             num_patches=num_patches, 
                             label_keys=None, transform=transforms, indices=indices)
         
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=0, #TEMP, num_workers,
+    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=0, #TEMP, num_workers,
                                        pin_memory=True, drop_last=True)
-
-    # Build dataloader
-    return dataloader
 
 class MaskGenerator:
     """

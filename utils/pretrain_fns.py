@@ -92,8 +92,8 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              model, device, dataloader_template_reg,
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
         
-        print(x.shape) # lower than expected (5952, 3072)
-        print(y.shape) # correct
+        #print(x.shape) # lower than expected (5952, 3072)
+        #print(y.shape) # correct
         
         # remove entries where y is NaN (because that means we don't have zspec)
         # make validation set of just known zspec ones?
@@ -127,7 +127,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         # TEMP
         fig = plt.figure()
         plt.scatter(y_test, y_pred_test, alpha=0.1)
-        print('max(y_test):', max(y_test))
+        #print('max(y_test):', max(y_test))
         line = np.linspace(0,max(y_test), num=5)
         plt.plot(line, line, '--')
         plt.xlabel('true zspec')
@@ -163,11 +163,11 @@ def get_embeddings(data_path, model, device, dataloader_template_1,
     # Map target samples to latent-space
     latent_features = mae_latent(model, dataloader, device, verbose=0, remove_cls=remove_cls)
     latent_features = latent_features.data.cpu().numpy()
-    print('latent_features.shape:', latent_features.shape) 
+    #print('latent_features.shape:', latent_features.shape) 
 
     # Collect targets
     with h5py.File(data_path, "r") as f:
-        y = f[y_label][:] 
+        y = f[y_label][:len(latent_features)] 
 
     if model.module.attn_pool:
         # There is only one output set of features if there is an attention pooling layer
@@ -197,6 +197,6 @@ def get_embeddings(data_path, model, device, dataloader_template_1,
         scaler = StandardScaler()
         x = scaler.fit_transform(x)
 
-    print('x.shape:', x.shape)
+    #print('x.shape:', x.shape)
 
     return x, y
