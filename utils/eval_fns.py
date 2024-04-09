@@ -138,8 +138,8 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
                 break
 
     print('len(latent):', len(latent)) # should be full batch here, not just 64?
-    print('len(labels):', labels.shape)
-    print('len(y):', len(y.shape))
+    print('len(labels):', len(labels))
+    print('len(y):', len(y))
     if return_images:
         return torch.cat(latents), torch.cat(images)
     elif return_y:
