@@ -14,7 +14,7 @@ with h5py.File(dwarf_file, 'r') as dwarf_f, h5py.File(validation_file, 'r') as v
     for key in dwarf_f.keys():
         print(key)
         if key == 'images':
-            dwarf_data['cutouts'] = dwarf_f[key][:]
+            dwarf_data['cutouts'] = dwarf_f[key][:,:5, :, :]
         else:
             dwarf_data[key] = dwarf_f[key][:]
 
