@@ -15,14 +15,14 @@ with h5py.File(dwarf_file, 'r') as dwarf_f, h5py.File(validation_file, 'r') as v
         print(key)
         dwarf_data[key] = dwarf_f[key][:]
 
-    print('validation')
+    print('\nvalidation')
     # Read data from validation_file
     validation_data = {}
     for key in validation_f.keys():
         print(key)
         validation_data[key] = validation_f[key][:]
 
-    key_0 = validation_f.keys()[0]
+    key_0 = 'ra'
 
     # Randomly sample the same amount of data from the validation set
     validation_data_sampled = {}
