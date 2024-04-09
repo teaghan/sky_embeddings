@@ -177,7 +177,7 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
                             num_patches=num_patches,
                             label_keys=None, transform=transforms, indices=indices)
         
-    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=0, #TEMP, num_workers,
+    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=0, 
                                        pin_memory=True, drop_last=True, shuffle=False)
 
 class MaskGenerator:

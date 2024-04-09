@@ -81,6 +81,7 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
 
     latents = []
     images = []
+    y = []
     
     # Conditional application of augmentations
     augmentations = get_augmentations() if apply_augmentations else None
@@ -104,11 +105,13 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
                 
                 # Concatenate all augmented samples along the batch dimension
                 samples = torch.cat(augmented_samples, dim=0)
-                label_lst = torch.Tensor(torch.cat(label_lst, dim=0))
+                label_lst = torch.cat(label_lst, dim=0)
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
             ra_decs = ra_decs.to(device, non_blocking=True)
+
+            label_lst = torch.Tensor(label_lst)
             label_lst = label_lst.to(device, non_blocking=True)
 
             if hasattr(model, 'module'):

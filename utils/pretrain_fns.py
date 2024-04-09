@@ -70,7 +70,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              y_label='is_dwarf', combine=combine, remove_cls=remove_cls)
         
         # Splitting the dataset into training and testing sets
-        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
         
         # Creating and training a classifier
         clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, C=0.01, random_state=42)
@@ -113,7 +113,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         #y = y[indices]
     
         # Splitting the dataset into training and testing sets
-        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
         
         # Creating and training a linear model for regression
         #regressor = LinearRegression()
