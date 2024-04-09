@@ -1,9 +1,10 @@
 import h5py
 import random
 
-dwarf_file = 'dr5_eval_set_dwarfs_only.h5' # exists
-validation_file = 'dr5_eval_set_validation.h5' # exist
-dwarf_class_file = 'dr5_eval_set_dwarfs_class.h5' # to create
+root_dir = '/scratch/data/'
+dwarf_file = root_dir + 'dr5_eval_set_dwarfs_only.h5' # exists
+validation_file = root_dir + 'dr5_eval_set_validation.h5' # exist
+dwarf_class_file = root_dir + 'dr5_eval_set_dwarfs_class.h5' # to create
 
 # Open dwarf_file and validation_file
 with h5py.File(dwarf_file, 'r') as dwarf_f, h5py.File(validation_file, 'r') as validation_f:
