@@ -29,6 +29,9 @@ with h5py.File(dwarf_file, 'r') as dwarf_f, h5py.File(validation_file, 'r') as v
     for key in dwarf_data.keys():
         combined_data[key] = dwarf_data[key] + validation_data_sampled[key]
 
+    # Add is_dwarf key to indicate the source of the data
+    combined_data['is_dwarf'] = [1] * len(dwarf_data['images']) + [0] * len(validation_data_sampled['images'])
+
 # Save combined data to dwarf_class_file
 with h5py.File(dwarf_class_file, 'w') as dwarf_class_f:
     for key, value in combined_data.items():
