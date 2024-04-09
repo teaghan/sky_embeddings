@@ -590,8 +590,7 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
             if self.label_keys is not None:
                 labels = [f[k][idx] for k in self.label_keys]
                 labels = torch.from_numpy(np.asarray(labels).astype(np.float32))
-
-            print('labels.shape:', labels.shape)
+                print('labels.shape:', labels.shape)
         
         # normalize cutouts -> put into transforms
         min_ = np.nanmin(cutout)
