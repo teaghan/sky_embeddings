@@ -1,7 +1,7 @@
 import h5py
 import random
 
-root_dir = '/scratch/data/'
+root_dir = '/home/a4ferrei/scratch/data/'
 dwarf_file = root_dir + 'dr5_eval_set_dwarfs_only.h5' # exists
 validation_file = root_dir + 'dr5_eval_set_validation.h5' # exist
 dwarf_class_file = root_dir + 'dr5_eval_set_dwarfs_class.h5' # to create
