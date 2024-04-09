@@ -81,6 +81,7 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
 
     latents = []
     images = []
+    y = []
     
     # Conditional application of augmentations
     augmentations = get_augmentations() if apply_augmentations else None
@@ -91,7 +92,7 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             # Apply augmentations if enabled
             augmented_samples = []
             label_lst = []
-            if apply_augmentations:
+            if apply_augmentations: 
                 for sample, label in zip(samples, labels):
                     # Add the original sample
                     augmented_samples.append(sample.unsqueeze(0))
@@ -104,14 +105,12 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
                 
                 # Concatenate all augmented samples along the batch dimension
                 samples = torch.cat(augmented_samples, dim=0)
-                label_lst = torch.cat(label_lst, dim=0)
+                labels = torch.cat(label_lst, dim=0)
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
             ra_decs = ra_decs.to(device, non_blocking=True)
-
-            label_lst = torch.Tensor(label_lst)
-            label_lst = label_lst.to(device, non_blocking=True)
+            labels = labels.to(device, non_blocking=True)
 
             if hasattr(model, 'module'):
                 latent, _, _ = model.module.forward_encoder(samples, ra_dec=ra_decs, 
@@ -132,17 +131,19 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
                 latent = latent[:,num_extra_tokens:]
             
             latents.append(latent.detach().cpu())
+            y.append(labels.detach().cpu())
             if return_images:
                 images.append(samples.detach().cpu())
             if len(latents)>=n_batches:
                 break
 
     print('len(latent):', len(latent)) # should be full batch here, not just 64?
-    print('label_lst.shape:', label_lst.shape)
+    print('len(labels):', labels.shape)
+    print('len(y):', len(y.shape))
     if return_images:
         return torch.cat(latents), torch.cat(images)
     elif return_y:
-        return torch.cat(latents), label_lst
+        return torch.cat(latents), torch.cat(y)
     else:
         return torch.cat(latents)
 
