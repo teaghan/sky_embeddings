@@ -81,7 +81,6 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
 
     latents = []
     images = []
-    y = []
     
     # Conditional application of augmentations
     augmentations = get_augmentations() if apply_augmentations else None
@@ -138,7 +137,8 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             if len(latents)>=n_batches:
                 break
 
-    print('len(latent):', len(latent))
+    print('len(latent):', len(latent)) # should be full batch here, not just 64?
+    print('label_lst.shape:', label_lst.shape)
     if return_images:
         return torch.cat(latents), torch.cat(images)
     elif return_y:

@@ -69,6 +69,8 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              model, device, dataloader_template_class,
                              y_label='is_dwarf', combine=combine, remove_cls=remove_cls)
         
+        print('x.shape, y.shape', x.shape, y.shape) # [896, 0]
+        
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
         
@@ -164,7 +166,8 @@ def get_embeddings(data_path, model, device, dataloader_template_1,
     latent_features, y = mae_latent(model, dataloader, device, verbose=0, remove_cls=remove_cls, return_y=True, y_label=y_label)
     latent_features = latent_features.data.cpu().numpy()
     y = y.data.cpu().numpy()
-    #print('latent_features.shape:', latent_features.shape) 
+    print('latent_features.shape:', latent_features.shape) 
+    print('y.shape:', y.shape)
 
     # Collect targets
     #with h5py.File(data_path, "r") as f:
