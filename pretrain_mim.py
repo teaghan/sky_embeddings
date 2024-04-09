@@ -103,6 +103,7 @@ def main(args):
                                                 max_mask_ratio=max_mask_ratio, eval=True,
                                                 img_size=int(config['ARCHITECTURE']['img_size']),
                                                 num_patches=model.module.patch_embed.num_patches,
+                                                label_keys=['zspec'],
                                                 eval_data_file=(config['DATA']['lp_regress_data_file']))
         else: 
             dataloader_regess = None

@@ -70,7 +70,7 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
     return pred_imgs, mask_imgs, orig_imgs
 
 def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_images=False, verbose=1, 
-               apply_augmentations=False, num_augmentations=16, remove_cls=True):
+               apply_augmentations=False, num_augmentations=16, remove_cls=True, return_y=False):
     
     if n_batches is None:
         n_batches = len(dataloader)
@@ -87,25 +87,29 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
 
     with torch.no_grad():
         # Loop through spectra in dataset
-        for batch_idx, (samples, masks, ra_decs) in enumerate(dataloader):
-
+        for batch_idx, (samples, masks, ra_decs, labels) in enumerate(dataloader):
             # Apply augmentations if enabled
             augmented_samples = []
+            label_lst = []
             if apply_augmentations:
-                for sample in samples:
+                for sample, label in zip(samples, labels):
                     # Add the original sample
                     augmented_samples.append(sample.unsqueeze(0))
+                    label_lst.append(label)
                     # Generate augmented versions of the sample
                     for _ in range(num_augmentations):
                         augmented_sample = augmentations(sample)
                         augmented_samples.append(augmented_sample.unsqueeze(0))
+                        label_lst.append(label)
                 
                 # Concatenate all augmented samples along the batch dimension
                 samples = torch.cat(augmented_samples, dim=0)
+                label_lst = torch.cat(label_lst, dim=0)
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
             ra_decs = ra_decs.to(device, non_blocking=True)
+            label_lst = label_lst.to(device, non_blocking=True)
 
             if hasattr(model, 'module'):
                 latent, _, _ = model.module.forward_encoder(samples, ra_dec=ra_decs, 
@@ -134,6 +138,8 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
     print('len(latent):', len(latent))
     if return_images:
         return torch.cat(latents), torch.cat(images)
+    elif return_y:
+        return torch.cat(latents), label_lst
     else:
         return torch.cat(latents)
 

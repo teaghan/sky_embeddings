@@ -161,13 +161,14 @@ def get_embeddings(data_path, model, device, dataloader_template_1,
         dataloader = dataloader_template_1 # go back to class later
 
     # Map target samples to latent-space
-    latent_features = mae_latent(model, dataloader, device, verbose=0, remove_cls=remove_cls)
+    latent_features, y = mae_latent(model, dataloader, device, verbose=0, remove_cls=remove_cls, return_y=True)
     latent_features = latent_features.data.cpu().numpy()
+    y = y.data.cpu().numpy()
     #print('latent_features.shape:', latent_features.shape) 
 
     # Collect targets
-    with h5py.File(data_path, "r") as f:
-        y = f[y_label][:len(latent_features)] 
+    #with h5py.File(data_path, "r") as f:
+    #    y = f[y_label][:len(latent_features)] 
 
     if model.module.attn_pool:
         # There is only one output set of features if there is an attention pooling layer
