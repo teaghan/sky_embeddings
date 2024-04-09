@@ -106,7 +106,7 @@ def main(args):
                                                 label_keys=['zspec'],
                                                 eval_data_file=(config['DATA']['lp_regress_data_file']))
         else: 
-            dataloader_regess = None
+            dataloader_regress = None
             
         if not lp_class_data_file == None:
             dataloader_classfication = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
