@@ -13,7 +13,10 @@ with h5py.File(dwarf_file, 'r') as dwarf_f, h5py.File(validation_file, 'r') as v
     dwarf_data = {}
     for key in dwarf_f.keys():
         print(key)
-        dwarf_data[key] = dwarf_f[key][:]
+        if key == 'images':
+            dwarf_data['cutouts'] = dwarf_f[key][:]
+        else:
+            dwarf_data[key] = dwarf_f[key][:]
 
     print('\nvalidation')
     # Read data from validation_file
@@ -32,7 +35,7 @@ with h5py.File(dwarf_file, 'r') as dwarf_f, h5py.File(validation_file, 'r') as v
 
     # Combine data from both files
     combined_data = {}
-    for key in dwarf_data.keys():
+    for key in validation_f.keys():
         combined_data[key] = dwarf_data[key] + validation_data_sampled[key]
 
     # Add is_dwarf key to indicate the source of the data
