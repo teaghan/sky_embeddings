@@ -20,7 +20,7 @@ with h5py.File(dwarf_file, 'r') as dwarf_f, h5py.File(validation_file, 'r') as v
 
     # Randomly sample the same amount of data from the validation set
     validation_data_sampled = {}
-    sample_indices = random.sample(range(len(validation_data['images'])), len(dwarf_data['images']))
+    sample_indices = random.sample(range(len(validation_data['zspec'])), len(dwarf_data['zspec']))
     for key in validation_data.keys():
         validation_data_sampled[key] = [validation_data[key][i] for i in sample_indices]
 
@@ -30,7 +30,7 @@ with h5py.File(dwarf_file, 'r') as dwarf_f, h5py.File(validation_file, 'r') as v
         combined_data[key] = dwarf_data[key] + validation_data_sampled[key]
 
     # Add is_dwarf key to indicate the source of the data
-    combined_data['is_dwarf'] = [1] * len(dwarf_data['images']) + [0] * len(validation_data_sampled['images'])
+    combined_data['is_dwarf'] = [1] * len(dwarf_data['zspec']) + [0] * len(validation_data_sampled['zspec'])
 
 # Save combined data to dwarf_class_file
 with h5py.File(dwarf_class_file, 'w') as dwarf_class_f:
