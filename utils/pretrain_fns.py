@@ -109,10 +109,10 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         x = np.delete(x, unknown_x, axis=0)
         y = np.delete(y, unknown_x, axis=0)
 
-        #indices = np.where((y > 0.1) & (y < 2)) # too small of number
-        #print(f'removing {len(y)-len(indices)} examples where zspec is out of range')
-        #x = x[indices]
-        #y = y[indices]
+        indices = np.where((y > -1) & (y < 5)) # standard scaled so its a bit weird
+        print(f'removing {len(y)-len(indices)} examples where zspec is out of range')
+        x = x[indices]
+        y = y[indices]
     
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
@@ -134,7 +134,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         plt.plot(line, line, '--')
         plt.xlabel('true zspec')
         plt.ylabel('predicted zspec')
-        fig.savefig('/home/a4ferrei/scratch/github/sky_embeddings/figures/zspec_predictions.png')
+        fig.savefig('/home/a4ferrei/scratch/github/sky_embeddings/figures/zspec_predictions_2.png')
         
         # Evaluating the regressor
         #mse_test = mean_squared_error(y_test, y_pred_test)
