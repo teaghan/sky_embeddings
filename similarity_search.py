@@ -134,8 +134,8 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
 
 print('generating target latents')
 # Map target samples to latent-space
-target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True, 
-                                          apply_augmentations=augment_targets, num_augmentations=64)
+target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True) 
+                     # ADD AUGMENTATIONS BACK IN LATER: apply_augmentations=augment_targets, num_augmentations=64)
 print('target_latent.shape:', target_latent.shape)
 
 # Plot targets
@@ -149,6 +149,7 @@ test_similarity = mae_simsearch(model, target_latent, test_dataloader, device, m
 
 # Sort by similarity score
 sim_order = torch.argsort(test_similarity).cpu()
+print(sim_order)
 if metric=='cosine':
     sim_order = reversed(sim_order)
 
@@ -174,7 +175,8 @@ print('test_latent.shape:', test_latent.shape)
 
 # Display top n_plot candidates
 display_images(normalize_images(test_images[:n_plot,display_channel,:,:].data.cpu().numpy()), 
-                                vmin=0., vmax=1, savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results.png'))
+                                vmin=0., vmax=1, similarities=test_similarity[sim_order[:n_save]],
+                                savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results.png'))
 print('nearby tests plotted')
 # Save results
 np.savez(os.path.join(results_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results.npz'), indices=save_indices,

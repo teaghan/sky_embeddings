@@ -261,7 +261,7 @@ def plot_batch_tiled(orig_imgs, mask_imgs, pred_imgs, n_samples=5, savename=None
 
     plt.close()
 
-def display_images(images, vmin=0., vmax=1., show_num=True, savename=None):
+def display_images(images, vmin=0., vmax=1., show_num=True, savename=None, similarity=None):
     """
     Display a list of images in a 2D grid using matplotlib.
 
@@ -291,8 +291,12 @@ def display_images(images, vmin=0., vmax=1., show_num=True, savename=None):
     for i, img in enumerate(images):
         axes[i].imshow(img)
         axes[i].axis('off')  # Hide the axes
-        if show_num:
+        
+        if not similarity == None:
+            axes[i].set_title('similarity rank:' + str(i) + '\n cosine similarity:' + str(round(similarity[i], 5)))
+        elif show_num:
             axes[i].set_title(str(i))
+            
     # Hide any unused axes
     for j in range(i + 1, len(axes)):
         axes[j].axis('off')

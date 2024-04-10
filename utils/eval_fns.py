@@ -89,6 +89,7 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
     with torch.no_grad():
         # Loop through spectra in dataset
         for batch_idx, (samples, masks, ra_decs, labels) in enumerate(dataloader):
+            print('samples.shape:', samples.shape)
             # Apply augmentations if enabled
             augmented_samples = []
             label_lst = []
@@ -112,7 +113,7 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             ra_decs = ra_decs.to(device, non_blocking=True)
             labels = labels.to(device, non_blocking=True)
 
-            if hasattr(model, 'module'):
+            if hasattr(model, 'module'): # should just pass 1 at a time or so
                 latent, _, _ = model.module.forward_encoder(samples, ra_dec=ra_decs, 
                                                             mask_ratio=mask_ratio, mask=None, 
                                                             reshape_out=False)
