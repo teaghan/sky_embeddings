@@ -132,13 +132,16 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 eval_data_file=data_dir+test_fn)  
 
 
+print('generating target latents')
 # Map target samples to latent-space
 target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True, 
                                           apply_augmentations=augment_targets, num_augmentations=64)
+print('target_latent.shape:', target_latent.shape)
 
 # Plot targets
 display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().numpy()), 
                                 vmin=0., vmax=1, savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_target.png'))
+print('targets plotted')
 
 # Compute similarity score for all test samples
 test_similarity = mae_simsearch(model, target_latent, test_dataloader, device, metric=metric, combine=combine, use_weights=True,
@@ -152,7 +155,7 @@ if metric=='cosine':
 # Determine which samples to save
 save_indices = test_indices[sim_order[:n_save]]
 
-# Create a new dataloader for these samples - WHY?
+# Create a new dataloader for these samples 
 test_dataloader = build_unions_dataloader(batch_size=batch_size, 
                                                 num_workers=num_workers,
                                                 patch_size=8, 
@@ -164,13 +167,15 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 label_keys=['zspec'],
                                                 indices=save_indices)
 
+print('generating test latents')
 # Encode to latent features
 test_latent, test_images = mae_latent(model, test_dataloader, device, return_images=True)
+print('test_latent.shape:', test_latent.shape)
 
 # Display top n_plot candidates
 display_images(normalize_images(test_images[:n_plot,display_channel,:,:].data.cpu().numpy()), 
                                 vmin=0., vmax=1, savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results.png'))
-
+print('nearby tests plotted')
 # Save results
 np.savez(os.path.join(results_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results.npz'), indices=save_indices,
         target_images=target_images.data.cpu().numpy(), target_features=target_latent.data.cpu().numpy(), 

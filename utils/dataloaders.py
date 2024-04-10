@@ -537,8 +537,8 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
         self.pixel_max = pixel_max
         self.indices = indices
         self.max_mask_ratio = max_mask_ratio
-
-        if dwarf:
+        self.dwarf = dwarf
+        if self.dwarf:
             self.image_key = 'images'
         else:
             self.image_key = 'cutouts'
@@ -603,6 +603,9 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
         #cutout = (cutout - min_) / (max_ - min_)
         
         cutout = torch.from_numpy(cutout).to(torch.float32)
+
+        if self.dwarf:
+            cutout = cutout[:,:5, :, :]
 
         # Apply any augmentations, etc.
         if self.transform is not None:
