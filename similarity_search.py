@@ -7,7 +7,7 @@ import ast
 
 from utils.misc import str2bool, h5_snr
 from utils.mim_vit import build_model
-from utils.dataloaders import build_h5_dataloader
+from utils.dataloaders import build_unions_dataloader
 from utils.plotting_fns import display_images, plot_dual_histogram, normalize_images
 from utils.eval_fns import mae_latent
 from utils.similarity import mae_simsearch, compute_similarity
@@ -17,14 +17,14 @@ def parseArguments():
     parser = argparse.ArgumentParser('Similarity searching.', add_help=False)
 
     # Positional mandatory arguments
-    parser.add_argument("model_name", help="Name of model.", type=str)
-
-    # Optional arguments
+    parser.add_argument("model_name", help="Name of model.", type=str, 
+                        default='mim_73_unions') 
     
+    # Optional arguments
     parser.add_argument("-tgt_fn", "--target_fn", 
-                        type=str, default='HSC_dwarf_galaxies_GRIZY_64_new.h5')
-    parser.add_argument("-tst_fn", "--test_fn", 
-                        type=str, default='HSC_unkown_GRIZY_64_new.h5')
+                        type=str, default='dr5_eval_set_dwarfs_only.h5')
+    parser.add_argument("-tst_fn", "--test_fn", #  make a larget set here or stream 
+                        type=str, default='dr5_eval_set_validation.h5') # add validation set with known dwarfs here? --> take some out from train --> make larger set for sure when done debuging  
     parser.add_argument("-tgt_i", "--target_indices", 
                         default='[3,4]')
     parser.add_argument("-aug", "--augment_targets", 
@@ -48,8 +48,8 @@ def parseArguments():
     
     # Alternative data directory than sky_embeddings/data/
     parser.add_argument("-dd", "--data_dir", 
-                        help="Data directory if different from StarNet_SS/data/", 
-                        type=str, default=None)
+                        help="Data directory", 
+                        type=str, default='/home/a4ferrei/scratch/data/')
     
     return parser
 
@@ -110,29 +110,24 @@ test_snr = np.min(test_snr, axis=(1))
 test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
 
 # Data loaders
-target_dataloader = build_h5_dataloader(os.path.join(data_dir, target_fn), 
-                                          batch_size=batch_size, 
-                                          num_workers=num_workers,
-                                          patch_size=int(config['ARCHITECTURE']['patch_size']), 
-                                          num_channels=int(config['ARCHITECTURE']['num_channels']), 
-                                          max_mask_ratio=None, 
-                                          img_size=int(config['ARCHITECTURE']['img_size']),
-                                          pos_channel=str2bool(config['DATA']['pos_channel']), 
-                                          num_patches=model.module.patch_embed.num_patches,
-                                          shuffle=False,
-                                        indices=target_indices)
+target_dataloader = build_unions_dataloader(batch_size=batch_size, 
+                                                num_workers=num_workers,
+                                                patch_size=8, 
+                                                num_channels=5, 
+                                                max_mask_ratio=0, eval=True,
+                                                img_size=64,
+                                                num_patches=model.module.patch_embed.num_patches,
+                                                eval_data_file=target_fn)
 
-test_dataloader = build_h5_dataloader(os.path.join(data_dir, test_fn), 
-                                          batch_size=batch_size, 
-                                          num_workers=num_workers,
-                                          patch_size=int(config['ARCHITECTURE']['patch_size']), 
-                                          num_channels=int(config['ARCHITECTURE']['num_channels']), 
-                                          max_mask_ratio=None, 
-                                          img_size=int(config['ARCHITECTURE']['img_size']),
-                                          pos_channel=str2bool(config['DATA']['pos_channel']), 
-                                          num_patches=model.module.patch_embed.num_patches,
-                                          shuffle=False,
-                                        indices=test_indices)
+
+test_dataloader = build_unions_dataloader(batch_size=batch_size, 
+                                                num_workers=num_workers,
+                                                patch_size=8, 
+                                                num_channels=5, 
+                                                max_mask_ratio=0, eval=True,
+                                                img_size=64,
+                                                num_patches=model.module.patch_embed.num_patches,
+                                                eval_data_file=test_fn)  
 
 
 # Map target samples to latent-space
@@ -155,18 +150,16 @@ if metric=='cosine':
 # Determine which samples to save
 save_indices = test_indices[sim_order[:n_save]]
 
-# Create a new dataloader for these samples
-test_dataloader = build_h5_dataloader(os.path.join(data_dir, test_fn), 
-                                          batch_size=batch_size, 
-                                          num_workers=num_workers,
-                                          patch_size=int(config['ARCHITECTURE']['patch_size']), 
-                                          num_channels=int(config['ARCHITECTURE']['num_channels']), 
-                                          max_mask_ratio=None, 
-                                          img_size=int(config['ARCHITECTURE']['img_size']),
-                                          pos_channel=str2bool(config['DATA']['pos_channel']), 
-                                          num_patches=model.module.patch_embed.num_patches,
-                                          shuffle=False,
-                                        indices=save_indices)
+# Create a new dataloader for these samples - WHY?
+test_dataloader = build_unions_dataloader(batch_size=batch_size, 
+                                                num_workers=num_workers,
+                                                patch_size=8, 
+                                                num_channels=5, 
+                                                max_mask_ratio=0, eval=True,
+                                                img_size=64,
+                                                num_patches=model.module.patch_embed.num_patches,
+                                                eval_data_file=test_fn,
+                                                indices=save_indices)
 
 # Encode to latent features
 test_latent, test_images = mae_latent(model, test_dataloader, device, return_images=True)
