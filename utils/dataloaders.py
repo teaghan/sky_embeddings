@@ -605,7 +605,7 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
         cutout = torch.from_numpy(cutout).to(torch.float32)
 
         if self.dwarf:
-            cutout = cutout[:,:5, :, :]
+            cutout = cutout[:5, :, :]
 
         # Apply any augmentations, etc.
         if self.transform is not None:
