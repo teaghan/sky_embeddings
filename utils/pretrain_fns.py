@@ -66,7 +66,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
     if class_data_path:
         # Classifier task
         x,y = get_embeddings(class_data_path, 
-                             model, device, dataloader_template_class,
+                             model, device, dataloader_template_class, regression=False,
                              y_label='is_dwarf', combine=combine, remove_cls=remove_cls)
         
         print('x.shape, y.shape', x.shape, y.shape) # [896, 0]
@@ -91,7 +91,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
     if regress_data_path:
         # Regression task
         x,y = get_embeddings(regress_data_path, 
-                             model, device, dataloader_template_reg,
+                             model, device, dataloader_template_reg, regression=True,
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
         
         #print(x.shape) # lower than expected (5952, 3072)
@@ -145,7 +145,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         losses_cp['val_lp_r2'].append(float(r2_test))
 
 def get_embeddings(data_path, model, device, dataloader_template_1,
-                   y_label='class', combine='central', remove_cls=True, new_loader=False):
+                   y_label='class', combine='central', remove_cls=True, new_loader=False, regression=False):
 
     if new_loader:
         # Data loader
@@ -200,7 +200,9 @@ def get_embeddings(data_path, model, device, dataloader_template_1,
     if scale:
         scaler = StandardScaler()
         x = scaler.fit_transform(x)
-        y = scaler.fit_transform(y)
+
+        if regression:
+            y = scaler.fit_transform(y)
 
     #print('x.shape:', x.shape)
 
