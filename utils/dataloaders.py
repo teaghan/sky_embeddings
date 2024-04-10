@@ -460,10 +460,10 @@ class StreamDataset_UNIONS(IterableDataset):
             batch_cutouts = self.cutout_batch[start_idx:end_idx]
 
             # Normalize cutouts
-            for i in range(len(batch_cutouts)):
-                min_ = np.nanmin(batch_cutouts[i])
-                max_ = np.nanmax(batch_cutouts[i])
-                batch_cutouts[i] = (batch_cutouts[i] - min_) / (max_ - min_)
+            #for i in range(len(batch_cutouts)):
+            #    min_ = np.nanmin(batch_cutouts[i])
+            #    max_ = np.nanmax(batch_cutouts[i])
+            #    batch_cutouts[i] = (batch_cutouts[i] - min_) / (max_ - min_)
 
             batch_ra_dec = torch.from_numpy(np.asarray(self.catalog[['ra', 'dec']][start_idx:end_idx]).astype(np.float32))
 
@@ -593,9 +593,9 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
                 print('labels.shape:', labels.shape)
         
         # normalize cutouts -> put into transforms
-        min_ = np.nanmin(cutout)
-        max_ = np.nanmax(cutout)
-        cutout = (cutout - min_) / (max_ - min_)
+        #min_ = np.nanmin(cutout)
+        #max_ = np.nanmax(cutout)
+        #cutout = (cutout - min_) / (max_ - min_)
         
         cutout = torch.from_numpy(cutout).to(torch.float32)
 

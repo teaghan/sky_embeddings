@@ -113,11 +113,11 @@ def plot_batch(orig_imgs, mask_imgs, pred_imgs,
         pred_imgs = pred_imgs[:,:,:,channel_index]
     
     # Normalize the batch between 0 and 1
-    ##orig_imgs = normalize_images(np.concatenate((orig_imgs, mask_imgs, pred_imgs)))
-    ##b = pred_imgs.shape[0]
-    ##mask_imgs = orig_imgs[b:b*2]
-    ##pred_imgs = orig_imgs[b*2:]
-    ##orig_imgs = orig_imgs[:b] # what does this do??
+    orig_imgs = normalize_images(np.concatenate((orig_imgs, mask_imgs, pred_imgs)))
+    b = pred_imgs.shape[0]
+    mask_imgs = orig_imgs[b:b*2]
+    pred_imgs = orig_imgs[b*2:]
+    orig_imgs = orig_imgs[:b] # what does this do??
 
     # Create a figure with subplots
     fig, axes = plt.subplots(n_samples, 3, figsize=(5, n_samples*5/3))
@@ -157,7 +157,7 @@ def plot_batch_raw(orig_imgs, n_samples=5, channel_index=None, savename=None):
     print(orig_imgs.shape)
     
     # Normalize the batch between 0 and 1
-    ##orig_imgs = normalize_images(orig_imgs)
+    orig_imgs = normalize_images(orig_imgs)
     print(orig_imgs.shape)
     print(orig_imgs[0])
 
@@ -228,11 +228,11 @@ def plot_batch_tiled(orig_imgs, mask_imgs, pred_imgs, n_samples=5, savename=None
     savename (str, optional): Filename to save the plot. If None, the plot is shown.
     """
     # Normalize the batch between 0 and 1
-    #orig_imgs = normalize_images(np.concatenate((orig_imgs, mask_imgs, pred_imgs)))
-    #b = pred_imgs.shape[0]
-    #mask_imgs = orig_imgs[b:b*2]
-    #pred_imgs = orig_imgs[b*2:]
-    #orig_imgs = orig_imgs[:b]
+    orig_imgs = normalize_images(np.concatenate((orig_imgs, mask_imgs, pred_imgs)))
+    b = pred_imgs.shape[0]
+    mask_imgs = orig_imgs[b:b*2]
+    pred_imgs = orig_imgs[b*2:]
+    orig_imgs = orig_imgs[:b]
 
     # Create a figure with subplots
     fig, axes = plt.subplots(n_samples, 3, figsize=(10, n_samples*10/3))
