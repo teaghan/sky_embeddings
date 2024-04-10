@@ -17,7 +17,7 @@ def parseArguments():
     parser = argparse.ArgumentParser('Similarity searching.', add_help=False)
 
     # Positional mandatory arguments
-    parser.add_argument("model_name", help="Name of model.", type=str, 
+    parser.add_argument("-model_name", help="Name of model.", type=str, 
                         default='mim_73_unions') 
     
     # Optional arguments

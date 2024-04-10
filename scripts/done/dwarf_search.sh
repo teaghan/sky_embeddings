@@ -7,4 +7,4 @@ source /home/a4ferrei/mae_env/bin/activate
 module load hdf5/1.10.6
 
 # Run MAE training
-python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search.py
+python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search.py mim_73_unions
