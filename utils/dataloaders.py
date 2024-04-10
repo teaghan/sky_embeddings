@@ -149,7 +149,7 @@ def build_h5_dataloader(filename, batch_size, num_workers, patch_size=8, num_cha
 def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=5, 
                         max_mask_ratio=None, label_keys=None, img_size=64, eval=False,
                         num_patches=None, augment=False, shuffle=True, indices=None, transforms=None,
-                        eval_data_file='/home/a4ferrei/scratch/data/dr5_eval_set_validation.h5'):
+                        eval_data_file='/home/a4ferrei/scratch/data/dr5_eval_set_validation.h5', dwarf=False):
     '''
     under development, not all unputs are currently used
     '''
@@ -162,7 +162,7 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
         dataset = EvaluationDataset_UNIONS(eval_data_file, img_size=img_size, patch_size=patch_size, 
                         num_channels=num_channels, max_mask_ratio=max_mask_ratio,
                         num_patches=num_patches,
-                        label_keys=label_keys, transform=transforms, indices=indices)
+                        label_keys=label_keys, transform=transforms, indices=indices, dwarf=dwarf) # just rename key in future
 
     else:
         #if (transforms is None) and augment:
@@ -526,7 +526,7 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
 
     def __init__(self, data_file, img_size, patch_size, num_channels, max_mask_ratio, 
                  num_patches=None, label_keys=None, 
-                 transform=None, pixel_min=-3., pixel_max=None, indices=None):
+                 transform=None, pixel_min=-3., pixel_max=None, indices=None, dwarf=False):
         
         self.data_file = data_file
         self.transform = transform
@@ -537,6 +537,11 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
         self.pixel_max = pixel_max
         self.indices = indices
         self.max_mask_ratio = max_mask_ratio
+
+        if dwarf:
+            self.image_key = 'images'
+        else:
+            self.image_key = 'cutouts'
 
         if max_mask_ratio is not None:
             self.mask_generator = MaskGenerator(input_size=img_size,
@@ -554,12 +559,12 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
             return len(self.indices)
         else:
             with h5py.File(self.data_file, "r") as f:    
-                num_samples = len(f['cutouts'])
+                num_samples = len(f[self.image_key])
             return num_samples
 
     def __printstats__(self):
         with h5py.File(self.data_file, "r") as f: 
-            all_cutouts = f['cutouts']
+            all_cutouts = f[self.image_key]
             self.median = np.nanmedian(all_cutouts) 
             self.mad = median_abs_deviation(all_cutouts, nan_policy='omit', axis=None)
 
@@ -571,7 +576,7 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
             idx = self.indices[idx]
         with h5py.File(self.data_file, "r") as f: 
             # Load cutout
-            cutout = f['cutouts'][idx]
+            cutout = f[self.image_key][idx]
 
             # Clip pixel values
             #if self.pixel_min is not None:

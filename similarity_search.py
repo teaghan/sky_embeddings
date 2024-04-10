@@ -117,7 +117,7 @@ target_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 max_mask_ratio=0, eval=True,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
-                                                eval_data_file=data_dir+target_fn)
+                                                eval_data_file=data_dir+target_fn, dwarf=True)
 
 
 test_dataloader = build_unions_dataloader(batch_size=batch_size, 
