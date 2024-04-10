@@ -117,6 +117,7 @@ target_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 max_mask_ratio=0, eval=True,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
+                                                label_keys=['zspec'],
                                                 eval_data_file=data_dir+target_fn, dwarf=True)
 
 
@@ -127,6 +128,7 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 max_mask_ratio=0, eval=True,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
+                                                label_keys=['zspec'],
                                                 eval_data_file=data_dir+test_fn)  
 
 
@@ -159,6 +161,7 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 eval_data_file=data_dir+test_fn,
+                                                label_keys=['zspec'],
                                                 indices=save_indices)
 
 # Encode to latent features
