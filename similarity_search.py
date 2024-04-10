@@ -117,7 +117,7 @@ target_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 max_mask_ratio=0, eval=True,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
-                                                eval_data_file=target_fn)
+                                                eval_data_file=data_dir+target_fn)
 
 
 test_dataloader = build_unions_dataloader(batch_size=batch_size, 
@@ -127,7 +127,7 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 max_mask_ratio=0, eval=True,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
-                                                eval_data_file=test_fn)  
+                                                eval_data_file=data_dir+test_fn)  
 
 
 # Map target samples to latent-space
@@ -158,7 +158,7 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 max_mask_ratio=0, eval=True,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
-                                                eval_data_file=test_fn,
+                                                eval_data_file=data_dir+test_fn,
                                                 indices=save_indices)
 
 # Encode to latent features
