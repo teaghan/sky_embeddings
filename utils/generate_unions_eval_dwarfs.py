@@ -1,5 +1,6 @@
 import h5py
 import random
+import numpy as np
 
 root_dir = '/home/a4ferrei/scratch/data/'
 dwarf_file = root_dir + 'dr5_eval_set_dwarfs_only.h5' # exists
@@ -36,10 +37,11 @@ with h5py.File(dwarf_file, 'r') as dwarf_f, h5py.File(validation_file, 'r') as v
     # Combine data from both files
     combined_data = {}
     for key in validation_f.keys():
-        combined_data[key] = dwarf_data[key] + validation_data_sampled[key]
+        combined_data[key] = np.array(list(dwarf_data[key]) + (validation_data_sampled[key]))
 
     # Add is_dwarf key to indicate the source of the data
-    combined_data['is_dwarf'] = [1] * len(dwarf_data[key_0]) + [0] * len(validation_data_sampled[key_0])
+    combined_data['is_dwarf'] = np.array([1] * len(dwarf_data[key_0]) + [0] * len(validation_data_sampled[key_0]))
+    print(len(dwarf_data[key_0]), len(validation_data_sampled[key_0]))
 
 # Save combined data to dwarf_class_file
 with h5py.File(dwarf_class_file, 'w') as dwarf_class_f:
