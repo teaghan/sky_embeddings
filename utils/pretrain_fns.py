@@ -200,7 +200,7 @@ def get_embeddings(data_path, model, device, dataloader_template_1,
     if scale:
         scaler = StandardScaler()
         x = scaler.fit_transform(x)
-        #y = scaler.fit_transform(y)
+        y = scaler.fit_transform(y)
 
     #print('x.shape:', x.shape)
 
