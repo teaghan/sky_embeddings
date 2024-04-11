@@ -60,9 +60,12 @@ def main(args):
         mae_config = configparser.ConfigParser()
         mae_config.read(config_dir+mae_name+'.ini')
         mae_filename =  os.path.join(model_dir, mae_name+'.pth.tar')
-    model, losses, cur_iter, optimizer, lr_scheduler = build_model(config, mae_config, 
+
+    mae_config = config
+    model, losses, cur_iter, optimizer, lr_scheduler = build_model(mae_config, 
                                                                    model_filename, #mae_filename, # what is the diff?
                                                                    device, build_optimizer=True)
+    # TypeError: build_model() got multiple values for argument 'build_optimizer'
     
     # Data loaders    
     num_workers = min([os.cpu_count(),12*n_gpu])
