@@ -113,7 +113,7 @@ test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
 target_indices = [0,1,3] # list(range(64))
 
 # Data loaders
-target_dataloader = build_unions_dataloader(batch_size=batch_size, 
+target_dataloader = build_unions_dataloader(batch_size=1, 
                                                 num_workers=num_workers,
                                                 patch_size=8, 
                                                 num_channels=5, 
