@@ -109,6 +109,9 @@ test_snr = np.min(test_snr, axis=(1))
 # Only use images in specified S/N range
 test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
 
+# overwriting target indices
+target_indices = [0,1,3] # list(range(64))
+
 # Data loaders
 target_dataloader = build_unions_dataloader(batch_size=batch_size, 
                                                 num_workers=num_workers,
