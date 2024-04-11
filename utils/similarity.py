@@ -72,8 +72,11 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
             print('test_latent.shape:', test_latent.shape)
 
             # Remove cls token - EXPERIMENT WITH THIS --> changed for attention pooling
-            attn_pool = True
-            test_latent = test_latent[:,0,:]#, 1:]
+            attn_pool = False
+            if attn_pool:
+                test_latent = test_latent[:,0,:]#, 1:]
+            else:
+                test_latent = test_latent[:,0, 1:]
 
             print('test_latent.shape:', test_latent.shape)
             if max_pool and not attn_pool:
@@ -213,7 +216,9 @@ def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean',
         #test_latent = select_centre(test_latent, n_central_patches)
     
     if attn_pool:
-        feat_weights = torch.ones_like(feat_weights)
+        #x
+        #return test_similarity
+        pass
 
     else:
         # Determine target features and feature weighting
@@ -221,18 +226,14 @@ def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean',
         if not use_weights:
             feat_weights = torch.ones_like(feat_weights)
     
-    # Compute similarities
-    if metric=='MAE':
-        test_similarity = weighted_MAE(target_latent, test_latent, feat_weights)
-    if metric=='MSE':
-        test_similarity = weighted_MSE(target_latent, test_latent, feat_weights)
-    if metric=='cosine':
-        test_similarity = weighted_cosine_similarity(target_latent, test_latent, feat_weights)
-
-    if attn_pool: 
-        return test_similarity
-
-    else:
+        # Compute similarities
+        if metric=='MAE':
+            test_similarity = weighted_MAE(target_latent, test_latent, feat_weights)
+        if metric=='MSE':
+            test_similarity = weighted_MSE(target_latent, test_latent, feat_weights)
+        if metric=='cosine':
+            test_similarity = weighted_cosine_similarity(target_latent, test_latent, feat_weights)
+        
         if n_top_sims is not None:
             # Collect average of the best n_top similarities
             test_similarity = torch.topk(test_similarity, k=n_top_sims, dim=1, largest=largest).values
