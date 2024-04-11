@@ -71,11 +71,12 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
             
             print('test_latent.shape:', test_latent.shape)
 
-            # Remove cls token - EXPERIMENT WITH THIS
-            test_latent = test_latent[:,0, 1:]
+            # Remove cls token - EXPERIMENT WITH THIS --> changed for attention pooling
+            attn_pool = True
+            test_latent = test_latent[:,0,:]#, 1:]
 
             print('test_latent.shape:', test_latent.shape)
-            if max_pool:
+            if max_pool and not attn_pool:
                 test_latent, _ = torch.max(test_latent, dim=1, keepdim=True)
 
             # Try to put all features on the same scale
@@ -86,7 +87,7 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
             test_latent = (test_latent - mean_feats) / (std_feats + 1e-8)
 
             # Compute similarity score for each sample
-            test_similarity = compute_similarity(target_latent, test_latent, 
+            test_similarity = compute_similarity(target_latent, test_latent, attn_pool=attn_pool,
                                                  metric='cosine', combine='min', use_weights=True)
             sim_scores.append(test_similarity)
             
@@ -175,7 +176,7 @@ def weighted_MAE(target_feats, test_feats, weights):
     weighted_squared_error = squared_error * weights / torch.sum(weights)
     return torch.mean(weighted_squared_error, dim=-1)
 
-def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean', use_weights=True, n_central_patches=None, n_top_sims=None):
+def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean', use_weights=True, n_central_patches=None, n_top_sims=None, attn_pool=False):
 
     '''
     Compute the similarity between the samples in test_latent against the features in target_latent.
@@ -217,16 +218,17 @@ def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean',
         test_similarity = weighted_MSE(target_latent, test_latent, feat_weights)
     if metric=='cosine':
         test_similarity = weighted_cosine_similarity(target_latent, test_latent, feat_weights)
-    
-    if n_top_sims is not None:
-        # Collect average of the best n_top similarities
-        test_similarity = torch.topk(test_similarity, k=n_top_sims, dim=1, largest=largest).values
 
-    # Combine the similarities to get a single value for each sample
-    if combine=='mean':
-        test_similarity = torch.mean(test_similarity, dim=1)
-    elif combine=='min':
-        test_similarity = torch.min(test_similarity, dim=1).values
-    elif combine=='max':
-        test_similarity = torch.max(test_similarity, dim=1).values
-    return test_similarity
+    if not attn_pool:
+        if n_top_sims is not None:
+            # Collect average of the best n_top similarities
+            test_similarity = torch.topk(test_similarity, k=n_top_sims, dim=1, largest=largest).values
+
+        # Combine the similarities to get a single value for each sample
+        if combine=='mean':
+            test_similarity = torch.mean(test_similarity, dim=1)
+        elif combine=='min':
+            test_similarity = torch.min(test_similarity, dim=1).values
+        elif combine=='max':
+            test_similarity = torch.max(test_similarity, dim=1).values
+        return test_similarity
