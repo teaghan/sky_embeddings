@@ -73,7 +73,10 @@ def main(args):
 
     num_train = int(config['TRAINING']['num_train'])
     train_indices = range(num_train) if num_train>-1 else None
-    dataloader_train = build_h5_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
+    dataloader_train = 
+    
+    
+    build_h5_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
                                            batch_size=batch_size, 
                                            num_workers=num_workers,
                                            label_keys=eval(config['DATA']['label_keys']),
@@ -86,7 +89,10 @@ def main(args):
                                            shuffle=True,
                                            indices=train_indices)
     
-    dataloader_val = build_h5_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
+    dataloader_val = 
+    
+    
+    build_h5_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
                                         batch_size=batch_size, 
                                         num_workers=num_workers,
                                         label_keys=eval(config['DATA']['label_keys']),

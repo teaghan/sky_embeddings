@@ -74,9 +74,9 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
             # Remove cls token - EXPERIMENT WITH THIS --> changed for attention pooling
             attn_pool = False
             if attn_pool:
-                test_latent = test_latent[:,0,:]#, 1:]
+                test_latent = test_latent[:,0,:]
             else:
-                test_latent = test_latent[:,0, 1:]
+                test_latent = test_latent[:,:, 1:]
 
             print('test_latent.shape:', test_latent.shape)
             if max_pool and not attn_pool:
