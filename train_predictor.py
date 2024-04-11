@@ -7,7 +7,7 @@ import torch
 
 from utils.misc import str2bool, parseArguments
 from utils.predictor_training_fns import run_iter
-from utils.vit import build_model
+from utils.mim_vit import build_model # set to mim vit?
 from utils.dataloaders import build_unions_dataloader
 from utils.plotting_fns import plot_progress
 
@@ -61,7 +61,7 @@ def main(args):
         mae_config.read(config_dir+mae_name+'.ini')
         mae_filename =  os.path.join(model_dir, mae_name+'.pth.tar')
     model, losses, cur_iter, optimizer, lr_scheduler = build_model(config, mae_config, 
-                                                                   model_filename, mae_filename,
+                                                                   model_filename, #mae_filename, # what is the diff?
                                                                    device, build_optimizer=True)
     
     # Data loaders    
@@ -73,8 +73,8 @@ def main(args):
     else:
         batch_size = int(config['TRAINING']['batch_size'])
 
-    num_train = int(config['TRAINING']['num_train'])
-    train_indices = range(num_train) if num_train>-1 else None
+    #num_train = int(config['TRAINING']['num_train'])
+    #train_indices = range(num_train) if num_train>-1 else None
 
     dataloader = build_unions_dataloader(batch_size=batch_size, 
                                                 num_workers=num_workers,
