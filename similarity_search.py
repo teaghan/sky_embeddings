@@ -34,7 +34,7 @@ def parseArguments():
     parser.add_argument("-snr", "--snr_range", 
                         default='[2,7]')
     parser.add_argument("-bs", "--batch_size", 
-                        type=int, default=2)
+                        type=int, default=1)
     parser.add_argument("-m", "--metric", 
                         type=str, default='cosine')
     parser.add_argument("-c", "--combine", 
