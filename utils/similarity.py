@@ -64,12 +64,17 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
             samples = samples.to(device, non_blocking=True)
 
             if hasattr(model, 'module'):
+                print('module...')
                 test_latent, _, _ = model.module.forward_encoder(samples, mask_ratio=0., reshape_out=False)
             else:
                 test_latent, _, _ = model.forward_encoder(samples, mask_ratio=0., reshape_out=False)
-            # Remove cls token
+            
+            print('test_latent.shape:', test_latent.shape)
+
+            # Remove cls token - EXPERIMENT WITH THIS
             test_latent = test_latent[:,1:]
 
+            print('test_latent.shape:', test_latent.shape)
             if max_pool:
                 test_latent, _ = torch.max(test_latent, dim=1, keepdim=True)
 
