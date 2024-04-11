@@ -109,17 +109,17 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         x = np.delete(x, unknown_x, axis=0)
         y = np.delete(y, unknown_x, axis=0)
 
-        indices = np.where((y[:, 0] > -1) & (y[:, 0] < 5)) # standard scaled so its a bit weird - maybe do cut before hand
-        print(f'removing {len(y)-len(indices)} examples where zspec is out of range')
-        x = x[indices]
-        y = y[indices]
+        #indices = np.where((y[:, 0] > -1) & (y[:, 0] < 5)) # standard scaled so its a bit weird - maybe do cut before hand
+        #print(f'removing {len(y)-len(indices)} examples where zspec is out of range')
+        #x = x[indices]
+        #y = y[indices]
     
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
         
         # Creating and training a linear model for regression
         #regressor = LinearRegression()
-        regressor = ElasticNet(alpha=0.0001, l1_ratio=0.9, max_iter=10000, random_state=42)
+        regressor = ElasticNet(alpha=0.0001, l1_ratio=0.9, max_iter=10000, random_state=42, normalize=True)
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
