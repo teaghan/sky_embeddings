@@ -110,7 +110,9 @@ test_snr = np.min(test_snr, axis=(1))
 test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
 
 # overwriting target indices
-target_indices =  list(range(32))[1:]
+#target_indices =  list(range(32))[1:]
+target_indices = list(range(6))
+# or individual at index 6 
 
 # Data loaders
 target_dataloader = build_unions_dataloader(batch_size=1, 
@@ -179,7 +181,7 @@ print('test_latent.shape:', test_latent.shape)
 
 # Display top n_plot candidates
 display_images(normalize_images(test_images[:n_plot,display_channel,:,:].data.cpu().numpy()), 
-                                vmin=0., vmax=1, similarities=test_similarity[sim_order[:n_save]],
+                                vmin=0., vmax=1, similarity=test_similarity[sim_order[:n_save]],
                                 savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results.png'))
 print('nearby tests plotted')
 # Save results
