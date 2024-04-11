@@ -83,8 +83,11 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
             if i==0:
                 mean_feats = test_latent.mean(dim=(0, 1))
                 std_feats = test_latent.std(dim=(0, 1), unbiased=True) 
-                target_latent = (target_latent - mean_feats) / (std_feats + 1e-8)
+                #target_latent = (target_latent - mean_feats) / (std_feats + 1e-8)
+                #print('test_latent.shape:', test_latent.shape)
+
             test_latent = (test_latent - mean_feats) / (std_feats + 1e-8)
+            print('test_latent.shape:', test_latent.shape)
 
             # Compute similarity score for each sample
             test_similarity = compute_similarity(target_latent, test_latent, attn_pool=attn_pool,
@@ -94,6 +97,7 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
             if len(sim_scores)>=n_batches:
                 break
     
+    print(sim_scores)
     return torch.cat(sim_scores)
 
 def determine_target_features(target_latent):
