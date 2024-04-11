@@ -109,7 +109,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         x = np.delete(x, unknown_x, axis=0)
         y = np.delete(y, unknown_x, axis=0)
 
-        indices = np.where((y > -1) & (y < 5)) # standard scaled so its a bit weird
+        indices = np.where((y[:, 0] > -1) & (y[:, 0] < 5)) # standard scaled so its a bit weird - maybe do cut before hand
         print(f'removing {len(y)-len(indices)} examples where zspec is out of range')
         x = x[indices]
         y = y[indices]
