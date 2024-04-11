@@ -7,7 +7,7 @@ import torch
 
 from utils.misc import str2bool, parseArguments
 from utils.predictor_training_fns import run_iter
-from utils.mim_vit import build_model
+from utils.vit import build_model
 from utils.dataloaders import build_unions_dataloader
 from utils.plotting_fns import plot_progress
 
@@ -61,11 +61,16 @@ def main(args):
         mae_config.read(config_dir+mae_name+'.ini')
         mae_filename =  os.path.join(model_dir, mae_name+'.pth.tar')
 
-    mae_config = config
-    model, losses, cur_iter, optimizer, lr_scheduler = build_model(mae_config, 
-                                                                   model_filename, #mae_filename, # what is the diff?
+    # FOR MIM_VIT IMPORT
+    #model, losses, cur_iter, optimizer, lr_scheduler = build_model(mae_config, 
+    #                                                               model_filename,
+    #                                                               device, build_optimizer=True)
+        
+    # FOR VIT IMPORT
+    model, losses, cur_iter, optimizer, lr_scheduler = build_model(config, mae_config, 
+                                                                   model_filename, mae_filename,
                                                                    device, build_optimizer=True)
-    # TypeError: build_model() got multiple values for argument 'build_optimizer'
+    
     
     # Data loaders    
     num_workers = min([os.cpu_count(),12*n_gpu])
@@ -90,14 +95,8 @@ def main(args):
                                                 eval_data_file=(mae_config['DATA']['lp_regress_data_file_train']),
                                                 augment=str2bool(config['TRAINING']['augment']))
 
-    # Assuming dataset_len contains the total length of your dataset
-    # And you want to split it into 70% training, 15% validation, and 15% test
     train_val_idx, test_idx = train_test_split(range(len(dataloader)), test_size=0.2, random_state=42)
     train_idx, val_idx = train_test_split(train_val_idx, test_size=0.2, random_state=42) 
-
-    # Now you have the indices for training, validation, and test sets
-    # You can use these indices to create separate dataloaders for each set
-
 
     dataloader_train = build_unions_dataloader(batch_size=batch_size, 
                                                 num_workers=num_workers,
