@@ -8,8 +8,10 @@ import torch
 from utils.misc import str2bool, parseArguments
 from utils.predictor_training_fns import run_iter
 from utils.vit import build_model
-from utils.dataloaders import build_h5_dataloader
+from utils.dataloaders import build_unions_dataloader
 from utils.plotting_fns import plot_progress
+
+from sklearn.model_selection import train_test_split
 
 def main(args):
 
@@ -73,36 +75,48 @@ def main(args):
 
     num_train = int(config['TRAINING']['num_train'])
     train_indices = range(num_train) if num_train>-1 else None
-    dataloader_train = 
+
+    dataloader = build_unions_dataloader(batch_size=batch_size, 
+                                                num_workers=num_workers,
+                                                patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
+                                                num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
+                                                max_mask_ratio=0.0, eval=True,
+                                                img_size=int(mae_config['ARCHITECTURE']['img_size']),
+                                                num_patches=model.module.patch_embed.num_patches,
+                                                label_keys=eval(mae_config['DATA']['label_keys']),
+                                                eval_data_file=(mae_config['DATA']['lp_regress_data_file_train']),
+                                                augment=str2bool(config['TRAINING']['augment']))
+
+    # Assuming dataset_len contains the total length of your dataset
+    # And you want to split it into 70% training, 15% validation, and 15% test
+    train_val_idx, test_idx = train_test_split(range(len(dataloader)), test_size=0.2, random_state=42)
+    train_idx, val_idx = train_test_split(train_val_idx, test_size=0.2, random_state=42) 
+
+    # Now you have the indices for training, validation, and test sets
+    # You can use these indices to create separate dataloaders for each set
+
+
+    dataloader_train = build_unions_dataloader(batch_size=batch_size, 
+                                                num_workers=num_workers,
+                                                patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
+                                                num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
+                                                max_mask_ratio=0.0, eval=True,
+                                                img_size=int(mae_config['ARCHITECTURE']['img_size']),
+                                                num_patches=model.module.patch_embed.num_patches,
+                                                label_keys=eval(mae_config['DATA']['label_keys']),
+                                                eval_data_file=(mae_config['DATA']['lp_regress_data_file_train']),
+                                                augment=str2bool(config['TRAINING']['augment']), indices=train_idx)
     
-    
-    build_h5_dataloader(os.path.join(data_dir, config['DATA']['train_data_file']), 
-                                           batch_size=batch_size, 
-                                           num_workers=num_workers,
-                                           label_keys=eval(config['DATA']['label_keys']),
-                                           img_size=int(config['ARCHITECTURE']['img_size']),
-                                           pos_channel=str2bool(mae_config['DATA']['pos_channel']), 
-                                           patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
-                                           num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
-                                           num_patches=model.module.patch_embed.num_patches,
-                                           augment=str2bool(config['TRAINING']['augment']),
-                                           shuffle=True,
-                                           indices=train_indices)
-    
-    dataloader_val = 
-    
-    
-    build_h5_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
-                                        batch_size=batch_size, 
-                                        num_workers=num_workers,
-                                        label_keys=eval(config['DATA']['label_keys']),
-                                        img_size=int(config['ARCHITECTURE']['img_size']),
-                                        pos_channel=str2bool(mae_config['DATA']['pos_channel']), 
-                                        patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
-                                         num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
-                                        num_patches=model.module.patch_embed.num_patches,
-                                        shuffle=True)
-    
+    dataloader_val = build_unions_dataloader(batch_size=batch_size, 
+                                                num_workers=num_workers,
+                                                patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
+                                                num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
+                                                max_mask_ratio=0.0, eval=True,
+                                                img_size=int(mae_config['ARCHITECTURE']['img_size']),
+                                                num_patches=model.module.patch_embed.num_patches,
+                                                label_keys=eval(mae_config['DATA']['label_keys']),
+                                                eval_data_file=(mae_config['DATA']['lp_regress_data_file_train']),
+                                                augment=str2bool(config['TRAINING']['augment']), indices=val_idx)
     
     print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
 
