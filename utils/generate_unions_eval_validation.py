@@ -17,14 +17,18 @@ dataset = dataset_wrapper()
 # Open HDF5 file for writing
 with h5py.File(eval_dataset_path, 'w') as f: 
     # Load cutouts, catalog, and tile
-    cutouts, catalog, _ = dataset.__next__()
-    
-    # Create dataset for cutouts
-    dset_cutouts = f.create_dataset("cutouts", data=cutouts.astype(np.float64))
-    
-    # Store RA and Dec values
-    dset_ra = f.create_dataset("ra", data=catalog['ra'].values.astype('f'))
-    dset_dec = f.create_dataset("dec", data=catalog['dec'].values.astype('f'))
+    cutouts, catalog, tile = dataset.__next__()
 
-# Print the evaluated tile
-print("Evaluated Tile:", eval_tile)
+    if tile == eval_tile:
+        # Create dataset for cutouts
+        dset_cutouts = f.create_dataset("cutouts", data=cutouts.astype(np.float64))
+        
+        # Store RA and Dec values
+        dset_ra = f.create_dataset("ra", data=catalog['ra'].values.astype('f'))
+        dset_dec = f.create_dataset("dec", data=catalog['dec'].values.astype('f'))
+
+        # Print the evaluated tile
+        print("Evaluated Tile:", eval_tile)
+
+    else:
+        print(f'for some reason {eval_tile} is not the first tile but {tile} is')

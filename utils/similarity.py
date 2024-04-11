@@ -58,7 +58,7 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
     sim_scores = []
     with torch.no_grad():
         # Loop through spectra in dataset
-        for i, (samples, _, _) in enumerate(dataloader):
+        for i, (samples, _, _, _) in enumerate(dataloader):  # added extra one since currently returning labels
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
