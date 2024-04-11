@@ -110,7 +110,7 @@ test_snr = np.min(test_snr, axis=(1))
 test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
 
 # overwriting target indices
-target_indices = [0,1,3] # list(range(64))
+target_indices =  list(range(32))[1:]
 
 # Data loaders
 target_dataloader = build_unions_dataloader(batch_size=1, 
