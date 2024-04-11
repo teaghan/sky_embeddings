@@ -11,8 +11,8 @@ def run_iter(model, samples, masks, labels, optimizer, lr_scheduler,
     # Run forward prop
     model_output = model(samples, mask=masks)
 
-    # Compute loss
-    labels = model.module.normalize_labels(labels)
+    # Compute loss - may not work now that this is using mim_vit
+    #labels = model.module.normalize_labels(labels)
     if label_uncertainties is None:
         loss = torch.nn.MSELoss()(model_output, labels)
     else:

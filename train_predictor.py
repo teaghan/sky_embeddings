@@ -7,7 +7,7 @@ import torch
 
 from utils.misc import str2bool, parseArguments
 from utils.predictor_training_fns import run_iter
-from utils.mim_vit import build_model # set to mim vit?
+from utils.mim_vit import build_model
 from utils.dataloaders import build_unions_dataloader
 from utils.plotting_fns import plot_progress
 
