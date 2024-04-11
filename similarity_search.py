@@ -111,8 +111,9 @@ test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
 
 # overwriting target indices
 #target_indices =  list(range(32))[1:]
-target_indices = list(range(6)) # look into how this works out with test snr
-# or individual at index 6 
+target_indices = list(range(1,7+3))
+#target_indices = list(range(1,7)) # look into how this works out with test snr
+# or individual at index 7 
 
 # Data loaders
 target_dataloader = build_unions_dataloader(batch_size=1, 

@@ -300,7 +300,7 @@ def display_images(images, vmin=0., vmax=1., show_num=True, savename=None, simil
         axes[i].axis('off')  # Hide the axes
         
         if not similarity == None:
-            axes[i].set_title('similarity rank:' + str(i) + '\n cosine similarity:' + str(round(similarity[i], 5)))
+            axes[i].set_title('similarity rank:' + str(i) + '\n cosine similarity:' + str(round(similarity[i].item(), 5)))
         elif show_num:
             axes[i].set_title(str(i))
             
