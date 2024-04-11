@@ -44,7 +44,7 @@ def parseArguments():
     parser.add_argument("-np", "--n_plot", 
                         type=int, default=36)
     parser.add_argument("-ns", "--n_save", 
-                        type=int, default=300)
+                        type=int, default=100)
     
     # Alternative data directory than sky_embeddings/data/
     parser.add_argument("-dd", "--data_dir", 
@@ -131,7 +131,7 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 max_mask_ratio=0, eval=True,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
-                                                label_keys=['ra', 'dec'],
+                                                label_keys=['ra', 'dec'], indices=test_indices,
                                                 eval_data_file=data_dir+test_fn)  
 
 
@@ -157,6 +157,7 @@ if metric=='cosine':
     sim_order = reversed(sim_order)
 
 # Determine which samples to save
+print(len(test_indices), len(sim_order), n_save)
 save_indices = test_indices[sim_order[:n_save]]
 
 # Create a new dataloader for these samples 

@@ -91,7 +91,7 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
 
             test_latent = (test_latent - mean_feats) / (std_feats + 1e-8)
             print('test_latent.shape:', test_latent.shape)
-            print(test_latent[0])
+            #print(test_latent[0])
 
             # Compute similarity score for each sample
             test_similarity = compute_similarity(target_latent, test_latent, attn_pool=attn_pool,
