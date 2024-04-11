@@ -72,7 +72,7 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metr
             print('test_latent.shape:', test_latent.shape)
 
             # Remove cls token - EXPERIMENT WITH THIS
-            test_latent = test_latent[:,1:]
+            test_latent = test_latent[:,0, 1:]
 
             print('test_latent.shape:', test_latent.shape)
             if max_pool:
