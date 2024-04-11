@@ -117,7 +117,7 @@ target_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 max_mask_ratio=0, eval=True,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
-                                                label_keys=['ra', 'dec'],
+                                                label_keys=['ra', 'dec'], indices=target_indices,
                                                 eval_data_file=data_dir+target_fn, dwarf=True)
 
 
