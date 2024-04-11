@@ -212,7 +212,10 @@ def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean',
         # Also do for test latents?
         #test_latent = select_centre(test_latent, n_central_patches)
     
-    if not attn_pool:
+    if attn_pool:
+        feat_weights = torch.ones_like(feat_weights)
+
+    else:
         # Determine target features and feature weighting
         target_latent, feat_weights = determine_target_features(target_latent)
         if not use_weights:
