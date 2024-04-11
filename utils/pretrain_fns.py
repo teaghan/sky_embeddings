@@ -119,7 +119,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         
         # Creating and training a linear model for regression
         #regressor = LinearRegression()
-        regressor = ElasticNet(alpha=0.0001, l1_ratio=0.5, max_iter=10000, random_state=42) # discontinued: normalize=True)
+        regressor = ElasticNet(alpha=0.0001, l1_ratio=0.9, max_iter=10000, random_state=42) # discontinued: normalize=True)
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
@@ -201,8 +201,8 @@ def get_embeddings(data_path, model, device, dataloader_template_1,
         scaler = StandardScaler()
         x = scaler.fit_transform(x)
 
-        if regression:
-            y = scaler.fit_transform(y)
+    #    if regression:
+    #        y = scaler.fit_transform(y)
 
     #print('x.shape:', x.shape)
 
