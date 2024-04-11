@@ -34,7 +34,7 @@ def parseArguments():
     parser.add_argument("-snr", "--snr_range", 
                         default='[2,7]')
     parser.add_argument("-bs", "--batch_size", 
-                        type=int, default=64)
+                        type=int, default=2)
     parser.add_argument("-m", "--metric", 
                         type=str, default='cosine')
     parser.add_argument("-c", "--combine", 
@@ -111,7 +111,7 @@ test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
 
 # overwriting target indices
 #target_indices =  list(range(32))[1:]
-target_indices = list(range(6))
+target_indices = list(range(6)) # look into how this works out with test snr
 # or individual at index 6 
 
 # Data loaders
@@ -134,7 +134,7 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 label_keys=['ra', 'dec'], indices=test_indices,
-                                                eval_data_file=data_dir+test_fn)  
+                                                eval_data_file=data_dir+test_fn) 
 
 
 print('generating target latents')
@@ -151,15 +151,15 @@ print('targets plotted')
 # Compute similarity score for all test samples
 test_similarity = mae_simsearch(model, target_latent, test_dataloader, device, metric=metric, combine=combine, use_weights=True,
                                max_pool=max_pool)
+print(len(test_similarity), len(test_indices))
 
 # Sort by similarity score
 sim_order = torch.argsort(test_similarity).cpu()
-print(sim_order)
 if metric=='cosine':
     sim_order = reversed(sim_order)
 
 # Determine which samples to save
-print(len(test_indices), len(sim_order), n_save)
+print(len(test_indices), len(sim_order), n_save) # sim order and test indices should be the same len but they are not
 save_indices = test_indices[sim_order[:n_save]]
 
 # Create a new dataloader for these samples 
