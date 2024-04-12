@@ -35,7 +35,7 @@ def parseArguments():
     parser.add_argument("-ct", "--cls_token", 
                         type=str, default='False')
     parser.add_argument("-snr", "--snr_range", 
-                        default='[1,4]')
+                        default='[0,2]')
     parser.add_argument("-bs", "--batch_size", 
                         type=int, default=1)
     parser.add_argument("-m", "--metric", 
