@@ -170,6 +170,7 @@ target_latent, target_images = mae_latent(model, target_dataloader, device, retu
                                           apply_augmentations=augment_targets, num_augmentations=64,
                                          remove_cls=False)
 print(target_latent.shape)
+print('target_latent', target_latent)
 
 # Plot targets
 display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().numpy()), 
@@ -180,6 +181,7 @@ print('targets plotted')
 test_similarity = mae_simsearch(model, target_latent, test_dataloader, 
                                 device, metric=metric, combine=combine, use_weights=True,
                                max_pool=max_pool, cls_token=cls_token)
+print('test_similarity', test_similarity)
 
 # Sort by similarity score
 sim_order = torch.argsort(test_similarity).cpu()
@@ -206,6 +208,9 @@ print('generating test latents')
 # Encode to latent features
 test_latent, test_images = mae_latent(model, test_dataloader, device, return_images=True)
 print('test_latent.shape:', test_latent.shape)
+print('test_latent', test_latent)
+print('sim order', sim_order)
+print('passed sims', test_similarity[sim_order[:n_save]])
 
 # Display top n_plot candidates
 display_images(normalize_images(test_images[:n_plot,display_channel,:,:].data.cpu().numpy()), 
