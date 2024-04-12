@@ -54,12 +54,14 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None,
                     test_latent, _ = torch.max(test_latent, dim=1, keepdim=True)
 
             # Try to put all features on the same scale
+            '''
             if i==0:
                 mean_feats = test_latent.mean(dim=(0, 1))
                 std_feats = test_latent.std(dim=(0, 1), unbiased=True) 
                 print(mean_feats.shape, test_latent.shape)
                 target_latent = (target_latent - mean_feats) / (std_feats + 1e-8)
             test_latent = (test_latent - mean_feats) / (std_feats + 1e-8)
+            '''
             print('test_latent 2', test_latent)
 
             # Compute similarity score for each sample
