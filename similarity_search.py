@@ -131,9 +131,9 @@ test_snr = h5_snr(os.path.join(data_dir, test_fn), n_central_pix=8, batch_size=5
 test_snr = np.nanmin(test_snr[:,:5], axis=(1))
 
 # Only use images in specified S/N range
-##test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
+test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
 ## SEEING WHAT RESULTS LOOK LIKE WITHOUT SNR CUTOFF
-test_indices = list(range(len(test_snr)))
+#test_indices = list(range(len(test_snr)))
 
 # overwriting target indices
 #target_indices =  list(range(32))[1:]
