@@ -131,11 +131,13 @@ test_snr = h5_snr(os.path.join(data_dir, test_fn), n_central_pix=8, batch_size=5
 test_snr = np.nanmin(test_snr[:,:5], axis=(1))
 
 # Only use images in specified S/N range
-test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
+##test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
+## SEEING WHAT RESULTS LOOK LIKE WITHOUT SNR CUTOFF
+test_indices = list(range(len(test_snr)))
 
 # overwriting target indices
 #target_indices =  list(range(32))[1:]
-target_indices = list(range(1,8)) + [11,12]
+target_indices = list(range(1,8)) + [11,12] # not displaying properly?
 #target_indices = list(range(1,7)) # look into how this works out with test snr
 # or individual at index 7 
 
@@ -147,7 +149,7 @@ target_dataloader = build_unions_dataloader(batch_size=1,
                                                 max_mask_ratio=0, eval=True,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
-                                                label_keys=['ra', 'dec'], indices=target_indices,
+                                                label_keys=['ra', 'dec'], indices=target_indices, 
                                                 eval_data_file=data_dir+target_fn, dwarf=True)
 
 
@@ -167,6 +169,7 @@ print('generating target latents')
 target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True, 
                                           apply_augmentations=augment_targets, num_augmentations=64,
                                          remove_cls=False)
+print(target_latent.shape)
 
 # Plot targets
 display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().numpy()), 
