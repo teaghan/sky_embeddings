@@ -208,7 +208,8 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
 
 print('generating test latents')
 # Encode to latent features
-test_latent, test_images, labels = mae_latent(model, test_dataloader, device, return_images=True)#, return_y=True, y_label='is_dwarf')
+#test_latent, test_images, labels = mae_latent(model, test_dataloader, device, return_images=True, return_y=True, y_label='is_dwarf')
+test_latent, test_images = mae_latent(model, test_dataloader, device, return_images=True)
 print('test_latent.shape:', test_latent.shape)
 print('test_latent', test_latent)
 print('sim order', sim_order)
