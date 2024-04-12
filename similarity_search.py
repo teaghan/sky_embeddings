@@ -137,7 +137,7 @@ test_indices = list(range(len(test_snr)))
 
 # overwriting target indices
 #target_indices =  list(range(32))[1:]
-target_indices = list(range(1,8)) + [11,12] # not displaying properly?
+target_indices = [1,2,3]#list(range(1,8)) + [11,12] # not displaying properly?
 #target_indices = list(range(1,7)) # look into how this works out with test snr
 # or individual at index 7 
 
