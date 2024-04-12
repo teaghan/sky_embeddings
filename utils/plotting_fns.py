@@ -320,17 +320,15 @@ def display_images(images, vmin=0., vmax=1., show_num=True, savename=None, simil
     for i, img in enumerate(images):
         axes[i].imshow(img)
         axes[i].axis('off')  # Hide the axes
-
-        if labels[i] == None or labels[i] == 0:
-            labels[i] = False
-
-        elif labels[i] == 1:
-            labels[i] = True
-
         
         if not similarity == None:
+            if labels == None or labels[i] == 0:
+                label = False
+
+            elif labels[i] == 1:
+                label = True
             #axes[i].set_title('similarity rank:' + str(i+1) + '\n cosine similarity:' + str(round(similarity[i].item(), 8))) # TEMP
-            axes[i].set_title(f'similarity rank: {i+1}\n cosine similarity: {round(similarity[i].item(),5)}\n labelled_dwarf={labels[i]}')
+            axes[i].set_title(f'similarity rank: {i+1}\n cosine similarity: {round(similarity[i].item(),5)}\n labelled_dwarf={label}')
         elif show_num:
             axes[i].set_title(str(i))
             
