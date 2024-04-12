@@ -140,7 +140,9 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             if len(latents)>=n_batches:
                 break
 
-    if return_images:
+    if return_images and return_y:
+        return torch.cat(latents), torch.cat(images), torch.cat(y)
+    elif return_images:
         return torch.cat(latents), torch.cat(images)
     elif return_y:
         return torch.cat(latents), torch.cat(y)
