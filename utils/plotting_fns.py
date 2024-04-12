@@ -290,7 +290,7 @@ def plot_batch_tiled(orig_imgs, mask_imgs, pred_imgs, n_samples=5, savename=None
 
     plt.close()
 
-def display_images(images, vmin=0., vmax=1., show_num=True, savename=None, similarity=None):
+def display_images(images, vmin=0., vmax=1., show_num=True, savename=None, similarity=None, labels=None):
     """
     Display a list of images in a 2D grid using matplotlib.
 
@@ -320,10 +320,17 @@ def display_images(images, vmin=0., vmax=1., show_num=True, savename=None, simil
     for i, img in enumerate(images):
         axes[i].imshow(img)
         axes[i].axis('off')  # Hide the axes
+
+        if labels[i] == None or labels[i] == 0:
+            labels[i] = False
+
+        elif labels[i] == 1:
+            labels[i] = True
+
         
         if not similarity == None:
             #axes[i].set_title('similarity rank:' + str(i+1) + '\n cosine similarity:' + str(round(similarity[i].item(), 8))) # TEMP
-            axes[i].set_title('similarity rank: ' + str(i+1) + '\n cosine similarity: ' + str(similarity[i].item()))
+            axes[i].set_title(f'similarity rank: {i+1}\n cosine similarity: {round(similarity[i].item(),5)}\n labelled_dwarf={labels[i]}')
         elif show_num:
             axes[i].set_title(str(i))
             
