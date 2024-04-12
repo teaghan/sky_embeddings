@@ -130,6 +130,8 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             if remove_cls:
                 # Remove cls token
                 latent = latent[:,num_extra_tokens:]
+
+            print('latent', latent)
             
             latents.append(latent.detach().cpu())
             y.append(labels.detach().cpu())
@@ -138,9 +140,6 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             if len(latents)>=n_batches:
                 break
 
-    print('len(latent):', len(latent)) # should be full batch here, not just 64?
-    print('len(labels):', len(labels))
-    print('len(y):', len(y))
     if return_images:
         return torch.cat(latents), torch.cat(images)
     elif return_y:

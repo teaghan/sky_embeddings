@@ -146,7 +146,7 @@ target_dataloader = build_unions_dataloader(batch_size=1,
                                                 num_workers=num_workers,
                                                 patch_size=8, 
                                                 num_channels=5, 
-                                                max_mask_ratio=0, eval=True,
+                                                max_mask_ratio=0., eval=True,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 label_keys=['ra', 'dec'], indices=target_indices, 
@@ -157,7 +157,7 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 num_workers=num_workers,
                                                 patch_size=8, 
                                                 num_channels=5, 
-                                                max_mask_ratio=0, eval=True,
+                                                max_mask_ratio=0., eval=True,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 label_keys=['ra', 'dec'], indices=test_indices,
@@ -168,7 +168,7 @@ print('generating target latents')
 # Map target samples to latent-space
 target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True, 
                                           apply_augmentations=augment_targets, num_augmentations=64,
-                                         remove_cls=False)
+                                         remove_cls=not(cls_token)) 
 print(target_latent.shape)
 print('target_latent', target_latent)
 
@@ -181,7 +181,7 @@ print('targets plotted')
 test_similarity = mae_simsearch(model, target_latent, test_dataloader, 
                                 device, metric=metric, combine=combine, use_weights=True,
                                max_pool=max_pool, cls_token=cls_token)
-print('test_similarity', test_similarity) # nans here
+print('test_similarity', test_similarity)
 
 # Sort by similarity score
 sim_order = torch.argsort(test_similarity).cpu()
@@ -197,7 +197,7 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 num_workers=num_workers,
                                                 patch_size=8, 
                                                 num_channels=5, 
-                                                max_mask_ratio=0, eval=True,
+                                                max_mask_ratio=0., eval=True,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 eval_data_file=data_dir+test_fn,
