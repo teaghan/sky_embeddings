@@ -202,7 +202,8 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 eval_data_file=data_dir+test_fn,
-                                                label_keys=['is_dwarf'],
+                                                #label_keys=['is_dwarf'],
+                                                label_keys=['ra', 'dec'],
                                                 indices=save_indices)
 
 print('generating test latents')
