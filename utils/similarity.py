@@ -41,6 +41,7 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None,
             else:
                 test_latent, _, _ = model.forward_features(samples, ra_dec=ra_decs,
                                                            reshape_out=False)
+            print('test latent', test_latent)
 
             if cls_token:
                 # Use cls token
@@ -59,19 +60,17 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None,
                 print(mean_feats.shape, test_latent.shape)
                 target_latent = (target_latent - mean_feats) / (std_feats + 1e-8)
             test_latent = (test_latent - mean_feats) / (std_feats + 1e-8)
-            print('test_latent.shape:', test_latent.shape)
-            #print(test_latent[0])
+            print('test_latent 2', test_latent)
 
             # Compute similarity score for each sample
-            test_similarity = compute_similarity(target_latent, test_latent, attn_pool=attn_pool,
-                                                 metric='cosine', combine='min', use_weights=True)
+            test_similarity = compute_similarity(target_latent, test_latent, attn_pool=False,
+                                                 metric='cosine', combine='mean', use_weights=False)#True)
             sim_scores.append(test_similarity)
-            print(test_similarity) # None
+            print(test_similarity) # nans start here
             
             if len(sim_scores)>=n_batches:
                 break
     
-    print(sim_scores)
     return torch.cat(sim_scores)
 
 def determine_target_features(target_latent):
