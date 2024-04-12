@@ -95,7 +95,7 @@ def main(args):
                                                 img_size=int(mae_config['ARCHITECTURE']['img_size']),
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 label_keys=eval(mae_config['DATA']['label_keys']),
-                                                eval_data_file=(mae_config['DATA']['lp_regress_data_file_train']),
+                                                eval_data_file=(config['DATA']['lp_regress_data_file_train']),
                                                 augment=str2bool(config['TRAINING']['augment']))
 
     train_val_idx, test_idx = train_test_split(range(len(dataloader)), test_size=0.2, random_state=42)
@@ -109,7 +109,7 @@ def main(args):
                                                 img_size=int(mae_config['ARCHITECTURE']['img_size']),
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 label_keys=eval(mae_config['DATA']['label_keys']),
-                                                eval_data_file=(mae_config['DATA']['lp_regress_data_file_train']),
+                                                eval_data_file=(config['DATA']['lp_regress_data_file_train']),
                                                 augment=str2bool(config['TRAINING']['augment']), indices=train_idx)
     
     dataloader_val = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']),
@@ -120,7 +120,7 @@ def main(args):
                                                 img_size=int(mae_config['ARCHITECTURE']['img_size']),
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 label_keys=eval(mae_config['DATA']['label_keys']),
-                                                eval_data_file=(mae_config['DATA']['lp_regress_data_file_train']),
+                                                eval_data_file=(config['DATA']['lp_regress_data_file_train']),
                                                 augment=str2bool(config['TRAINING']['augment']), indices=val_idx)
     
     print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
