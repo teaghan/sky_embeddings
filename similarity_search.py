@@ -207,7 +207,7 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
 
 print('generating test latents')
 # Encode to latent features
-test_latent, test_images, labels = mae_latent(model, test_dataloader, device, return_images=True, return_y=True, y_label='is_dwarf')
+test_latent, test_images, labels = mae_latent(model, test_dataloader, device, return_images=True)#, return_y=True, y_label='is_dwarf')
 print('test_latent.shape:', test_latent.shape)
 print('test_latent', test_latent)
 print('sim order', sim_order)
@@ -216,8 +216,8 @@ print('passed sims', test_similarity[sim_order[:n_save]])
 # Display top n_plot candidates
 display_images(normalize_images(test_images[:n_plot,display_channel,:,:].data.cpu().numpy()), 
                                 vmin=0., vmax=1, similarity=test_similarity[sim_order[:n_save]],
-                                savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results.png'),
-                                labels=labels)
+                                savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results.png'))
+                                #labels=labels)
 print('nearby tests plotted')
 # Save results
 np.savez(os.path.join(results_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results.npz'), indices=save_indices,
