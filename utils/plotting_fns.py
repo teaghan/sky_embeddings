@@ -3,6 +3,8 @@ import math
 import os
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 
 plt.rcParams.update({
     "text.usetex": True,
@@ -19,6 +21,8 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
     if 'train_lp_acc' in losses.keys():
         num_ax += 1
     if 'train_lp_r2' in losses.keys():
+        num_ax += 1
+    if ('train_acc' in losses.keys()) or ('train_mae' in losses.keys()):
         num_ax += 1
         
     fig = plt.figure(figsize=(9,3*(num_ax)))
@@ -38,6 +42,10 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
         cur_ax +=1
         ax3 = plt.subplot(gs[cur_ax])
         axs.append(ax3)
+    if ('train_acc' in losses.keys()) or ('train_mae' in losses.keys()):
+        cur_ax +=1
+        ax4 = plt.subplot(gs[cur_ax])
+        axs.append(ax4)
     
     ##
     ax1.set_title('Objective Function', fontsize=fontsize)
@@ -66,6 +74,20 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
                          label=r'Val', c='r')
         #ax3.set_ylabel(r'Regression $R^2$',fontsize=fontsize)
         ax3.set_ylabel(r'$R^2$',fontsize=fontsize)
+    if 'train_acc' in losses.keys():
+        ax4.set_title('Classification Accuracy', fontsize=fontsize)
+        ax4.plot(losses['batch_iters'], losses['train_acc'],
+                     label=r'Train', c='k')
+        ax4.plot(losses['batch_iters'], losses['val_acc'],
+                         label=r'Val', c='r')
+        ax4.set_ylabel(r'Acc (\%)',fontsize=fontsize)
+    elif 'train_mae' in losses.keys():
+        ax4.set_title('Regression Error', fontsize=fontsize)
+        ax4.plot(losses['batch_iters'], losses['train_mae'],
+                     label=r'Train', c='k')
+        ax4.plot(losses['batch_iters'], losses['val_mae'],
+                         label=r'Val', c='r')
+        ax4.set_ylabel(r'MAE',fontsize=fontsize)
     
     for i, ax in enumerate(axs):
         if x_lim is not None:
@@ -316,7 +338,19 @@ def display_images(images, vmin=0., vmax=1., show_num=True, savename=None, simil
     else:
         plt.show()
 
-
+def plot_conf_mat(tgt_class, pred_class, labels, savename):
+    cm = confusion_matrix(tgt_class, pred_class)
+    sns.heatmap(cm, annot=True, fmt='d', xticklabels=labels, yticklabels=labels)
+    plt.title(f'Classifier Confusion Matrix')
+    plt.xlabel('Predicted Class')
+    plt.ylabel('True Class')
+    if savename is not None:
+        plt.savefig(savename, facecolor='white', 
+                    transparent=False, dpi=100,
+                    bbox_inches='tight', pad_inches=0.05)
+    else:
+        plt.show()
+    
 def plot_resid_hexbin(label_keys, tgt_stellar_labels, pred_stellar_labels,
                       y_lims=[2], 
                       gridsize=(100,50), max_counts=30, cmap='ocean_r', n_std=3,

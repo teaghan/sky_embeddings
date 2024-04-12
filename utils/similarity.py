@@ -1,94 +1,63 @@
-import random
-import numpy as np
 import torch
-import torchvision
-torchvision.disable_beta_transforms_warning()
-from torchvision.transforms import v2
 
-# Custom brightness adjustment for images
-def adjust_brightness(img, brightness_factor):
-    return img * brightness_factor
-
-# Custom transform that applies brightness adjustment with a random factor
-class RandomBrightnessAdjust:
-    def __init__(self, brightness_range=(0.8, 1.2)):
-        self.brightness_range = brightness_range
-
-    def __call__(self, img):
-        brightness_factor = random.uniform(*self.brightness_range)
-        return adjust_brightness(img, brightness_factor)
-
-# Custom brightness adjustment for images
-def add_noise(img, noise_factor):
-    return img + torch.randn_like(img) * noise_factor
-
-# Custom transform that applies random noise
-class RandomNoise:
-    def __init__(self, noise_range=(0., 0.1)):
-        self.noise_range = noise_range
-
-    def __call__(self, img):
-        noise_factor = random.uniform(*self.noise_range)
-        return add_noise(img, noise_factor)
-
-# Define the augmentation pipeline
-def get_augmentations(img_size=64):
-    return v2.Compose([
-        v2.RandomHorizontalFlip(),
-        v2.RandomVerticalFlip(),
-        #v2.RandomRotation(degrees=(0, 360)),
-        v2.RandomResizedCrop(size=(img_size, img_size), scale=(0.8, 1.0), ratio=(0.9, 1.1), antialias=True),
-        RandomBrightnessAdjust(brightness_range=(0.2, 5)),
-        RandomNoise(noise_range=(0., 0.1)),
-        #v2.GaussianBlur(kernel_size=(5, 5), sigma=(0.1, 2.0)),
-        #v2.Lambda(lambda img: img + torch.randn_like(img) * 0.05),
-    ])
-
-def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, metric='cosine', combine='min', use_weights=True, max_pool=False):
+def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, 
+                  metric='cosine', combine='min', use_weights=True, max_pool=False, cls_token=False):
     
     if n_batches is None:
         n_batches = len(dataloader)
     print(f'Performing similarity search on {min(len(dataloader), n_batches)} batches...')
     model.eval()
 
-    if max_pool:
-        # Select max feature across all samples
-        target_latent, _ = torch.max(target_latent, dim=1, keepdim=True)
+    if hasattr(model, 'module'):
+        num_extra_tokens = model.module.num_extra_tokens
+    else:
+        num_extra_tokens = model.num_extra_tokens
+    
+    target_latent = target_latent.to(device, non_blocking=True)
+    if cls_token:
+        # Use cls token
+        target_latent = target_latent[:,:1]
+        print(target_latent.shape)
+    else:
+        # Remove cls token and any other extra tokens
+        target_latent = target_latent[:,num_extra_tokens:]
+        if max_pool:
+            # Select max feature across all samples
+            target_latent, _ = torch.max(target_latent, dim=1, keepdim=True)
 
     sim_scores = []
     with torch.no_grad():
         # Loop through spectra in dataset
-        for i, (samples, _, _, _) in enumerate(dataloader):  # added extra one since currently returning labels
+        for i, (samples, _, ra_decs, _) in enumerate(dataloader):
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
+            ra_decs = ra_decs.to(device, non_blocking=True)
 
+            # Map to latent space
             if hasattr(model, 'module'):
-                print('module...')
-                test_latent, _, _ = model.module.forward_encoder(samples, mask_ratio=0., reshape_out=False)
+                test_latent, _, _ = model.module.forward_features(samples, ra_dec=ra_decs, 
+                                                                  reshape_out=False)
             else:
-                test_latent, _, _ = model.forward_encoder(samples, mask_ratio=0., reshape_out=False)
-            
-            print('test_latent.shape:', test_latent.shape)
+                test_latent, _, _ = model.forward_features(samples, ra_dec=ra_decs,
+                                                           reshape_out=False)
 
-            # Remove cls token - EXPERIMENT WITH THIS --> changed for attention pooling
-            attn_pool = False
-            if attn_pool:
-                test_latent = test_latent[:,0,:]
+            if cls_token:
+                # Use cls token
+                test_latent = test_latent[:,:1]
             else:
-                test_latent = test_latent[:,:,:]#, 1:]
-
-            print('test_latent.shape:', test_latent.shape)
-            if max_pool and not attn_pool:
-                test_latent, _ = torch.max(test_latent, dim=1, keepdim=True)
+                # Remove cls token
+                test_latent = test_latent[:,num_extra_tokens:]
+                if max_pool:
+                    # Select max feature across all samples
+                    test_latent, _ = torch.max(test_latent, dim=1, keepdim=True)
 
             # Try to put all features on the same scale
             if i==0:
                 mean_feats = test_latent.mean(dim=(0, 1))
                 std_feats = test_latent.std(dim=(0, 1), unbiased=True) 
-                #target_latent = (target_latent - mean_feats) / (std_feats + 1e-8)
-                #print('test_latent.shape:', test_latent.shape)
-
+                print(mean_feats.shape, test_latent.shape)
+                target_latent = (target_latent - mean_feats) / (std_feats + 1e-8)
             test_latent = (test_latent - mean_feats) / (std_feats + 1e-8)
             print('test_latent.shape:', test_latent.shape)
             #print(test_latent[0])

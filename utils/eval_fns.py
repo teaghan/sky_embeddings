@@ -113,16 +113,16 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
             ra_decs = ra_decs.to(device, non_blocking=True)
             labels = labels.to(device, non_blocking=True)
 
-            if hasattr(model, 'module'): # should just pass 1 at a time or so
-                latent, _, _ = model.module.forward_encoder(samples, ra_dec=ra_decs, 
-                                                            mask_ratio=mask_ratio, mask=None, 
+            if hasattr(model, 'module'):
+                latent, _, _ = model.module.forward_features(samples, ra_dec=ra_decs, 
+                                                            mask=None, 
                                                             reshape_out=False)
                 num_extra_tokens = model.module.num_extra_tokens
                 if model.module.attn_pool:
                     remove_cls = False 
             else:
-                latent, _, _ = model.forward_encoder(samples, ra_dec=ra_decs, 
-                                                     mask_ratio=mask_ratio, mask=None, 
+                latent, _, _ = model.forward_features(samples, ra_dec=ra_decs, 
+                                                     mask=None, 
                                                     reshape_out=False)
                 num_extra_tokens = model.module.num_extra_tokens
                 if model.attn_pool:
@@ -160,11 +160,12 @@ def ft_predict(model, dataloader, device, num_batches=None, return_images=False,
 
     print(f'Running predictions on {num_batches} batches...')
     
-    for i, (samples, masks, labels) in enumerate(dataloader):
+    for i, (samples, masks, ra_decs, labels) in enumerate(dataloader):
         
         # Switch to GPU if available
         samples = samples.to(device, non_blocking=True)
         masks = masks.to(device, non_blocking=True)
+        ra_decs = ra_decs.to(device, non_blocking=True)
         labels = labels.to(device, non_blocking=True)
         if use_label_errs:
             # Don't need label uncertainties
@@ -172,7 +173,7 @@ def ft_predict(model, dataloader, device, num_batches=None, return_images=False,
             labels = labels[:,:num_labels]
     
         # Run predictions
-        model_outputs = model(samples, mask=masks)
+        model_outputs = model(samples, mask=masks, ra_dec=ra_decs)
 
         if hasattr(model, 'module'):
             model = model.module

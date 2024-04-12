@@ -6,8 +6,9 @@ import numpy as np
 import ast
 
 from utils.misc import str2bool, h5_snr
-from utils.mim_vit import build_model
-from utils.dataloaders import build_unions_dataloader
+from utils.mim_vit import build_model as build_mim
+from utils.vit import build_model as build_vit
+from utils.dataloaders import build_h5_dataloader
 from utils.plotting_fns import display_images, plot_dual_histogram, normalize_images
 from utils.eval_fns import mae_latent
 from utils.similarity import mae_simsearch, compute_similarity
@@ -26,11 +27,13 @@ def parseArguments():
     parser.add_argument("-tst_fn", "--test_fn", #  make a larget set here or stream 
                         type=str, default='dr5_eval_set_dwarfs_class.h5') # add validation set with known dwarfs here? --> take some out from train --> make larger set for sure when done debuging  
     parser.add_argument("-tgt_i", "--target_indices", 
-                        default='[3,4]')
+                        default='[1,2]')
     parser.add_argument("-aug", "--augment_targets", 
                         type=str, default='True')
     parser.add_argument("-mp", "--max_pool", 
                         type=str, default='True')
+    parser.add_argument("-ct", "--cls_token", 
+                        type=str, default='False')
     parser.add_argument("-snr", "--snr_range", 
                         default='[2,7]')
     parser.add_argument("-bs", "--batch_size", 
@@ -65,6 +68,7 @@ else:
     target_indices = None
 augment_targets = str2bool(args.augment_targets)
 max_pool = str2bool(args.max_pool)
+cls_token = str2bool(args.cls_token)
 snr_range = ast.literal_eval(args.snr_range)
 batch_size = args.batch_size
 metric = args.metric
@@ -96,15 +100,35 @@ print(f'Using a {device} device with {n_gpu} GPU(s)')
 config = configparser.ConfigParser()
 config.read(config_dir+model_name+'.ini')
 
-# Construct the model and load pretrained weights
 model_filename =  os.path.join(model_dir, model_name+'.pth.tar') 
-model, losses, cur_iter = build_model(config, model_filename, device, build_optimizer=False)
+
+if 'pretained_mae' in config['TRAINING']:
+    mae_name = config['TRAINING']['pretained_mae']
+    if mae_name=='None':
+        mae_filename = 'None'
+        mae_config = config
+    else:
+        # Load pretrained MAE configuration
+        mae_config = configparser.ConfigParser()
+        mae_config.read(config_dir+mae_name+'.ini')
+        mae_filename =  os.path.join(model_dir, mae_name+'.pth.tar')
+        
+    # Construct the model and load pretrained weights
+    model, losses, cur_iter = build_vit(config, mae_config, 
+                                        model_filename, mae_filename,
+                                        device, build_optimizer=False)
+
+else:
+    mae_config = config
+    # Construct the model and load pretrained weights
+    model, losses, cur_iter = build_mim(config, model_filename, device, build_optimizer=False)
 
 # Calculate S/N of images in test dataset
 print('Estimating S/N for test dataset images...')
 test_snr = h5_snr(os.path.join(data_dir, test_fn), n_central_pix=8, batch_size=5000)
 # Calculate minimum snr of the 5 channels
-test_snr = np.min(test_snr, axis=(1))
+#test_snr = np.min(test_snr, axis=(1))
+test_snr = np.nanmin(test_snr[:,:5], axis=(1))
 
 # Only use images in specified S/N range
 test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
@@ -140,9 +164,9 @@ test_dataloader = build_unions_dataloader(batch_size=batch_size,
 
 print('generating target latents')
 # Map target samples to latent-space
-target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True) 
-                     # ADD AUGMENTATIONS BACK IN LATER: apply_augmentations=augment_targets, num_augmentations=64)
-print('target_latent.shape:', target_latent.shape)
+target_latent, target_images = mae_latent(model, target_dataloader, device, return_images=True, 
+                                          apply_augmentations=augment_targets, num_augmentations=64,
+                                         remove_cls=False)
 
 # Plot targets
 display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().numpy()), 
@@ -150,9 +174,9 @@ display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().
 print('targets plotted')
 
 # Compute similarity score for all test samples
-test_similarity = mae_simsearch(model, target_latent, test_dataloader, device, metric=metric, combine=combine, use_weights=True,
-                               max_pool=max_pool)
-print(len(test_similarity), len(test_indices))
+test_similarity = mae_simsearch(model, target_latent, test_dataloader, 
+                                device, metric=metric, combine=combine, use_weights=True,
+                               max_pool=max_pool, cls_token=cls_token)
 
 # Sort by similarity score
 sim_order = torch.argsort(test_similarity).cpu()

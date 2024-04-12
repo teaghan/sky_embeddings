@@ -5,7 +5,7 @@ import configparser
 from collections import defaultdict
 import torch
 
-from utils.misc import str2bool, parseArguments
+from utils.misc import str2bool, parseArguments, select_training_indices
 from utils.predictor_training_fns import run_iter
 from utils.vit import build_model
 from utils.dataloaders import build_unions_dataloader
@@ -76,15 +76,18 @@ def main(args):
     num_workers = min([os.cpu_count(),12*n_gpu])
     if num_workers>1:
         num_workers -=1
-    if n_gpu>1:
-        batch_size = int(int(config['TRAINING']['batch_size'])/n_gpu)
+
+    num_train = int(config['TRAINING']['num_train'])
+    if num_train>-1:
+        if 'crossentropy' in config['TRAINING']['loss_fn'].lower():
+            train_indices = select_training_indices(os.path.join(data_dir, config['DATA']['train_data_file']), 
+                                                    num_train, balanced=False)
+        else:    
+            train_indices = range(num_train)
     else:
-        batch_size = int(config['TRAINING']['batch_size'])
+        train_indices = None
 
-    #num_train = int(config['TRAINING']['num_train'])
-    #train_indices = range(num_train) if num_train>-1 else None
-
-    dataloader = build_unions_dataloader(batch_size=batch_size, 
+    dataloader = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
                                                 num_workers=num_workers,
                                                 patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
@@ -125,27 +128,30 @@ def main(args):
     train_network(model, dataloader_train, dataloader_val, 
                   optimizer, lr_scheduler, device,
                   losses, cur_iter, 
+                  config['TRAINING']['loss_fn'],
                   int(float(config['TRAINING']['total_batch_iters'])),
                   args.verbose_iters, args.cp_time, model_filename, fig_dir,
                  str2bool(config['TRAINING']['use_label_errs']))
 
 def train_network(model, dataloader_train, dataloader_val, optimizer, lr_scheduler, device, 
-                  losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir,
+                  losses, cur_iter, loss_fn, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir,
                   use_label_errs):
     print('Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size))
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
           (verbose_iters, cp_time))
-    
+
+    best_val_loss = np.inf
     # Train the neural networks
     losses_cp = defaultdict(list)
     cp_start_time = time.time()
     while cur_iter < (total_batch_iters):
         # Iterate through training dataset
-        for input_samples, sample_masks, sample_labels in dataloader_train:
+        for input_samples, sample_masks, ra_decs, sample_labels in dataloader_train:
             
             # Switch to GPU if available
             input_samples = input_samples.to(device, non_blocking=True)
             sample_masks = sample_masks.to(device, non_blocking=True)
+            ra_decs = ra_decs.to(device, non_blocking=True)
             sample_labels = sample_labels.to(device, non_blocking=True)
 
             if use_label_errs:
@@ -157,10 +163,11 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                 sample_label_errs = None
             
             # Run an iteration of training
-            model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, sample_masks, sample_labels,
+            model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, sample_masks, ra_decs, sample_labels,
                                                                  optimizer, 
                                                                  lr_scheduler, 
                                                                  losses_cp, 
+                                                                 loss_fn,
                                                                  label_uncertainties=sample_label_errs,
                                                                  mode='train')
                             
@@ -168,10 +175,11 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
             if cur_iter % verbose_iters == 0:
 
                 with torch.no_grad():
-                    for i, (input_samples, sample_masks, sample_labels) in enumerate(dataloader_val):
+                    for i, (input_samples, sample_masks, ra_decs, sample_labels) in enumerate(dataloader_val):
                         # Switch to GPU if available
                         input_samples = input_samples.to(device, non_blocking=True)
                         sample_masks = sample_masks.to(device, non_blocking=True)
+                        ra_decs = ra_decs.to(device, non_blocking=True)
                         sample_labels = sample_labels.to(device, non_blocking=True)
 
 
@@ -184,12 +192,17 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                             sample_label_errs = None
 
                         # Run an iteration
-                        model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, sample_masks, sample_labels,
+                        model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, 
+                                                                             sample_masks, ra_decs, sample_labels,
                                                                              optimizer, 
                                                                              lr_scheduler, 
                                                                              losses_cp, 
+                                                                             loss_fn,
                                                                              label_uncertainties=sample_label_errs,
                                                                              mode='val')
+                        # Don't bother with the whole dataset
+                        if i>=200:
+                            break
                 
                 # Calculate averages
                 for k in losses_cp.keys():
@@ -198,20 +211,43 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                 
                 # Print current status
                 print('\nBatch Iterations: %i/%i ' % (cur_iter, total_batch_iters))
-                print('Losses:')
                 print('\tTraining Dataset')
                 print('\t\tTotal Loss: %0.3f'% (losses['train_loss'][-1]))
+                if 'mse' in loss_fn.lower():
+                    print('\t\tMAE: %0.3f'% (losses['train_mae'][-1]))
+                else:
+                    print('\t\tAccuracy: %0.3f'% (losses['train_acc'][-1]))
                 print('\tValidation Dataset')
                 print('\t\tTotal Loss: %0.3f'% (losses['val_loss'][-1]))
+                if 'mse' in loss_fn.lower():
+                    print('\t\tMAE: %0.3f'% (losses['val_mae'][-1]))
+                else:
+                    print('\t\tAccuracy: %0.3f'% (losses['val_acc'][-1]))
 
                 # Reset checkpoint loss dictionary
                 losses_cp = defaultdict(list)
                 
                 if len(losses['batch_iters'])>1:
+
+                    if 'mse' in loss_fn.lower():
+                        y_lims = [(0,0.005), (0,0.1)]
+                    else:
+                        y_lims = [(0,0.2), (0.7,1)]
                     # Plot progress
-                    plot_progress(losses, y_lims=[(0,0.005)], 
+                    plot_progress(losses, y_lims=y_lims, 
                                   savename=os.path.join(fig_dir, 
                                                         f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
+
+                # Save best model
+                if losses['val_loss'][-1]<best_val_loss:
+                    best_val_loss = losses['val_loss'][-1]
+                    print('Saving network...')
+                    torch.save({'batch_iters': cur_iter,
+                                    'losses': losses,
+                                    'optimizer' : optimizer.state_dict(),
+                                    'lr_scheduler' : lr_scheduler.state_dict(),
+                                    'model' : model.module.state_dict()},
+                                    model_filename.replace('.pth.tar', '_best.pth.tar'))
 
             # Increase the iteration
             cur_iter += 1

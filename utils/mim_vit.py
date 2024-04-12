@@ -13,6 +13,8 @@ cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)
 from pos_embed import get_2d_sincos_pos_embed
 from misc import str2bool
+from location_encoder import LocationEncoder
+
 
 def build_model(config, model_filename, device, build_optimizer=False):
 
@@ -127,6 +129,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
         optimizer = torch.optim.AdamW(param_groups, lr=init_lr, betas=(0.9, 0.95))
 
         # Learning rate scheduler
+        '''
         lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, init_lr,
                                                            total_steps=int(total_batch_iters), 
                                                            pct_start=0.05, anneal_strategy='cos', 
@@ -135,6 +138,11 @@ def build_model(config, model_filename, device, build_optimizer=False):
                                                            max_momentum=0.95, div_factor=25.0, 
                                                            final_div_factor=final_lr_factor, 
                                                            three_phase=False)
+        '''
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 
+                                                                  int(total_batch_iters), 
+                                                                  eta_min=init_lr/final_lr_factor)
+
         model, losses, cur_iter = load_model(model, model_filename, optimizer, lr_scheduler)
         
         return model, losses, cur_iter, optimizer, lr_scheduler
@@ -200,7 +208,11 @@ class MaskedAutoencoderViT(nn.Module):
 
         if self.ra_dec:
             # Mapping for Right Ascension and Dec to the Embedding space
-            self.ra_dec_embed = nn.Linear(2, embed_dim, bias=True)
+            self.ra_dec_embed = LocationEncoder(neural_network_name="siren", 
+                                                legendre_polys=5,
+                                                dim_hidden=8,
+                                                num_layers=1,
+                                                num_classes=embed_dim)
             self.num_extra_tokens = 2
         else:
             self.num_extra_tokens = 1
@@ -208,8 +220,8 @@ class MaskedAutoencoderViT(nn.Module):
         # Class token that is the same size as the embeddings
         # This CLS token is prepended to the sequence of patch embeddings before the sequence is fed into the transformer encoder. 
         # The purpose of the CLS token is to aggregate information from the entire image as it passes through the transformer layers. 
-        # By the end of the transformer layers, the CLS token's embedding is expected to contain a global representation of the input image,
-        # which can be used for image classification or other downstream tasks.
+        # By the end of the transformer layers, the CLS token's embedding is expected to contain a global representation of the input
+        # image, which can be used for image classification or other downstream tasks.
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
 
         # Fixed sin-cos embedding to identify the spatial position of each patch
@@ -366,9 +378,9 @@ class MaskedAutoencoderViT(nn.Module):
 
         return x_masked, mask, ids_restore
             
-    def forward_encoder(self, x, ra_dec=None, mask_ratio=0, mask=None, reshape_out=True):
-        print(x.shape)
-        B, C, H, W = 64, 5, 64, 64 #x.shape
+    def forward_features(self, x, ra_dec=None, mask_ratio=0, mask=None, reshape_out=True):
+
+        B, C, H, W = x.shape
         # Normalize input images
         x = self.norm_inputs(x)
         
@@ -383,8 +395,6 @@ class MaskedAutoencoderViT(nn.Module):
             ids_restore = None
             
             # Image is masked where mask==1 and replaced with the values in patch_mask_values
-            # Additionally, replace NaN values with patch_mask_values
-            x = torch.where(torch.isnan(x), patch_mask_values, x)
             if mask is not None:
                 x = x * (1 - mask) + patch_mask_values * mask
         
@@ -398,11 +408,10 @@ class MaskedAutoencoderViT(nn.Module):
             x, mask, ids_restore = self.random_masking(x, mask_ratio)
 
         if self.ra_dec:
-            # Normalize between -1 and 1
-            ra_dec = self.normalize_ra_dec(ra_dec)
+            # Map RA and Dec to embedding space and add positional embedding
+            ra_dec = self.ra_dec_embed(ra_dec) + self.pos_embed[:, 1]
             # Append RA and Dec token
-            ra_dec = self.ra_dec_embed(ra_dec).unsqueeze(1)
-            x = torch.cat((ra_dec, x), dim=1)
+            x = torch.cat((ra_dec.unsqueeze(1), x), dim=1)
         
         # Append cls token
         cls_token = self.cls_token + self.pos_embed[:, :1, :]
@@ -541,7 +550,7 @@ class MaskedAutoencoderViT(nn.Module):
         return torch.stack((normalized_ra, normalized_dec), dim=1)
 
     def forward(self, imgs, ra_dec=None, mask_ratio=0.75, mask=None, denorm_out=False):
-        latent, mask, ids_restore = self.forward_encoder(imgs, ra_dec=ra_dec,
+        latent, mask, ids_restore = self.forward_features(imgs, ra_dec=ra_dec,
                                                          mask_ratio=mask_ratio, mask=mask)
         pred = self.forward_decoder(latent, ids_restore)  # [N, L, p*p*3]
         # Normalize inputs before computing loss

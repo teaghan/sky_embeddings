@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import h5py
-from utils_new import getPatches, cutouts_to_hdf5, get_cutouts_from_patch
+from utils import getPatches, cutouts_to_hdf5, get_cutouts_from_patch
 import pandas as pd
 import glob
 import shutil
@@ -115,8 +115,6 @@ out_dir = '/home/obriaint/scratch/sky_embeddings/data/'
 
 bands = ['G', 'I', 'R', 'Y', 'Z', 'NB0387', 'NB0816', 'NB0921', 'NB1010']
 
-use_calexp = True
-
 batch_size = 100
 
 # Command line argument
@@ -203,6 +201,17 @@ if 'lense' in file_type:
         else:
             create_h5_dataset(fits_paths, bands, use_calexp, img_size, out_dir, out_filename, labels_path=labels_path,
                               patch_strategy='all', n_patches=-1)
+
+
+if 'unknown' in file_type:
+    # Stars
+    for out_name, use_calexp in zip(['HSC_dud_unknown_calexp_GIRYZ7610_64', 'HSC_dud_unknown_GIRYZ7610_64'],
+                                    [True, False]):
+        labels_path = os.path.join(out_dir,'HSC_unknown_dud.csv')
+        patch_start = 0
+        patch_end = 1515
+        create_h5_subsets(fits_paths, out_name, labels_path, out_dir, patch_start, patch_end, batch_size,
+                              bands, use_calexp, img_size)
 
 '''
 if 'dwarf' in file_type:
