@@ -101,7 +101,7 @@ def main(args):
     train_val_idx, test_idx = train_test_split(range(len(dataloader)), test_size=0.2, random_state=42)
     train_idx, val_idx = train_test_split(train_val_idx, test_size=0.2, random_state=42) 
 
-    dataloader_train = build_unions_dataloader(batch_size=batch_size, 
+    dataloader_train = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']),
                                                 num_workers=num_workers,
                                                 patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
@@ -112,7 +112,7 @@ def main(args):
                                                 eval_data_file=(mae_config['DATA']['lp_regress_data_file_train']),
                                                 augment=str2bool(config['TRAINING']['augment']), indices=train_idx)
     
-    dataloader_val = build_unions_dataloader(batch_size=batch_size, 
+    dataloader_val = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']),
                                                 num_workers=num_workers,
                                                 patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
@@ -229,12 +229,12 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                 
                 if len(losses['batch_iters'])>1:
 
-                    if 'mse' in loss_fn.lower():
-                        y_lims = [(0,0.005), (0,0.1)]
-                    else:
-                        y_lims = [(0,0.2), (0.7,1)]
+                    #if 'mse' in loss_fn.lower():
+                    #    y_lims = [(0,0.005), (0,0.1)]
+                    #else:
+                    #    y_lims = [(0,0.2), (0.7,1)]
                     # Plot progress
-                    plot_progress(losses, y_lims=y_lims, 
+                    plot_progress(losses, #y_lims=y_lims, 
                                   savename=os.path.join(fig_dir, 
                                                         f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
 

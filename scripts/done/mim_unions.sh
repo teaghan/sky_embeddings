@@ -6,4 +6,4 @@ source /home/a4ferrei/mae_env/bin/activate
 module load hdf5/1.10.6
 
 # Run MAE training
-python /home/a4ferrei/scratch/github/sky_embeddings/pretrain_mim.py mim_86_unions -v 1000 -ct 10.00
+python /home/a4ferrei/scratch/github/sky_embeddings/pretrain_mim.py mim_87_unions -v 1 -ct 10.00

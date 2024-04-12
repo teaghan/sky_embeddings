@@ -1,7 +1,7 @@
 import torch
 
 def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, 
-                  metric='cosine', combine='min', use_weights=True, max_pool=False, cls_token=False):
+                  metric='cosine', combine='min', use_weights=True, max_pool=False, cls_token=False, attn_pool=False):
     
     if n_batches is None:
         n_batches = len(dataloader)
@@ -154,7 +154,7 @@ def weighted_MAE(target_feats, test_feats, weights):
     weighted_squared_error = squared_error * weights / torch.sum(weights)
     return torch.mean(weighted_squared_error, dim=-1)
 
-def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean', use_weights=True, n_central_patches=None, n_top_sims=None, attn_pool=False):
+def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean', use_weights=True, n_central_patches=None, n_top_sims=None, attn_pool=False, select_centre=None):
 
     '''
     Compute the similarity between the samples in test_latent against the features in target_latent.
@@ -178,7 +178,7 @@ def compute_similarity(target_latent, test_latent, metric='MAE', combine='mean',
     elif (metric=='cosine'):
         largest = True
     
-    if n_central_patches is not None:
+    if select_centre is not None:
         # Select central patch features as targets
         target_latent = select_centre(target_latent, n_central_patches)
         # Also do for test latents?
