@@ -8,7 +8,7 @@ import ast
 from utils.misc import str2bool, h5_snr
 from utils.mim_vit import build_model as build_mim
 from utils.vit import build_model as build_vit
-from utils.dataloaders import build_h5_dataloader
+from utils.dataloaders import build_unions_dataloader
 from utils.plotting_fns import display_images, plot_dual_histogram, normalize_images
 from utils.eval_fns import mae_latent
 from utils.similarity import mae_simsearch, compute_similarity
@@ -135,7 +135,7 @@ test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
 
 # overwriting target indices
 #target_indices =  list(range(32))[1:]
-target_indices = list(range(1,8)) + [10,11]
+target_indices = list(range(1,8)) + [11,12]
 #target_indices = list(range(1,7)) # look into how this works out with test snr
 # or individual at index 7 
 
