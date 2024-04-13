@@ -181,7 +181,7 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
                             num_patches=num_patches,
                             label_keys=None, transform=transforms, indices=indices)
         
-    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=0, 
+    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, 
                                        pin_memory=True, drop_last=True, shuffle=False)
 
 class MaskGenerator:
@@ -558,7 +558,7 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
         else:
             self.mask_generator = None
 
-        self.__printstats__()
+        #self.__printstats__()
                         
     def __len__(self):
         if self.indices is not None:
