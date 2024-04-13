@@ -89,7 +89,7 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
     with torch.no_grad():
         # Loop through spectra in dataset
         for batch_idx, (samples, masks, ra_decs, labels) in enumerate(dataloader):
-            print('samples.shape:', samples.shape)
+            #print('samples.shape:', samples.shape)
             # Apply augmentations if enabled
             augmented_samples = []
             label_lst = []
@@ -131,7 +131,7 @@ def mae_latent(model, dataloader, device, mask_ratio=0., n_batches=None, return_
                 # Remove cls token
                 latent = latent[:,num_extra_tokens:]
 
-            print('latent', latent)
+            #print('latent', latent)
             
             latents.append(latent.detach().cpu())
             y.append(labels.detach().cpu())

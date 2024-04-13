@@ -59,10 +59,10 @@ def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler
 def plot_confusion_matrix(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
     sns.heatmap(cm, annot=True, cmap='Blues', fmt='g', cbar=False)
-    plt.xlabel('Predicted')
-    plt.ylabel('True')
+    plt.xlabel('Predicted Class')
+    plt.ylabel('True Class')
     plt.title('Confusion Matrix')
-    plt.show()
+    plt.savefig('cm.png')
 
 def plot_roc_curve(y_true, y_prob):
     auc = roc_auc_score(y_true, y_prob)
@@ -76,7 +76,7 @@ def plot_roc_curve(y_true, y_prob):
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic')
     plt.legend(loc="lower right")
-    plt.show()
+    plt.savefig('cm.png')
 
 def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_template_class, class_data_path=None,
                  regress_data_path=None, combine='central', remove_cls=True):
@@ -92,13 +92,14 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              model, device, dataloader_template_class, regression=False,
                              y_label='is_dwarf', combine=combine, remove_cls=remove_cls)
         
-        print('x.shape, y.shape', x.shape, y.shape) # [896, 0]
-        
         # Splitting the dataset into training and testing sets
-        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
+        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=42, shuffle=True)
+        # ARTIFICIALLY REDUCING THE TRAINING SET SIZE AND INCEARING TEST
+        print('len of test dwarfs:', len(y_test))
+        print('len of train dwarfs:', len(y_train))
         
         # Creating and training a classifier
-        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, C=0.01, random_state=42)
+        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=1000, C=0.01, random_state=42)
         clf.fit(X_train, y_train)
         
         # Predicting the class label
@@ -129,6 +130,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         
         # remove entries where y is NaN (because that means we don't have zspec)
         # make validation set of just known zspec ones?
+        '''
         unknown_y = np.where(np.isnan(y))[0] 
         print(f'removing {len(unknown_y)} examples from linear probe set due to unknown zspec')
         x = np.delete(x, unknown_y, axis=0)
@@ -138,6 +140,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         print(f'removing {len(unknown_x)} examples from linear probe set due to nan in representation')
         x = np.delete(x, unknown_x, axis=0)
         y = np.delete(y, unknown_x, axis=0)
+        '''
 
         #indices = np.where((y[:, 0] > -1) & (y[:, 0] < 5)) # standard scaled so its a bit weird - maybe do cut before hand
         #print(f'removing {len(y)-len(indices)} examples where zspec is out of range')
@@ -149,7 +152,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         
         # Creating and training a linear model for regression
         #regressor = LinearRegression()
-        regressor = ElasticNet(alpha=0.000001, l1_ratio=0.9, max_iter=10000, random_state=0) # discontinued: normalize=True)
+        regressor = ElasticNet(alpha=0.000001, l1_ratio=0.9, max_iter=1000, random_state=0) # discontinued: normalize=True)
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
@@ -196,8 +199,8 @@ def get_embeddings(data_path, model, device, dataloader_template_1,
     latent_features, y = mae_latent(model, dataloader, device, verbose=0, remove_cls=remove_cls, return_y=True, y_label=y_label)
     latent_features = latent_features.data.cpu().numpy()
     y = y.data.cpu().numpy()
-    print('latent_features.shape:', latent_features.shape) 
-    print('y.shape:', y.shape)
+    #print('latent_features.shape:', latent_features.shape) 
+    #print('y.shape:', y.shape)
 
     # Collect targets
     #with h5py.File(data_path, "r") as f:
