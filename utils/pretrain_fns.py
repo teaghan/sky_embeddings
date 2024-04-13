@@ -14,7 +14,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression, ElasticNet
 from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
 from sklearn.preprocessing import StandardScaler
-
+from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve
+import seaborn as sns
 from matplotlib import pyplot as plt
 
 def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler,
@@ -55,6 +56,28 @@ def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler
                 
     return model, optimizer, lr_scheduler, losses_cp
 
+def plot_confusion_matrix(y_true, y_pred):
+    cm = confusion_matrix(y_true, y_pred)
+    sns.heatmap(cm, annot=True, cmap='Blues', fmt='g', cbar=False)
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.title('Confusion Matrix')
+    plt.show()
+
+def plot_roc_curve(y_true, y_prob):
+    auc = roc_auc_score(y_true, y_prob)
+    fpr, tpr, thresholds = roc_curve(y_true, y_prob)
+    plt.figure()
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic')
+    plt.legend(loc="lower right")
+    plt.show()
+
 def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_template_class, class_data_path=None,
                  regress_data_path=None, combine='central', remove_cls=True):
     '''Train a quick linear probing model to evaluate the quality of the embeddings.'''
@@ -88,6 +111,13 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
     
         losses_cp['train_lp_acc'].append(float(train_accuracy))
         losses_cp['val_lp_acc'].append(float(test_accuracy))
+
+         # Plot Confusion Matrix
+        plot_confusion_matrix(y_test, y_pred_test)
+
+        # Plot AUC and ROC Curve
+        plot_roc_curve(y_test, clf.predict_proba(X_test)[:,1])
+
     if regress_data_path:
         # Regression task
         x,y = get_embeddings(regress_data_path, 
