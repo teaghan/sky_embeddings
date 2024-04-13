@@ -201,6 +201,7 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
     cp_start_time = time.time()
     #time1 = time.time()
     while cur_iter < (total_batch_iters):
+        print('cur_iter:', cur_iter)
 
         # Iterate through training dataset
         # (this might return a batch and then it just iterates over that?)
@@ -208,22 +209,20 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
             samples = samples.squeeze(1)
             masks = masks.squeeze(1)
             ra_decs = ra_decs.squeeze(1)
-
-            print('cur_iter:', cur_iter)
-            #print(samples.shape)
-            #print(masks.shape)
-            #print(ra_decs.shape)
+            print('batch loaded.')
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
             masks = masks.to(device, non_blocking=True)
             ra_decs = ra_decs.to(device, non_blocking=True)
+            print('batch on gpu.')
             
             # Run an iteration of training
             model, optimizer, lr_scheduler, losses_cp = run_iter(model, samples, ra_decs, masks,
                                                                  mask_ratio, optimizer, 
                                                                  lr_scheduler, 
                                                                  losses_cp, mode='train')
+            print('training iter done.')
             
             #if cur_iter % 100 == 0:
             #    time_el = time.time()-time1

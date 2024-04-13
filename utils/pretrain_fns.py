@@ -68,15 +68,15 @@ def plot_roc_curve(y_true, y_prob):
     auc = roc_auc_score(y_true, y_prob)
     fpr, tpr, thresholds = roc_curve(y_true, y_prob)
     plt.figure()
-    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % auc)
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.plot(fpr, tpr, color='red', lw=2, label='ROC curve (area = %0.2f) for model' % auc)
+    plt.plot([0, 1], [0, 1], color='k', lw=2, linestyle='--', label='ROC curve for random classifier')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic')
     plt.legend(loc="lower right")
-    plt.savefig('cm.png')
+    plt.savefig('roc.png')
 
 def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_template_class, class_data_path=None,
                  regress_data_path=None, combine='central', remove_cls=True):

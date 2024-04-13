@@ -11,6 +11,7 @@ import glob
 from astropy.io import fits
 from astropy.wcs import WCS
 from sklearn.utils import shuffle
+from torch.utils.data import IterableDataset, DataLoader
 
 # TEMP
 import sys
@@ -181,7 +182,7 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
                             num_patches=num_patches,
                             label_keys=None, transform=transforms, indices=indices)
         
-    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, 
+    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=0, 
                                        pin_memory=True, drop_last=True, shuffle=False)
 
 class MaskGenerator:
@@ -358,10 +359,6 @@ class H5Dataset(torch.utils.data.Dataset):
             return cutout, mask, ra_dec
         else:
             return cutout, mask, ra_dec, labels
-        
-
-import torch
-from torch.utils.data import IterableDataset, DataLoader
 
 class StreamDataset_UNIONS(IterableDataset):
     """
@@ -473,7 +470,6 @@ class StreamDataset_UNIONS(IterableDataset):
             #    batch_cutouts[i] = (batch_cutouts[i] - min_) / (max_ - min_)
 
             batch_ra_dec = torch.from_numpy(np.asarray(self.catalog[['ra', 'dec']][start_idx:end_idx]).astype(np.float32))
-
             batch_cutouts = torch.tensor(batch_cutouts, dtype=torch.float32)
             # Apply any augmentations, etc.
             if self.transform is not None:
