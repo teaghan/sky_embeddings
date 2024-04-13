@@ -59,16 +59,29 @@ def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler
 def plot_confusion_matrix(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
     sns.heatmap(cm, annot=True, cmap='Blues', fmt='g', cbar=False)
+    plt.clf()
     plt.xlabel('Predicted Class')
     plt.ylabel('True Class')
     plt.title('Confusion Matrix')
     plt.savefig('cm.png')
 
+def plot_confusion_matrix_pct(y_true, y_pred):
+    cm = confusion_matrix(y_true, y_pred)
+    cm_sum = np.sum(cm, axis=1, keepdims=True)
+    cm_percentage = cm / cm_sum.astype(float) * 100  # Compute percentages
+    plt.clf()
+    sns.heatmap(cm_percentage, annot=True, cmap='Blues', fmt='.2f', cbar=False)  # Use fmt='.2f' for two decimal places
+    plt.xlabel('Predicted Class')
+    plt.ylabel('True Class')
+    plt.title('Confusion Matrix')
+    plt.savefig('cm_pct.png')
+
+
 def plot_roc_curve(y_true, y_prob):
     auc = roc_auc_score(y_true, y_prob)
     fpr, tpr, thresholds = roc_curve(y_true, y_prob)
     plt.figure()
-    plt.plot(fpr, tpr, color='red', lw=2, label='ROC curve (area = %0.2f) for model' % auc)
+    plt.plot(fpr, tpr, color='r', lw=1, alpha=0.8, label='ROC curve (area = %0.2f) for model' % auc)
     plt.plot([0, 1], [0, 1], color='k', lw=2, linestyle='--', label='ROC curve for random classifier')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
@@ -115,6 +128,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
 
          # Plot Confusion Matrix
         plot_confusion_matrix(y_test, y_pred_test)
+        plot_confusion_matrix_pct(y_test, y_pred_test)
 
         # Plot AUC and ROC Curve
         plot_roc_curve(y_test, clf.predict_proba(X_test)[:,1])
