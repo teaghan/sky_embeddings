@@ -99,7 +99,8 @@ def main(args):
                                                 augment=str2bool(config['TRAINING']['augment']))
 
     print(len(dataloader))
-    print(len(dataloader)*64) # 6k?
+    print(len(dataloader)*64) 
+    print(len(dataloader.dataset)) # 6k?
     train_val_idx, test_idx = train_test_split(range(len(dataloader.dataset)), test_size=0.2, random_state=42)
     train_idx, val_idx = train_test_split(train_val_idx, test_size=0.2, random_state=42) 
 
@@ -125,7 +126,7 @@ def main(args):
                                                 eval_data_file=(config['DATA']['lp_regress_data_file_train']),
                                                 augment=str2bool(config['TRAINING']['augment']), indices=val_idx)
     
-    print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset))) # wrong size here
+    print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
 
     train_network(model, dataloader_train, dataloader_val, 
                   optimizer, lr_scheduler, device,
@@ -211,50 +212,50 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                         #if i>=200:
                         #    break
                 
-            # Calculate averages
-            for k in losses_cp.keys():
-                losses[k].append(np.mean(np.array(losses_cp[k]), axis=0))
-            losses['batch_iters'].append(cur_iter)
-            
-            # Print current status
-            print('\nBatch Iterations: %i/%i ' % (cur_iter, total_batch_iters))
-            print('\tTraining Dataset')
-            print('\t\tTotal Loss: %0.3f'% (losses['train_loss'][-1]))
-            if 'mse' in loss_fn.lower():
-                print('\t\tMAE: %0.3f'% (losses['train_mae'][-1]))
-            else:
-                print('\t\tAccuracy: %0.3f'% (losses['train_acc'][-1]))
-            print('\tValidation Dataset')
-            print('\t\tTotal Loss: %0.3f'% (losses['val_loss'][-1]))
-            if 'mse' in loss_fn.lower():
-                print('\t\tMAE: %0.3f'% (losses['val_mae'][-1]))
-            else:
-                print('\t\tAccuracy: %0.3f'% (losses['val_acc'][-1]))
+        # Calculate averages
+        for k in losses_cp.keys():
+            losses[k].append(np.mean(np.array(losses_cp[k]), axis=0))
+        losses['batch_iters'].append(cur_iter)
+        
+        # Print current status
+        print('\nBatch Iterations: %i/%i ' % (cur_iter, total_batch_iters))
+        print('\tTraining Dataset')
+        print('\t\tTotal Loss: %0.3f'% (losses['train_loss'][-1]))
+        if 'mse' in loss_fn.lower():
+            print('\t\tMAE: %0.3f'% (losses['train_mae'][-1]))
+        else:
+            print('\t\tAccuracy: %0.3f'% (losses['train_acc'][-1]))
+        print('\tValidation Dataset')
+        print('\t\tTotal Loss: %0.3f'% (losses['val_loss'][-1]))
+        if 'mse' in loss_fn.lower():
+            print('\t\tMAE: %0.3f'% (losses['val_mae'][-1]))
+        else:
+            print('\t\tAccuracy: %0.3f'% (losses['val_acc'][-1]))
 
-            # Reset checkpoint loss dictionary
-            losses_cp = defaultdict(list)
-            
-            if len(losses['batch_iters'])>1:
+        # Reset checkpoint loss dictionary
+        losses_cp = defaultdict(list)
+        
+        if len(losses['batch_iters'])>1:
 
-                #if 'mse' in loss_fn.lower():
-                #    y_lims = [(0,0.005), (0,0.1)]
-                #else:
-                #    y_lims = [(0,0.2), (0.7,1)]
-                # Plot progress
-                plot_progress(losses, #y_lims=y_lims, 
-                                savename=os.path.join(fig_dir, 
-                                                    f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
+            #if 'mse' in loss_fn.lower():
+            #    y_lims = [(0,0.005), (0,0.1)]
+            #else:
+            #    y_lims = [(0,0.2), (0.7,1)]
+            # Plot progress
+            plot_progress(losses, #y_lims=y_lims, 
+                            savename=os.path.join(fig_dir, 
+                                                f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
 
-            # Save best model
-            if losses['val_loss'][-1]<best_val_loss:
-                best_val_loss = losses['val_loss'][-1]
-                print('Saving network...')
-                torch.save({'batch_iters': cur_iter,
-                                'losses': losses,
-                                'optimizer' : optimizer.state_dict(),
-                                'lr_scheduler' : lr_scheduler.state_dict(),
-                                'model' : model.module.state_dict()},
-                                model_filename.replace('.pth.tar', '_best.pth.tar'))
+        # Save best model
+        if losses['val_loss'][-1]<best_val_loss:
+            best_val_loss = losses['val_loss'][-1]
+            print('Saving network...')
+            torch.save({'batch_iters': cur_iter,
+                            'losses': losses,
+                            'optimizer' : optimizer.state_dict(),
+                            'lr_scheduler' : lr_scheduler.state_dict(),
+                            'model' : model.module.state_dict()},
+                            model_filename.replace('.pth.tar', '_best.pth.tar'))
 
         # Increase the iteration
         cur_iter += 1
