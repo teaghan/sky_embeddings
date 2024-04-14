@@ -105,7 +105,7 @@ def main(args):
                                             use_label_errs=str2bool(config['TRAINING']['use_label_errs']))
 
     snr_vals = h5_snr(h5_path=os.path.join(data_dir, config['DATA']['lp_regress_data_file_train']), 
-                      n_central_pix=8, batch_size=5000, num_samples=None)
+                      n_central_pix=8, batch_size=5000, num_samples=None)[val_idx]
     
     # Calculate minimum snr of the 5 channels
     print(snr_vals.shape)
