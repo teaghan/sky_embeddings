@@ -82,7 +82,7 @@ def plot_roc_curve(y_true, y_prob):
     fpr, tpr, thresholds = roc_curve(y_true, y_prob)
     plt.figure()
     plt.plot(fpr, tpr, color='r', lw=1, alpha=0.8, label='ROC curve (area = %0.2f) for model' % auc)
-    plt.plot([0, 1], [0, 1], color='k', lw=2, linestyle='--', label='ROC curve for random classifier')
+    plt.plot([0, 1], [0, 1], color='k', lw=1, alpha=0.8, linestyle='--', label='ROC curve for random classifier')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
