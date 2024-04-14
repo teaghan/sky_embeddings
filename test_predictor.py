@@ -5,7 +5,7 @@ import torch
 
 from utils.misc import str2bool, parseArguments, h5_snr
 from utils.vit import build_model
-from utils.dataloaders import build_h5_dataloader
+from utils.dataloaders import build_unions_dataloader
 from utils.eval_fns import ft_predict
 from utils.plotting_fns import plot_resid_hexbin, evaluate_z, plot_progress, plot_conf_mat
 
@@ -71,15 +71,16 @@ def main(args):
     # Data loaders
     num_workers = min([os.cpu_count(),12*n_gpu])
 
-    dataloader_val = build_h5_dataloader(os.path.join(data_dir, config['DATA']['val_data_file']), 
-                                        batch_size=int(config['TRAINING']['batch_size']), 
-                                        num_workers=num_workers,
-                                        label_keys=eval(config['DATA']['label_keys']),
-                                        img_size=int(config['ARCHITECTURE']['img_size']),
-                                        patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
-                                         num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
-                                        num_patches=model.module.patch_embed.num_patches,
-                                        shuffle=False)
+    dataloader_val = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']),
+                                                num_workers=num_workers,
+                                                patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
+                                                num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
+                                                max_mask_ratio=0.0, eval=True,
+                                                img_size=int(mae_config['ARCHITECTURE']['img_size']),
+                                                num_patches=model.module.patch_embed.num_patches,
+                                                label_keys=eval(mae_config['DATA']['label_keys']),
+                                                eval_data_file=(config['DATA']['lp_regress_data_file_train']),
+                                                augment=str2bool(config['TRAINING']['augment']), indices=val_idx)
     
     print('The validation set consists of %i cutouts.' % (len(dataloader_val.dataset)))
 
@@ -104,7 +105,8 @@ def main(args):
                           savename=os.path.join(fig_dir, f'{model_name}_predictions.png'))
         
         evaluate_z(pred_labels[snr_indices], tgt_labels[snr_indices], n_bins=8, z_range=(0.2,1.6), threshold=0.1, 
-                   y_lims=[(-0.08,0.08),(-0.02,0.02),(0,0.03),(0,0.1)], snr=snr[snr_indices],
+                   #y_lims=[(-0.08,0.08),(-0.02,0.02),(0,0.03),(0,0.1)], 
+                   snr=snr[snr_indices],
                    savename=os.path.join(fig_dir, f'{model_name}_redshift.png'))
     else:
         # Turn logit predictions into classes
