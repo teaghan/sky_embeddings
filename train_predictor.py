@@ -145,6 +145,7 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
     losses_cp = defaultdict(list)
     cp_start_time = time.time()
     while cur_iter < (total_batch_iters):
+        print(cur_iter)
         # Iterate through training dataset
         for input_samples, sample_masks, ra_decs, sample_labels in dataloader_train:
             
@@ -162,6 +163,7 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
             else:
                 sample_label_errs = None
             
+            print('data loader, running training iteration...')
             # Run an iteration of training
             model, optimizer, lr_scheduler, losses_cp = run_iter(model, input_samples, sample_masks, ra_decs, sample_labels,
                                                                  optimizer, 
@@ -170,18 +172,21 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                                                                  loss_fn,
                                                                  label_uncertainties=sample_label_errs,
                                                                  mode='train')
+            
+            print('training iteration complete')
                             
             # Evaluate validation set and display losses
             #if cur_iter % verbose_iters == 0:
-            if True:
+            #if True:
+            if cur_iter % 10 == 0:
                 with torch.no_grad():
+                    print('performing validation')
                     for i, (input_samples, sample_masks, ra_decs, sample_labels) in enumerate(dataloader_val):
                         # Switch to GPU if available
                         input_samples = input_samples.to(device, non_blocking=True)
                         sample_masks = sample_masks.to(device, non_blocking=True)
                         ra_decs = ra_decs.to(device, non_blocking=True)
                         sample_labels = sample_labels.to(device, non_blocking=True)
-
 
                         if use_label_errs:
                             # Collect label uncertainties
@@ -204,79 +209,79 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                         #if i>=200:
                         #    break
                 
-                # Calculate averages
-                for k in losses_cp.keys():
-                    losses[k].append(np.mean(np.array(losses_cp[k]), axis=0))
-                losses['batch_iters'].append(cur_iter)
-                
-                # Print current status
-                print('\nBatch Iterations: %i/%i ' % (cur_iter, total_batch_iters))
-                print('\tTraining Dataset')
-                print('\t\tTotal Loss: %0.3f'% (losses['train_loss'][-1]))
-                if 'mse' in loss_fn.lower():
-                    print('\t\tMAE: %0.3f'% (losses['train_mae'][-1]))
-                else:
-                    print('\t\tAccuracy: %0.3f'% (losses['train_acc'][-1]))
-                print('\tValidation Dataset')
-                print('\t\tTotal Loss: %0.3f'% (losses['val_loss'][-1]))
-                if 'mse' in loss_fn.lower():
-                    print('\t\tMAE: %0.3f'% (losses['val_mae'][-1]))
-                else:
-                    print('\t\tAccuracy: %0.3f'% (losses['val_acc'][-1]))
+        # Calculate averages
+        for k in losses_cp.keys():
+            losses[k].append(np.mean(np.array(losses_cp[k]), axis=0))
+        losses['batch_iters'].append(cur_iter)
+        
+        # Print current status
+        print('\nBatch Iterations: %i/%i ' % (cur_iter, total_batch_iters))
+        print('\tTraining Dataset')
+        print('\t\tTotal Loss: %0.3f'% (losses['train_loss'][-1]))
+        if 'mse' in loss_fn.lower():
+            print('\t\tMAE: %0.3f'% (losses['train_mae'][-1]))
+        else:
+            print('\t\tAccuracy: %0.3f'% (losses['train_acc'][-1]))
+        print('\tValidation Dataset')
+        print('\t\tTotal Loss: %0.3f'% (losses['val_loss'][-1]))
+        if 'mse' in loss_fn.lower():
+            print('\t\tMAE: %0.3f'% (losses['val_mae'][-1]))
+        else:
+            print('\t\tAccuracy: %0.3f'% (losses['val_acc'][-1]))
 
-                # Reset checkpoint loss dictionary
-                losses_cp = defaultdict(list)
-                
-                if len(losses['batch_iters'])>1:
+        # Reset checkpoint loss dictionary
+        losses_cp = defaultdict(list)
+        
+        if len(losses['batch_iters'])>1:
 
-                    #if 'mse' in loss_fn.lower():
-                    #    y_lims = [(0,0.005), (0,0.1)]
-                    #else:
-                    #    y_lims = [(0,0.2), (0.7,1)]
-                    # Plot progress
-                    plot_progress(losses, #y_lims=y_lims, 
-                                  savename=os.path.join(fig_dir, 
-                                                        f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
+            #if 'mse' in loss_fn.lower():
+            #    y_lims = [(0,0.005), (0,0.1)]
+            #else:
+            #    y_lims = [(0,0.2), (0.7,1)]
+            # Plot progress
+            plot_progress(losses, #y_lims=y_lims, 
+                            savename=os.path.join(fig_dir, 
+                                                f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
 
-                # Save best model
-                if losses['val_loss'][-1]<best_val_loss:
-                    best_val_loss = losses['val_loss'][-1]
-                    print('Saving network...')
-                    torch.save({'batch_iters': cur_iter,
-                                    'losses': losses,
-                                    'optimizer' : optimizer.state_dict(),
-                                    'lr_scheduler' : lr_scheduler.state_dict(),
-                                    'model' : model.module.state_dict()},
-                                    model_filename.replace('.pth.tar', '_best.pth.tar'))
+        # Save best model
+        if losses['val_loss'][-1]<best_val_loss:
+            best_val_loss = losses['val_loss'][-1]
+            print('Saving network...')
+            torch.save({'batch_iters': cur_iter,
+                            'losses': losses,
+                            'optimizer' : optimizer.state_dict(),
+                            'lr_scheduler' : lr_scheduler.state_dict(),
+                            'model' : model.module.state_dict()},
+                            model_filename.replace('.pth.tar', '_best.pth.tar'))
 
-            # Increase the iteration
-            cur_iter += 1
+        # Increase the iteration
+        cur_itßer += 1
 
-            if (time.time() - cp_start_time) >= cp_time*60:
-                
-                # Save periodically
-                print('Saving network...')
-                torch.save({'batch_iters': cur_iter,
-                                'losses': losses,
-                                'optimizer' : optimizer.state_dict(),
-                                'lr_scheduler' : lr_scheduler.state_dict(),
-                                'model' : model.module.state_dict()},
-                                model_filename)
+        if (time.time() - cp_start_time) >= cp_time*60:
+            
+            # Save periodically
+            print('Saving network...')
+            torch.save({'batch_iters': cur_iter,
+                            'losses': losses,
+                            'optimizer' : optimizer.state_dict(),
+                            'lr_scheduler' : lr_scheduler.state_dict(),
+                            'model' : model.module.state_dict()},
+                            model_filename)
 
-                cp_start_time = time.time()
+            cp_start_time = time.time()
 
-            if cur_iter > total_batch_iters:
-                
-                # Save after training
-                print('Saving network...')
-                torch.save({'batch_iters': cur_iter,
-                                'losses': losses,
-                                'optimizer' : optimizer.state_dict(),
-                                'lr_scheduler' : lr_scheduler.state_dict(),
-                                'model' : model.module.state_dict()},
-                                model_filename)
-                # Finish training
-                break 
+        if cur_iter > total_batch_iters:
+            
+            # Save after training
+            print('Saving network...')
+            torch.save({'batch_iters': cur_iter,
+                            'losses': losses,
+                            'optimizer' : optimizer.state_dict(),
+                            'lr_scheduler' : lr_scheduler.state_dict(),
+                            'model' : model.module.state_dict()},
+                            model_filename)
+            # Finish training
+            break 
 
 # Run the training
 if __name__=="__main__":
