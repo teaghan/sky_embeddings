@@ -9,6 +9,8 @@ from utils.dataloaders import build_unions_dataloader
 from utils.eval_fns import ft_predict
 from utils.plotting_fns import plot_resid_hexbin, evaluate_z, plot_progress, plot_conf_mat
 
+from sklearn.model_selection import train_test_split
+
 def main(args):
     
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -70,6 +72,20 @@ def main(args):
     
     # Data loaders
     num_workers = min([os.cpu_count(),12*n_gpu])
+
+    dataloader = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
+                                                num_workers=num_workers,
+                                                patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
+                                                num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
+                                                max_mask_ratio=0.0, eval=True,
+                                                img_size=int(mae_config['ARCHITECTURE']['img_size']),
+                                                num_patches=model.module.patch_embed.num_patches,
+                                                label_keys=eval(mae_config['DATA']['label_keys']),
+                                                eval_data_file=(config['DATA']['lp_regress_data_file_train']),
+                                                augment=str2bool(config['TRAINING']['augment']))
+    
+    train_val_idx, test_idx = train_test_split(range(len(dataloader.dataset)), test_size=0.2, random_state=42)
+    train_idx, val_idx = train_test_split(train_val_idx, test_size=0.2, random_state=42) 
 
     dataloader_val = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']),
                                                 num_workers=num_workers,
