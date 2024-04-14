@@ -98,7 +98,9 @@ def main(args):
                                                 eval_data_file=(config['DATA']['lp_regress_data_file_train']),
                                                 augment=str2bool(config['TRAINING']['augment']))
 
-    train_val_idx, test_idx = train_test_split(range(len(dataloader)), test_size=0.2, random_state=42)
+    print(len(dataloader))
+    print(len(dataloader)*64) # 6k?
+    train_val_idx, test_idx = train_test_split(range(len(dataloader.dataset)), test_size=0.2, random_state=42)
     train_idx, val_idx = train_test_split(train_val_idx, test_size=0.2, random_state=42) 
 
     dataloader_train = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']),
@@ -123,7 +125,7 @@ def main(args):
                                                 eval_data_file=(config['DATA']['lp_regress_data_file_train']),
                                                 augment=str2bool(config['TRAINING']['augment']), indices=val_idx)
     
-    print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
+    print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset))) # wrong size here
 
     train_network(model, dataloader_train, dataloader_val, 
                   optimizer, lr_scheduler, device,
@@ -147,7 +149,7 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
     while cur_iter < (total_batch_iters):
         print(cur_iter)
         # Iterate through training dataset
-        for input_samples, sample_masks, ra_decs, sample_labels in dataloader_train:
+        for input_samples, sample_masks, ra_decs, sample_labels in dataloader_train: # doesn't hit this?
             
             # Switch to GPU if available
             input_samples = input_samples.to(device, non_blocking=True)
