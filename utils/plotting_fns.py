@@ -446,7 +446,7 @@ def plot_z_resid(fig, ax, cax, z_true, resid, bias, mad, frac_out, y_lims=1,
     ax.set_ylabel('Normalized\nResidual', size=fontsize)
     ax.axhline(0, linewidth=1, c='black', linestyle='--')
     ax.set_xlim(x_range[0], x_range[1])
-    ax.set_ylim(-y_lims, y_lims)
+    #ax.set_ylim(-y_lims, y_lims)
     ax.set_yticks([-y_lims, -0.5*y_lims, 0, 0.5*y_lims, y_lims])
     
     #ax.grid()
@@ -491,7 +491,7 @@ def z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
     ax1 = fig.add_subplot(gs[0, 0])
     ax1.hist(z_true, bins=100, range=z_range)
     ax1.set_ylabel('N', size=fontsize)
-    ax1.set_xlim(*z_range)
+    #ax1.set_xlim(*z_range)
     
     # Plot resid
     ax2 = fig.add_subplot(gs[1, 0])#, sharex=ax1)
@@ -504,7 +504,7 @@ def z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
     ax3 = fig.add_subplot(gs[2, 0])#, sharex=ax1)
     ax3.scatter(bin_mids, bin_bias, s=10)
     ax3.plot(bin_mids, bin_bias, linestyle='--')
-    ax3.set_ylim(*y_lims[1])
+    #ax3.set_ylim(*y_lims[1])
     ax3.axhline(0, linewidth=1, c='black', linestyle='--')
     ax3.set_ylabel('Bias', size=fontsize)
 
@@ -512,14 +512,14 @@ def z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
     ax4 = fig.add_subplot(gs[3, 0])#, sharex=ax1)
     ax4.scatter(bin_mids, bin_mad, s=10)
     ax4.plot(bin_mids, bin_mad, linestyle='--')
-    ax4.set_ylim(*y_lims[2])
+    #ax4.set_ylim(*y_lims[2])
     ax4.set_ylabel('MAD', size=fontsize)
 
     # Plot frac out
     ax5 = fig.add_subplot(gs[4, 0])#, sharex=ax1)
     ax5.scatter(bin_mids, bin_frac_out, s=10)
     ax5.plot(bin_mids, bin_frac_out, linestyle='--')
-    ax5.set_ylim(*y_lims[3])
+    #ax5.set_ylim(*y_lims[3])
     ax5.set_ylabel('Outlier\nFraction', size=fontsize)
 
     x_ticks = np.array(bin_mids) - np.diff(bin_mids)[0]/2
@@ -577,7 +577,7 @@ def evaluate_z(z_pred, z_true, n_bins=8, z_range=(0.2,2),
     # Create metric plot
     z_plots(z_true, full_resid, full_bias, full_mad, full_frac_out,
             bin_mids, bin_bias, bin_mad, bin_frac_out, z_range,
-            y_lims=y_lims,
+            #y_lims=y_lims,
            savename=savename)
 
     if snr is not None:

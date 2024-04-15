@@ -120,7 +120,7 @@ def main(args):
 
     if 'mse' in loss_fn.lower():
         #plot_resid_hexbin([r'$Z$'], tgt_labels[snr_indices], pred_labels[snr_indices], y_lims=[1], 
-        plot_resid_hexbin([r'$Z$'], tgt_labels, pred_labels, y_lims=[1], 
+        plot_resid_hexbin([r'$Z$'], tgt_labels, pred_labels, # y_lims=[1], 
                           gridsize=(80,40), max_counts=5, cmap='ocean_r', n_std=4,
                           savename=os.path.join(fig_dir, f'{model_name}_predictions.png'))
         
