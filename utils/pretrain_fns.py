@@ -107,7 +107,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              y_label='is_dwarf', combine=combine, remove_cls=remove_cls)
         
         # Splitting the dataset into training and testing sets
-        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.1, random_state=42, shuffle=True)
+        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=42, shuffle=True)
         # ARTIFICIALLY REDUCING THE TRAINING SET SIZE AND INCEARING TEST
         print('len of test dwarfs:', len(y_test))
         print('len of train dwarfs:', len(y_train))
