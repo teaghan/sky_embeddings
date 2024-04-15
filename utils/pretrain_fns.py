@@ -66,11 +66,12 @@ def plot_confusion_matrix(y_true, y_pred):
     plt.savefig('cm.png')
 
 def plot_confusion_matrix_pct(y_true, y_pred):
+    labels = ["non-dwarf", "dwarf"]
     cm = confusion_matrix(y_true, y_pred)
     cm_sum = np.sum(cm, axis=1, keepdims=True)
     cm_percentage = cm / cm_sum.astype(float) * 100  # Compute percentages
     plt.clf()
-    sns.heatmap(cm_percentage, annot=True, cmap='Blues', fmt='.2f', cbar=False)  # Use fmt='.2f' for two decimal places
+    sns.heatmap(cm_percentage, annot=True, cmap='Blues', fmt='.2f', cbar=False, xticklabels=labels, yticklabels=labels)  # Use fmt='.2f' for two decimal places
     plt.xlabel('Predicted Class')
     plt.ylabel('True Class')
     plt.title('Confusion Matrix')
@@ -81,8 +82,8 @@ def plot_roc_curve(y_true, y_prob):
     auc = roc_auc_score(y_true, y_prob)
     fpr, tpr, thresholds = roc_curve(y_true, y_prob)
     plt.figure()
-    plt.plot(fpr, tpr, color='r', lw=1, alpha=0.8, label='ROC curve (area = %0.2f) for model' % auc)
-    plt.plot([0, 1], [0, 1], color='k', lw=1, alpha=0.8, linestyle='--', label='ROC curve for random classifier')
+    plt.plot(fpr, tpr, color='r', lw=1, alpha=0.9, label='ROC curve (area = %0.2f) for model' % auc)
+    plt.plot([0, 1], [0, 1], color='k', lw=1, alpha=0.9, linestyle='--', label='ROC curve for random classifier')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
