@@ -6,4 +6,4 @@ source /home/a4ferrei/mae_env/bin/activate
 module load hdf5/1.10.6
 
 # Run MAE training
-python /home/a4ferrei/scratch/github/sky_embeddings/train_predictor.py lp_5 -v 100 -ct 3.00
+python /home/a4ferrei/scratch/github/sky_embeddings/train_predictor.py lp_6 -v 100 -ct 10.00
