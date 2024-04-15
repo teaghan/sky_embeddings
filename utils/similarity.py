@@ -62,11 +62,11 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None,
                 target_latent = (target_latent - mean_feats) / (std_feats + 1e-8)
             test_latent = (test_latent - mean_feats) / (std_feats + 1e-8)
             '''
-            print('test_latent 2', test_latent)
+            #print('test_latent 2', test_latent)
 
             # Compute similarity score for each sample
             test_similarity = compute_similarity(target_latent, test_latent, attn_pool=False,
-                                                 metric='cosine', combine='mean', use_weights=False)#True)
+                                                 metric='cosine', combine=combine, use_weights=False)#True)
             sim_scores.append(test_similarity)
             print(test_similarity) # nans start here
             
