@@ -18,6 +18,8 @@ from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve
 import seaborn as sns
 from matplotlib import pyplot as plt
 
+
+
 def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler,
              losses_cp, mode='train', save_sample=True):
         
@@ -134,11 +136,16 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         # Plot AUC and ROC Curve
         plot_roc_curve(y_test, clf.predict_proba(X_test)[:,1])
 
+        #plot_umap_projection(x, y, label='is_dwarf')
+
     if regress_data_path:
         # Regression task
         x,y = get_embeddings(regress_data_path, 
                              model, device, dataloader_template_reg, regression=True,
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
+        
+
+        #plot_umap_projection(x, y, label='is_dwarf')
         
         #print(x.shape) # lower than expected (5952, 3072)
         #print(y.shape) # correct

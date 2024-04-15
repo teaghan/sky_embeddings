@@ -25,8 +25,8 @@ def parseArguments():
     parser.add_argument("-tgt_fn", "--target_fn", 
                         type=str, default='dr5_eval_set_dwarfs_only.h5')
     parser.add_argument("-tst_fn", "--test_fn", #  make a larget set here or stream 
-                        #type=str, default='dr5_eval_set_validation_10kx5tiles.h5')
-                        type=str, default='dr5_eval_set_validation.h5')
+                        type=str, default='dr5_eval_set_validation_10kx5tiles.h5')
+                        #type=str, default='dr5_eval_set_validation.h5')
                         #type=str, default='dr5_eval_set_dwarfs_class.h5') # add validation set with known dwarfs here? --> take some out from train --> make larger set for sure when done debuging  
     parser.add_argument("-tgt_i", "--target_indices", 
                         default='[1,2]')
@@ -43,7 +43,7 @@ def parseArguments():
     parser.add_argument("-m", "--metric", 
                         type=str, default='cosine')
     parser.add_argument("-c", "--combine", 
-                        type=str, default='min')
+                        type=str, default='max')
     parser.add_argument("-dc", "--display_channel", 
                         type=int, default=2)
     parser.add_argument("-np", "--n_plot", 
