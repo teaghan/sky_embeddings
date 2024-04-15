@@ -19,7 +19,7 @@ def parseArguments():
 
     # Positional mandatory arguments
     parser.add_argument("-model_name", help="Name of model.", type=str, 
-                        default='mim_73_unions') 
+                        default='mim_88_unions') 
     
     # Optional arguments
     parser.add_argument("-tgt_fn", "--target_fn", 

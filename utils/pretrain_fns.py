@@ -18,6 +18,36 @@ from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve
 import seaborn as sns
 from matplotlib import pyplot as plt
 
+import umap
+
+def plot_umap_projection(latent_representation, label_value, label_name, umap_fit=None):
+    # Create UMAP object
+    if umap_fit == None:
+        reducer = umap.UMAP()
+    else:
+        reducer = umap_fit
+
+    # Fit UMAP to latent representations
+    reducer.fit(latent_representation)
+    umap_projection = reducer.transform(latent_representation)
+
+    if label_name == 'zspec':
+        cmap = 'hot_r'
+
+    elif label_name == 'is_dwarf':
+        cmap = 'seismic'
+
+    # Plot UMAP projection with colored points
+    plt.figure(figsize=(8, 6))
+    plt.scatter(umap_projection[:, 0], umap_projection[:, 1], c=label_value, cmap=cmap)
+    plt.colorbar(label=label_name)
+    plt.title('UMAP Projection with ' + label_name)
+    plt.xlabel('UMAP Dimension 1')
+    plt.ylabel('UMAP Dimension 2')
+    plt.savefig('umap_' + label_name + '.png')
+
+    if umap_fit == None:
+        return reducer
 
 
 def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler,
@@ -102,42 +132,6 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         remove_cls = False
     
     model.train(False)
-    if class_data_path:
-        # Classifier task
-        x,y = get_embeddings(class_data_path, 
-                             model, device, dataloader_template_class, regression=False,
-                             y_label='is_dwarf', combine=combine, remove_cls=remove_cls)
-        
-        # Splitting the dataset into training and testing sets
-        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=42, shuffle=True)
-        # ARTIFICIALLY REDUCING THE TRAINING SET SIZE AND INCEARING TEST
-        print('len of test dwarfs:', len(y_test))
-        print('len of train dwarfs:', len(y_train))
-        
-        # Creating and training a classifier
-        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=1000, C=0.01, random_state=42)
-        clf.fit(X_train, y_train)
-        
-        # Predicting the class label
-        y_pred_test = clf.predict(X_test)
-        y_pred_train = clf.predict(X_train)
-        
-        # Evaluating the classifier
-        test_accuracy = accuracy_score(y_test, y_pred_test)
-        train_accuracy = accuracy_score(y_train, y_pred_train)
-    
-        losses_cp['train_lp_acc'].append(float(train_accuracy))
-        losses_cp['val_lp_acc'].append(float(test_accuracy))
-
-         # Plot Confusion Matrix
-        plot_confusion_matrix(y_test, y_pred_test)
-        plot_confusion_matrix_pct(y_test, y_pred_test)
-
-        # Plot AUC and ROC Curve
-        plot_roc_curve(y_test, clf.predict_proba(X_test)[:,1])
-
-        #plot_umap_projection(x, y, label='is_dwarf')
-
     if regress_data_path:
         # Regression task
         x,y = get_embeddings(regress_data_path, 
@@ -145,7 +139,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
         
 
-        #plot_umap_projection(x, y, label='is_dwarf')
+        umap_fit = plot_umap_projection(x, y, label='is_dwarf')
         
         #print(x.shape) # lower than expected (5952, 3072)
         #print(y.shape) # correct
@@ -198,6 +192,43 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         r2_train = r2_score(y_train, y_pred_train)
         losses_cp['train_lp_r2'].append(float(r2_train))
         losses_cp['val_lp_r2'].append(float(r2_test))
+
+    elif class_data_path:
+        # Classifier task
+        x,y = get_embeddings(class_data_path, 
+                             model, device, dataloader_template_class, regression=False,
+                             y_label='is_dwarf', combine=combine, remove_cls=remove_cls)
+        
+        plot_umap_projection(x, y, label='is_dwarf', umap_fit=umap_fit)
+        
+        # Splitting the dataset into training and testing sets
+        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=42, shuffle=True)
+        # ARTIFICIALLY REDUCING THE TRAINING SET SIZE AND INCEARING TEST
+        print('len of test dwarfs:', len(y_test))
+        print('len of train dwarfs:', len(y_train))
+        
+        # Creating and training a classifier
+        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=1000, C=0.01, random_state=42)
+        clf.fit(X_train, y_train)
+        
+        # Predicting the class label
+        y_pred_test = clf.predict(X_test)
+        y_pred_train = clf.predict(X_train)
+        
+        # Evaluating the classifier
+        test_accuracy = accuracy_score(y_test, y_pred_test)
+        train_accuracy = accuracy_score(y_train, y_pred_train)
+    
+        losses_cp['train_lp_acc'].append(float(train_accuracy))
+        losses_cp['val_lp_acc'].append(float(test_accuracy))
+
+         # Plot Confusion Matrix
+        plot_confusion_matrix(y_test, y_pred_test)
+        plot_confusion_matrix_pct(y_test, y_pred_test)
+
+        # Plot AUC and ROC Curve
+        plot_roc_curve(y_test, clf.predict_proba(X_test)[:,1])
+
 
 def get_embeddings(data_path, model, device, dataloader_template_1,
                    y_label='class', combine='central', remove_cls=True, new_loader=False, regression=False):
