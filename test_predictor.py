@@ -128,7 +128,8 @@ def main(args):
         #           #y_lims=[(-0.08,0.08),(-0.02,0.02),(0,0.03),(0,0.1)], 
         #           snr=snr[snr_indices],
         #           savename=os.path.join(fig_dir, f'{model_name}_redshift.png'))
-        evaluate_z(pred_labels, tgt_labels, n_bins=8, z_range=(0.2,1.6), threshold=0.1,
+        evaluate_z(pred_labels, tgt_labels, n_bins=8, z_range=(0.02,7), #threshold=0.1,
+                   threshold=1.0,
                    savename=os.path.join(fig_dir, f'{model_name}_redshift.png'))
         
     else:
