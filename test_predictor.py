@@ -119,8 +119,8 @@ def main(args):
     print(len(np.where(snr_indices)[0]))
 
     if 'mse' in loss_fn.lower():
-        plot_resid_hexbin([r'$Z$'], tgt_labels[snr_indices], pred_labels[snr_indices], y_lims=[1], 
-        #plot_resid_hexbin([r'$Z$'], tgt_labels, pred_labels, y_lims=[1], 
+        #plot_resid_hexbin([r'$Z$'], tgt_labels[snr_indices], pred_labels[snr_indices], y_lims=[1], 
+        plot_resid_hexbin([r'$Z$'], tgt_labels, pred_labels, y_lims=[1], 
                           gridsize=(80,40), max_counts=5, cmap='ocean_r', n_std=4,
                           savename=os.path.join(fig_dir, f'{model_name}_predictions.png'))
         
@@ -128,9 +128,7 @@ def main(args):
         #           #y_lims=[(-0.08,0.08),(-0.02,0.02),(0,0.03),(0,0.1)], 
         #           snr=snr[snr_indices],
         #           savename=os.path.join(fig_dir, f'{model_name}_redshift.png'))
-        evaluate_z(pred_labels[snr_indices], tgt_labels[snr_indices], n_bins=8, z_range=(0.2,1.6), threshold=0.1, 
-                   #y_lims=[(-0.08,0.08),(-0.02,0.02),(0,0.03),(0,0.1)], 
-                   snr=snr[snr_indices],
+        evaluate_z(pred_labels, tgt_labels, n_bins=8, z_range=(0.2,1.6), threshold=0.1,
                    savename=os.path.join(fig_dir, f'{model_name}_redshift.png'))
         
     else:
