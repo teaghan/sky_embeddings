@@ -74,7 +74,7 @@ def main(args):
     num_workers = min([os.cpu_count(),12*n_gpu])
 
     dataloader = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
-                                                #num_workers=num_workers,
+                                                num_workers=num_workers,
                                                 patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
                                                 max_mask_ratio=0.0, eval=True,
@@ -86,10 +86,10 @@ def main(args):
     
     print(len(dataloader.dataset))
     train_val_idx, test_idx = train_test_split(range(len(dataloader.dataset)), test_size=0.2, random_state=42)
-    train_idx, val_idx = train_test_split(train_val_idx, test_size=0.2, random_state=42) 
+    #train_idx, val_idx = train_test_split(train_val_idx, test_size=0.2, random_state=42) 
 
     dataloader_val = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']),
-                                                #num_workers=num_workers,
+                                                num_workers=num_workers,
                                                 patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
                                                 num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
                                                 max_mask_ratio=0.0, eval=True,
