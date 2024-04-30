@@ -177,7 +177,8 @@ print('target_latent', target_latent)
 
 time = round(time.time())
 # Plot targets
-display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().numpy()), 
+# display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().numpy()), 
+display_images(normalize_images(target_images[:,[1,2,4],:,:].data.cpu().numpy()), 
                                 vmin=0., vmax=1, savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_target_{time}.png'))
 print('targets plotted')
 
@@ -219,7 +220,8 @@ print('sim order', sim_order)
 print('passed sims', test_similarity[sim_order[:n_save]]) 
 
 # Display top n_plot candidates
-display_images(normalize_images(test_images[:n_plot,display_channel,:,:].data.cpu().numpy()), 
+#display_images(normalize_images(test_images[:n_plot,display_channel,:,:].data.cpu().numpy()), 
+display_images(normalize_images(test_images[:n_plot,[1,2,4],:,:].data.cpu().numpy()), 
                                 vmin=0., vmax=1, similarity=test_similarity[sim_order[:n_save]],
                                 savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results{time}.png'))
                                 #labels=labels)
