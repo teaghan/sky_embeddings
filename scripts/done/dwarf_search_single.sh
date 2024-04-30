@@ -7,11 +7,11 @@ source /home/a4ferrei/mae_env/bin/activate
 module load hdf5/1.10.6
 
 # Run MAE training
-python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions --target_indices 1
-python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions --target_indices 2
-python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions --target_indices 3
-python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions --target_indices 4
-python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions --target_indices 5
-python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions --target_indices 6
-python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions --target_indices 7
-python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions --target_indices 8
+python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions -tgt_i 1
+python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions -tgt_i 2
+python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions -tgt_i 3
+python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions -tgt_i 4
+python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions -tgt_i 5
+python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions -tgt_i 6
+python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions -tgt_i 7
+python /home/a4ferrei/scratch/github/sky_embeddings/similarity_search_alt.py -model_name mim_88_unions -tgt_i 8

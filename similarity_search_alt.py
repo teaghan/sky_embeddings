@@ -30,7 +30,7 @@ def parseArguments():
                         #type=str, default='dr5_eval_set_validation.h5')
                         type=str, default='dr5_eval_set_dwarfs_class.h5') # add validation set with known dwarfs here? --> take some out from train --> make larger set for sure when done debuging  
     parser.add_argument("-tgt_i", "--target_indices", 
-                        default='[1,2]')
+                        type=str, default='[1,2]')
     parser.add_argument("-aug", "--augment_targets", 
                         type=str, default='False')
     parser.add_argument("-mp", "--max_pool", 
@@ -65,10 +65,13 @@ args = args.parse_args()
 model_name = args.model_name
 target_fn = args.target_fn
 test_fn = args.test_fn
+target_indices = ast.literal_eval(args.target_indices)
+'''
 if args.target_indices!='None':
     target_indices = ast.literal_eval(args.target_indices)
 else:
     target_indices = None
+'''
 augment_targets = str2bool(args.augment_targets)
 max_pool = str2bool(args.max_pool)
 cls_token = str2bool(args.cls_token)
@@ -140,7 +143,6 @@ test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
 
 # overwriting target indices
 #target_indices = [1] #list(range(1,4)) + [11,12]
-target_indices = ast.literal_eval(args.tgt_i)
 
 # Data loaders
 target_dataloader = build_unions_dataloader(batch_size=1, 
