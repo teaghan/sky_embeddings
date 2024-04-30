@@ -4,6 +4,7 @@ import configparser
 import torch
 import numpy as np
 import ast
+import time
 
 from utils.misc import str2bool, h5_snr
 from utils.mim_vit import build_model as build_mim
@@ -25,9 +26,9 @@ def parseArguments():
     parser.add_argument("-tgt_fn", "--target_fn", 
                         type=str, default='dr5_eval_set_dwarfs_only.h5')
     parser.add_argument("-tst_fn", "--test_fn", #  make a larget set here or stream 
-                        type=str, default='dr5_eval_set_validation_10kx5tiles.h5')
+                        #type=str, default='dr5_eval_set_validation_10kx5tiles.h5')
                         #type=str, default='dr5_eval_set_validation.h5')
-                        #type=str, default='dr5_eval_set_dwarfs_class.h5') # add validation set with known dwarfs here? --> take some out from train --> make larger set for sure when done debuging  
+                        type=str, default='dr5_eval_set_dwarfs_class.h5') # add validation set with known dwarfs here? --> take some out from train --> make larger set for sure when done debuging  
     parser.add_argument("-tgt_i", "--target_indices", 
                         default='[1,2]')
     parser.add_argument("-aug", "--augment_targets", 
@@ -47,9 +48,9 @@ def parseArguments():
     parser.add_argument("-dc", "--display_channel", 
                         type=int, default=2)
     parser.add_argument("-np", "--n_plot", 
-                        type=int, default=25)
+                        type=int, default=5)
     parser.add_argument("-ns", "--n_save", 
-                        type=int, default=25)
+                        type=int, default=5)
     
     # Alternative data directory than sky_embeddings/data/
     parser.add_argument("-dd", "--data_dir", 
@@ -138,7 +139,8 @@ test_indices = np.where((test_snr>snr_range[0]) & (test_snr<snr_range[1]))[0]
 #test_indices = list(range(len(test_snr)))
 
 # overwriting target indices
-target_indices = [1] #list(range(1,4)) + [11,12]
+#target_indices = [1] #list(range(1,4)) + [11,12]
+target_indices = ast.literal_eval(args.tgt_i)
 
 # Data loaders
 target_dataloader = build_unions_dataloader(batch_size=1, 
@@ -171,9 +173,10 @@ target_latent, target_images = mae_latent(model, target_dataloader, device, retu
 print(target_latent.shape)
 print('target_latent', target_latent)
 
+time = round(time.time())
 # Plot targets
 display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().numpy()), 
-                                vmin=0., vmax=1, savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_target.png'))
+                                vmin=0., vmax=1, savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_target_{time}.png'))
 print('targets plotted')
 
 # Compute similarity score for all test samples
@@ -216,7 +219,7 @@ print('passed sims', test_similarity[sim_order[:n_save]])
 # Display top n_plot candidates
 display_images(normalize_images(test_images[:n_plot,display_channel,:,:].data.cpu().numpy()), 
                                 vmin=0., vmax=1, similarity=test_similarity[sim_order[:n_save]],
-                                savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results.png'))
+                                savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results{time}.png'))
                                 #labels=labels)
 print('nearby tests plotted')
 # Save results
