@@ -328,7 +328,8 @@ def display_images(images, vmin=0., vmax=1., show_num=True, savename=None, simil
             elif labels[i] == 1:
                 label = True
             #axes[i].set_title('similarity rank:' + str(i+1) + '\n cosine similarity:' + str(round(similarity[i].item(), 8))) # TEMP
-            axes[i].set_title(f'similarity rank: {i+1}\n cosine similarity: {round(similarity[i].item(),5)}\n labelled_dwarf={label}')
+            #axes[i].set_title(f'similarity rank: {i+1}\n cosine similarity: {round(similarity[i].item(),5)}\n labelled_dwarf={label}')
+            axes[i].set_title(f'similarity rank: {i+1}\n cosine similarity: {round(similarity[i].item(),4)}')
         elif show_num:
             axes[i].set_title(str(i))
             

@@ -48,9 +48,9 @@ def parseArguments():
     parser.add_argument("-dc", "--display_channel", 
                         type=int, default=2)
     parser.add_argument("-np", "--n_plot", 
-                        type=int, default=5)
+                        type=int, default=25)
     parser.add_argument("-ns", "--n_save", 
-                        type=int, default=5)
+                        type=int, default=25)
     
     # Alternative data directory than sky_embeddings/data/
     parser.add_argument("-dd", "--data_dir", 
