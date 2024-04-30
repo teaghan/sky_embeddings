@@ -180,8 +180,8 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                                                                              label_uncertainties=sample_label_errs,
                                                                              mode='val')
                         # Don't bother with the whole dataset
-                        if i>=200:
-                            break
+                        #if i>=200:
+                        #    break
                 
                 # Calculate averages
                 for k in losses_cp.keys():
