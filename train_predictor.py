@@ -128,6 +128,7 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
         best_val_loss = np.min(losses['val_loss'])
     else:
         best_val_loss = np.inf
+    did_not_improve_count = 0
     # Train the neural networks
     losses_cp = defaultdict(list)
     cp_start_time = time.time()
@@ -235,6 +236,12 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                                     'lr_scheduler' : lr_scheduler.state_dict(),
                                     'model' : model.module.state_dict()},
                                     model_filename.replace('.pth.tar', '_best.pth.tar'))
+                    did_not_improve_count = 0
+                else:
+                    did_not_improve_count += 1
+
+                if did_not_improve_count>50:
+                    break
 
             # Increase the iteration
             cur_iter += 1
