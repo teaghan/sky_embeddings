@@ -58,7 +58,12 @@ def main(args):
         mae_config = configparser.ConfigParser()
         mae_config.read(config_dir+mae_name+'.ini')
         mae_filename =  os.path.join(model_dir, mae_name+'.pth.tar')
-    model, losses, cur_iter, optimizer, lr_scheduler = build_model(config, mae_config, 
+    if os.path.exists(model_filename.replace('.pth.tar', '_best.pth.tar')):
+        model, losses, cur_iter, optimizer, lr_scheduler = build_model(config, mae_config, 
+                                                                   model_filename.replace('.pth.tar', '_best.pth.tar'), mae_filename,
+                                                                   device, build_optimizer=True)
+    else:
+        model, losses, cur_iter, optimizer, lr_scheduler = build_model(config, mae_config, 
                                                                    model_filename, mae_filename,
                                                                    device, build_optimizer=True)
     
@@ -119,7 +124,10 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
           (verbose_iters, cp_time))
 
-    best_val_loss = np.inf
+    if 'val_loss' in losses.keys():
+        best_val_loss = np.min(losses['val_loss'])
+    else:
+        best_val_loss = np.inf
     # Train the neural networks
     losses_cp = defaultdict(list)
     cp_start_time = time.time()
