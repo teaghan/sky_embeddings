@@ -228,7 +228,7 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
 
                 # Save best model
                 if losses['val_loss'][-1]<best_val_loss:
-                    print('\t%0.3f, %0.3f'% , best_val_loss, losses['val_loss'][-1])
+                    print('\t%0.3f, %0.3f'% (best_val_loss, losses['val_loss'][-1]))
                     best_val_loss = losses['val_loss'][-1]
                     print('Saving network...')
                     torch.save({'batch_iters': cur_iter,
