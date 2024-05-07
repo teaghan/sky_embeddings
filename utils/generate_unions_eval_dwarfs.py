@@ -22,7 +22,8 @@ with h5py.File(dwarf_file, 'r') as dwarf_f, h5py.File(validation_file, 'r') as v
 
     for key in dwarf_f.keys():
         print(key)
-        dwarf_data[key] = dwarf_f[key][good_cutouts]
+        dwarf_data[key] = dwarf_f[key][:]#[good_cutouts]
+        print(dwarf_data[key].shape)
 
     print('\nvalidation')
     # Read data from validation_file
