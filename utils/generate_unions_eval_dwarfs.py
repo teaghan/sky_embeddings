@@ -5,19 +5,24 @@ import numpy as np
 root_dir = '/home/a4ferrei/scratch/data/'
 dwarf_file = root_dir + 'dr5_eval_set_dwarfs_only.h5' # exists
 validation_file = root_dir + 'dr5_eval_set_validation.h5' # exist
-dwarf_class_file = root_dir + 'dr5_eval_set_dwarfs_class.h5' # to create
+dwarf_class_file = root_dir + 'dr5_eval_set_dwarfs_class_cleaner.h5' # to create
 
 # Open dwarf_file and validation_file
 with h5py.File(dwarf_file, 'r') as dwarf_f, h5py.File(validation_file, 'r') as validation_f:
     print('dwarfs')
+
     # Read data from dwarf_file
     dwarf_data = {}
+
+    dwarf_data['cutouts'] = dwarf_f['images'][:,:5, :, :]
+
+    # Check for NaNs (+ should check consistency with the newer tileslicer code)
+    good_cutouts = ~np.isnan(dwarf_data['cutouts']).all(axis=(2, 3))
+    print(len(dwarf_data['cutouts']), len(good_cutouts))
+
     for key in dwarf_f.keys():
         print(key)
-        if key == 'images':
-            dwarf_data['cutouts'] = dwarf_f[key][:,:5, :, :]
-        else:
-            dwarf_data[key] = dwarf_f[key][:]
+        dwarf_data[key] = dwarf_f[key][good_cutouts]
 
     print('\nvalidation')
     # Read data from validation_file
