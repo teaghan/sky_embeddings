@@ -1,6 +1,6 @@
 # Sky Embeddings
 
-Welcome to the Sky Embeddings repository, where we leverage self-supervised learning to generate and utilize embeddings from sky images for tasks such as classification, redshift estimation, and similarity searches.
+Welcome to the **UNIONS branch** of the Sky Embeddings repository, where we leverage self-supervised learning to generate and utilize embeddings from sky images for tasks such as classification, redshift estimation, and similarity searches.
 
 ## Overview
 
@@ -22,20 +22,9 @@ Ensure you have the following installed:
 
 <br><br>
 
-## Dataset: Hyper Suprime-Cam (HSC) - Subaru Telescope
+## Dataset: The Ultraviolet Near Infrared Optical Northern Survey (UNIONS)
 
-Our primary dataset comes from the Hyper Suprime-Cam (HSC) on the Subaru Telescope. Below is an example image from the HSC:
-
-<p align="center">
-  <img width="600" height="600" src="./figures/hsc_subaru.jpg"><br>
-  <span style="display: block; text-align: right;"><a href="https://subarutelescope.org/en/news/topics/2017/02/27/2459.html">subarutelescope.org</a></span>
-</p>
-
-### Data Download
-
-Details on how to access and prepare the HSC data will be provided soon.
-
-<br><br>
+Our primary dataset comes from the UNIONS, more information on this survey can be found [here](https://www.skysurvey.cc/). Image data is currently streamed from the Canadian Astronomy Data Center and therefore does not need to be downloaded ahead of time. The catalogues used will be made available soon.
 
 ## Masked Image Modelling
 
