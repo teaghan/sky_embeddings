@@ -17,13 +17,14 @@ with h5py.File(dwarf_file, 'r') as dwarf_f, h5py.File(validation_file, 'r') as v
     dwarf_data['cutouts'] = dwarf_f['images'][:,:5, :, :]
 
     # Check for NaNs (+ should check consistency with the newer tileslicer code)
-    good_cutouts = ~np.isnan(dwarf_data['cutouts']).all(axis=(1, 2, 3))
-    print(len(dwarf_data['cutouts']), len(good_cutouts)) # it is checking them all
+    good_cutouts = ~np.isnan(dwarf_data['cutouts']).any(axis=(1, 2, 3))
+    print(dwarf_data['cutouts'])
+    print('orig:', len(dwarf_data['cutouts']), 'good:', len(good_cutouts)) # it is checking them all, why none?
 
-    for key in dwarf_f.keys():
+    for key in dwarf_f.keys(): # double have images now?
         print(key)
         dwarf_data[key] = dwarf_f[key][:][good_cutouts]
-        print(dwarf_data[key].shape)
+        print(dwarf_data[key].shape) # tile is of smaller shape?
 
     print('\nvalidation')
     # Read data from validation_file
