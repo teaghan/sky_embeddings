@@ -7,7 +7,7 @@ cc_dataloader_path = '/github/extra/TileSlicer/'
 sys.path.insert(0, src+cc_dataloader_path)
 from dataloader import dataset_wrapper
 
-eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_redshift_6k.h5'
+eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_redshift_6k_may2024.h5'
 eval_tiles = set(range(500))  # specify tiles to evaluate, only taking 6k of each
 
 # Initialize dataset wrapper

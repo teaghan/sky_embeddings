@@ -168,7 +168,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         
         # Creating and training a linear model for regression
         #regressor = LinearRegression()
-        regressor = ElasticNet(alpha=0.000001, l1_ratio=0.3, max_iter=1000, random_state=0) # discontinued: normalize=True)
+        regressor = ElasticNet(alpha=0.000001, l1_ratio=0.9, max_iter=1000, random_state=0) # discontinued: normalize=True)
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
