@@ -139,7 +139,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
         
 
-        umap_fit = plot_umap_projection(x, y, label_name='is_dwarf')
+        #umap_fit = plot_umap_projection(x, y, label_name='is_dwarf')
         
         #print(x.shape) # lower than expected (5952, 3072)
         #print(y.shape) # correct
