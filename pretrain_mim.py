@@ -229,7 +229,7 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
             #    print(f'{time_el:0.1f} seconds elapsed.')
             #    time1 = time.time()
             # Evaluate validation set and display losses
-            if cur_iter % verbose_iters == 0:
+            if cur_iter % verbose_iters == 0 and cur_iter != verbose_iters:
 
                 with torch.no_grad():
                     # Calculate average loss on validation set
