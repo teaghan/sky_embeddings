@@ -122,6 +122,8 @@ def main(args):
         else:
             dataloader_classfication = None
     
+        print('dataloader_classfication:', dataloader_classfication)
+
     else: 
         if 'train_data_file' in config['DATA']:
             # Using .h5 training file
@@ -196,6 +198,8 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
           (verbose_iters, cp_time))
     
+    print('lp_class_data_file:', lp_class_data_file)
+    
     # Train the neural networks
     losses_cp = defaultdict(list)
     cp_start_time = time.time()
@@ -253,6 +257,7 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
                         # Run Linear Probing tests
                         linear_probe(model, losses_cp, device, dataloader_regress, dataloader_classification,
                                      lp_class_data_file, lp_regress_data_file, combine=lp_combine)
+                        print(lp_class_data_file)
                 
                 # Calculate averages
                 for k in losses_cp.keys():
@@ -270,7 +275,7 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
                 if lp_class_data_file or lp_regress_data_file:
                     print('Linear Probing Results:')
                     if lp_class_data_file:
-                        print('\tClassification Accuracy:')
+                        print('\tClassification Accuracy:') # these keys are missing
                         print('\t\tTraining: %0.3f, Validation: %0.3f'% (losses['train_lp_acc'][-1], losses['val_lp_acc'][-1]))
                     if lp_regress_data_file:
                         print('\tRegression R2')

@@ -554,7 +554,7 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
         else:
             self.mask_generator = None
 
-        #self.__printstats__()
+        self.__printstats__()
                         
     def __len__(self):
         if self.indices is not None:
@@ -571,7 +571,15 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
             self.median = np.nanmedian(all_cutouts) 
             self.mad = median_abs_deviation(all_cutouts, nan_policy='omit', axis=None)
 
-        print(f'VALIDATION (centered): median={self.median}, mad={self.mad}')
+        print(f'VALIDATION (centered cutouts): median={self.median}, mad={self.mad}')
+
+        '''
+        if self.label_keys is not None:
+                labels = [f[k][idx] for k in self.label_keys]
+                labels = torch.from_numpy(np.asarray(labels).astype(np.float32))
+                print('labels.shape:', labels.shape)
+        print(f'VALIDATION (labels): median={self.median}, mad={self.mad}')
+        '''
     
     def __getitem__(self, idx):
         if self.indices is not None:

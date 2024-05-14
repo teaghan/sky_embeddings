@@ -130,6 +130,8 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
 
     if combine=='token':
         remove_cls = False
+
+    print('class_data_path:', class_data_path)
     
     model.train(False)
     if regress_data_path:
@@ -199,7 +201,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              model, device, dataloader_template_class, regression=False,
                              y_label='is_dwarf', combine=combine, remove_cls=remove_cls)
         
-        plot_umap_projection(x, y, label_name='is_dwarf', umap_fit=umap_fit)
+        #plot_umap_projection(x, y, label_name='is_dwarf', umap_fit=umap_fit)
         
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
