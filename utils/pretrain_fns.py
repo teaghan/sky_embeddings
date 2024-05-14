@@ -17,7 +17,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve
 import seaborn as sns
 from matplotlib import pyplot as plt
-
+from scipy.stats import binned_statistic_2d
 import umap
 
 def plot_umap_projection(latent_representation, label_value, label_name, umap_fit=None):
@@ -25,10 +25,10 @@ def plot_umap_projection(latent_representation, label_value, label_name, umap_fi
     if umap_fit == None:
         reducer = umap.UMAP()
     else:
-        reducer = umap_fit
+        reducer = umap_fit # this likely needs to be fixed
+        # Fit UMAP to latent representations
+        reducer.fit(latent_representation)
 
-    # Fit UMAP to latent representations
-    reducer.fit(latent_representation)
     umap_projection = reducer.transform(latent_representation)
 
     if label_name == 'zspec':
@@ -39,7 +39,7 @@ def plot_umap_projection(latent_representation, label_value, label_name, umap_fi
 
     # Plot UMAP projection with colored points
     plt.figure(figsize=(8, 6))
-    plt.scatter(umap_projection[:, 0], umap_projection[:, 1], c=label_value, cmap=cmap)
+    plt.scatter(umap_projection[:, 0], umap_projection[:, 1], c=label_value, cmap=cmap, alpha=0.5)
     plt.colorbar(label=label_name)
     plt.title('UMAP Projection with ' + label_name)
     plt.xlabel('UMAP Dimension 1')
@@ -48,7 +48,107 @@ def plot_umap_projection(latent_representation, label_value, label_name, umap_fi
 
     if umap_fit == None:
         return reducer
+    
 
+def scatter_plot_as_images(images, z_emb, inds_use, nx=8, ny=8, npix_show=96, iseed=13579, display_image=True):
+    """
+
+    TAKEN FROM: https://github.com/georgestein/ssl-legacysurvey/blob/main/ssl_legacysurvey/utils/plotting_tools.py
+    """
+    z_emb = z_emb[:, :2] # keep only first two dimensions
+
+    nplt = nx*ny
+
+    img_full = np.zeros((ny*npix_show, nx*npix_show, 3)) + 255#, dtype=np.uint8) + 255
+
+    xmin = z_emb[:,0].min()
+    xmax = z_emb[:,0].max()
+    ymin = z_emb[:,1].min()
+    ymax = z_emb[:,1].max()
+
+    dz_emb = 0.25
+    dx_cent = z_emb[:,0].mean()
+    dy_cent = z_emb[:,1].mean()
+
+    dx_cent = 10.0
+    dy_cent = 7.0
+
+    # xmin = dx_cent - dz_emb
+    # xmax = dx_cent + dz_emb
+    # ymin = dy_cent - dz_emb
+    # ymax = dy_cent + dz_emb
+
+    binx = np.linspace(xmin,xmax, nx+1)
+    biny = np.linspace(ymin,ymax, ny+1)
+
+    ret = binned_statistic_2d(z_emb[:,0], z_emb[:,1], z_emb[:,1], 'count', bins=[binx, biny], expand_binnumbers=True)
+    z_emb_bins = ret.binnumber.T
+
+    inds_used = []
+    inds_lin = np.arange(z_emb.shape[0])
+
+    # First get all indexes that will be used
+    for ix in range(nx):
+        for iy in range(ny):
+            dm = (z_emb_bins[:,0]==ix) & (z_emb_bins[:,1]==iy)
+            inds = inds_lin[dm]
+
+            np.random.seed(ix*nx+iy+iseed)
+            if len(inds) > 0:
+                ind_plt = np.random.choice(inds)
+                inds_used.append(inds_use[ind_plt])
+
+
+    # load in all images
+    iimg = 0
+
+    # Add each image as postage stamp in desired region  
+    for ix in range(nx):
+        for iy in range(ny):
+            dm = (z_emb_bins[:,0] == ix) & (z_emb_bins[:,1]==iy)
+            inds = inds_lin[dm]
+
+            np.random.seed(ix*nx+iy+iseed)
+            if len(inds) > 0:
+
+                # CHANGE: just show once channel
+                print(images.shape)
+                imi = images[iimg][:,:,2]
+                #to_rgb.dr2_rgb(images[iimg],
+                #                     ['g','r','z'])[::-1]
+
+                img_full[iy*npix_show:(iy+1)*npix_show, ix*npix_show:(ix+1)*npix_show] = imi
+
+                iimg += 1
+                
+    if display_image:
+        plt.figure(figsize=(nx, ny))
+        plt.imshow(img_full, origin='lower')#, interpolation='none')
+        plt.axis('off')
+        
+    return img_full
+
+def plot_umap_cutotus(latent_representation, cutouts):
+    
+    reducer = umap.UMAP()
+
+    # Fit UMAP to latent representations
+    reducer.fit(latent_representation)
+    umap_projection = reducer.transform(latent_representation)
+
+
+    # Plot as images in a fancy plot
+    nx, ny = 8, 8
+    inds_use = np.arange(cutouts.shape[0])
+    im = scatter_plot_as_images(cutouts, umap_projection, inds_use, nx=nx, ny=ny)
+
+    # Plot UMAP projection with colored points
+    #plt.figure(figsize=(8, 6))
+    #plt.scatter(umap_projection[:, 0], umap_projection[:, 1])
+    #plt.title('UMAP of Validation Set')
+    #plt.xlabel('UMAP Dimension 1')
+    #plt.ylabel('UMAP Dimension 2')
+    #plt.savefig('umap_cutouts.png')
 
 def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler,
              losses_cp, mode='train', save_sample=True):
@@ -141,7 +241,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
         
 
-        #umap_fit = plot_umap_projection(x, y, label_name='is_dwarf')
+        ##umap_fit = plot_umap_projection(x, y, label_name='redshift') # also do val set
         
         #print(x.shape) # lower than expected (5952, 3072)
         #print(y.shape) # correct
@@ -201,7 +301,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              model, device, dataloader_template_class, regression=False,
                              y_label='is_dwarf', combine=combine, remove_cls=remove_cls)
         
-        #plot_umap_projection(x, y, label_name='is_dwarf', umap_fit=umap_fit)
+        ##plot_umap_projection(x, y, label_name='is_dwarf', umap_fit=umap_fit)
         
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
