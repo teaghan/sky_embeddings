@@ -158,7 +158,6 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
     '''
     under development, not all unputs are currently used
     '''
-
     if eval:
         print('using evaluation dataloder (not streaming)')
         transforms = v2.Compose([ v2.CenterCrop(img_size),

@@ -241,36 +241,14 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
         
 
-        umap_fit = plot_umap_projection(x, y, label_name='redshift') # also do val set
-        
-        #print(x.shape) # lower than expected (5952, 3072)
-        #print(y.shape) # correct
-        
-        # remove entries where y is NaN (because that means we don't have zspec)
-        # make validation set of just known zspec ones?
-        '''
-        unknown_y = np.where(np.isnan(y))[0] 
-        print(f'removing {len(unknown_y)} examples from linear probe set due to unknown zspec')
-        x = np.delete(x, unknown_y, axis=0)
-        y = np.delete(y, unknown_y, axis=0)
-
-        unknown_x = np.where(np.isnan(x))[0] 
-        print(f'removing {len(unknown_x)} examples from linear probe set due to nan in representation')
-        x = np.delete(x, unknown_x, axis=0)
-        y = np.delete(y, unknown_x, axis=0)
-        '''
-
-        #indices = np.where((y[:, 0] > -1) & (y[:, 0] < 5)) # standard scaled so its a bit weird - maybe do cut before hand
-        #print(f'removing {len(y)-len(indices)} examples where zspec is out of range')
-        #x = x[indices]
-        #y = y[indices]
+        umap_fit = plot_umap_projection(x, y, label_name='redshift')
     
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
         
         # Creating and training a linear model for regression
         #regressor = LinearRegression()
-        regressor = ElasticNet(alpha=0.000001, l1_ratio=0.9, max_iter=1000, random_state=0) # discontinued: normalize=True)
+        regressor = ElasticNet(alpha=0.000001, l1_ratio=0.9, max_iter=1000, random_state=0) 
         regressor.fit(X_train, y_train)
         
         # Predicting the continuous values 
