@@ -7,8 +7,9 @@ cc_dataloader_path = '/github/extra/TileSlicer/'
 sys.path.insert(0, src+cc_dataloader_path)
 from dataloader import dataset_wrapper
 
-eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_redshift_6k_may2024.h5'
-eval_tiles = set(range(500))  # specify tiles to evaluate, only taking 6k of each
+eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_redshift_6k_may2024_under1.h5'
+#eval_dataset_path = '~/projects/  / /data/dr5_eval_set_redshift_6k_may2024_under1.h5'
+eval_tiles = set(range(1000))  # specify tiles to evaluate, only taking 6k of each
 
 # Initialize dataset wrapper
 dataset = dataset_wrapper()
@@ -41,7 +42,7 @@ with h5py.File(eval_dataset_path, 'w') as f:
             # Process catalog data and store directly in datasets
             for i in range(len(catalog)):
                 zspec = catalog['zspec'].iloc[i]
-                if np.isfinite(zspec) and zspec > 0.002:
+                if np.isfinite(zspec) and zspec > 0.002 and zspec < 1:
                     dset_cutouts[index] = cutouts[i] 
                     dset_ra[index] = catalog['ra'].iloc[i]
                     dset_dec[index] = catalog['dec'].iloc[i]

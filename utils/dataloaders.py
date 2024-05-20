@@ -155,31 +155,28 @@ def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=
                         max_mask_ratio=None, label_keys=None, img_size=64, eval=False,
                         num_patches=None, augment=False, shuffle=True, indices=None, transforms=None,
                         eval_data_file='/home/a4ferrei/scratch/data/dr5_eval_set_validation.h5', dwarf=False):
-    '''
-    under development, not all unputs are currently used
-    '''
+    # ^note that num_workers, augment, and shuffle are not used
     if eval:
         print('using evaluation dataloder (not streaming)')
-        transforms = v2.Compose([ v2.CenterCrop(img_size),
+        transforms = v2.Compose([ v2.CenterCrop(img_size), # to center image
                                   v2.ToTensor()]) 
 
         dataset = EvaluationDataset_UNIONS(eval_data_file, img_size=img_size, patch_size=patch_size, 
-                        num_channels=num_channels, max_mask_ratio=max_mask_ratio,
-                        num_patches=num_patches,
-                        label_keys=label_keys, transform=transforms, indices=indices, dwarf=dwarf) # just rename key in future
+                        num_channels=num_channels, max_mask_ratio=max_mask_ratio, num_patches=num_patches, 
+                        label_keys=label_keys, transform=transforms, indices=indices, dwarf=dwarf) 
 
     else:
         #if (transforms is None) and augment:
-        #transforms = get_augmentations(img_size=img_size)
-        transforms = v2.Compose([ v2.RandomCrop(img_size), # turn on/off for centering instead
+        #    transforms = get_augmentations(img_size=img_size)
+        
+        transforms = v2.Compose([ v2.RandomCrop(img_size), # to not center image
                                   v2.ToTensor()]) 
         # norm_pix_loss turned on so not applying addtional normalization
 
         # Build dataset
-        dataset = StreamDataset_UNIONS(img_size=img_size, patch_size=patch_size, 
-                            num_channels=num_channels, max_mask_ratio=max_mask_ratio,
-                            num_patches=num_patches,
-                            label_keys=None, transform=transforms, indices=indices)
+        dataset = StreamDataset_UNIONS(img_size=img_size, patch_size=patch_size, num_channels=num_channels, 
+                            max_mask_ratio=max_mask_ratio,num_patches=num_patches, label_keys=None, 
+                            transform=transforms, indices=indices)
         
     return torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=0, 
                                        pin_memory=True, drop_last=True, shuffle=False)
@@ -251,7 +248,6 @@ class MaskGenerator:
         return masks
 
 class H5Dataset(torch.utils.data.Dataset):
-    
     """
     A PyTorch dataset class for loading and transforming data from H5 files, specifically designed for astronomical
     cutouts or similar types of image datasets. This dataset loader supports dynamic masking, pixel value clipping,
@@ -361,57 +357,24 @@ class H5Dataset(torch.utils.data.Dataset):
 
 class StreamDataset_UNIONS(IterableDataset):
     """
-    A UNIONS-specific version of H5Dataset with streaming. --> under development
-
-    Currently not including:
-    - Pixel value clip 
-    - Select central cutout
-
-    ---------------------------------------
-    
-    A PyTorch dataset class for loading and transforming data from H5 files, specifically designed for astronomical
-    cutouts or similar types of image datasets. This dataset loader supports dynamic masking, pixel value clipping,
-    optional positional channels, and custom transformations.
-
-    The class can handle datasets where each sample consists of an image (cutout) and optionally additional labels,
-    such as RA (Right Ascension) and Dec (Declination) or other specified metadata. It also supports generating masks
-    for images dynamically using a `MaskGenerator` instance based on specified criteria like image size, patch size,
-    and maximum mask ratio.
-
-    Parameters:
-        data_file (str): Path to the H5 file containing the dataset.
-        img_size (int): The size to which images will be resized or cropped.
-        patch_size (int): The size of each patch for the purpose of mask generation.
-        num_channels (int): The number of channels in the images.
-        max_mask_ratio (float, optional): The maximum ratio of the image that can be masked by the `MaskGenerator`.
-        num_patches (int, optional): The number of patches into which the positional channel is divided.
-        label_keys (list of str, optional): Keys to retrieve additional labels from the H5 file.
-        transform (callable, optional): A function/transform that takes in an image and returns a transformed version.
-        pixel_min (float, optional): The minimum pixel value for clipping.
-        pixel_max (float, optional): The maximum pixel value for clipping.
-        indices (list of int, optional): A list of indices specifying which samples to include in the dataset.
-                                         If None, all samples in the file are included.
-
-    Methods:
-        __len__(): Returns the number of samples in the dataset.
-        __iter__(batch_size): Returns batches of samples along with their masks and labels.
+    A UNIONS-specific version of H5Dataset with streaming.
     """
 
     def __init__(self, img_size, patch_size, num_channels, max_mask_ratio, 
-                 num_patches=None, label_keys=None, # take off workers
+                 num_patches=None, label_keys=None, 
                  transform=None, pixel_min=-3., pixel_max=None, indices=None):
         
         self.transform = transform
         self.batch_size = 1
         self.img_size = img_size
         self.num_patches = num_patches
-        self.label_keys = None #label_keys
-        self.pixel_min = pixel_min
-        self.pixel_max = pixel_max
+        self.label_keys = label_keys
+        #self.pixel_min = pixel_min
+        #self.pixel_max = pixel_max
         self.indices = indices
         self.max_mask_ratio = max_mask_ratio
         self.cutout_count = 0
-        self.off_limit_tiles = [(285, 281)] # this one was saved for eval dataset, ideally use more in future
+        self.off_limit_tiles = [(285, 281)] # this one was saved for eval dataset
 
         if max_mask_ratio is not None:
             self.mask_generator = MaskGenerator(input_size=img_size,
@@ -421,11 +384,9 @@ class StreamDataset_UNIONS(IterableDataset):
         else:
             self.mask_generator = None
 
-        # ADDED
         self.dataset = dataset_wrapper()
-        #self.label_keys = None
     
-    def __iter__(self, batch_size=None): # only considering 1 worker now
+    def __iter__(self, batch_size=None): 
 
         # Set batch size if specified, otherwise use default
         if batch_size is None:
@@ -433,19 +394,12 @@ class StreamDataset_UNIONS(IterableDataset):
         
         self.cutout_batch, self.catalog, self.tile = self.dataset.__next__() 
 
-        #print(self.cutout_batch.shape)
         #self.median = np.nanmedian(self.cutout_batch)
         #self.mad = median_abs_deviation(self.cutout_batch, nan_policy='omit', axis=None)
         #print(f'PRE-TRAINING (non-centered): median={self.median}, mad={self.mad}')
 
-        #print('##################')
-        #print(self.tile)
-        #print(self.catalog.head())
-        #print('##################')
-
         if not self.tile in self.off_limit_tiles and self.cutout_batch is not None: 
             self.cutout_count = len(self.cutout_batch) 
-            #self.cutout_batch, self.catalog = shuffle(self.cutout_batch, self.catalog, random_state=0)
             random_indices = np.random.permutation(self.cutout_count)
             self.cutout_batch = [self.cutout_batch[i] for i in random_indices]
             self.catalog = self.catalog.iloc[random_indices].reset_index(drop=True)
@@ -462,7 +416,7 @@ class StreamDataset_UNIONS(IterableDataset):
 
             batch_cutouts = self.cutout_batch[start_idx:end_idx]
 
-            # Normalize cutouts
+            # Normalize cutouts - using norm_pix_loss instead right now
             #for i in range(len(batch_cutouts)):
             #    min_ = np.nanmin(batch_cutouts[i])
             #    max_ = np.nanmax(batch_cutouts[i])
@@ -488,42 +442,7 @@ class StreamDataset_UNIONS(IterableDataset):
 
 class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
     """
-    A UNIONS-specific version of H5Dataset without streaming. --> under development
-
-    Currently not including:
-    - Pixel value clip 
-    - Select central cutout
-
-    ---------------------------------------
-    
-    A PyTorch dataset class for loading and transforming data from H5 files, specifically designed for astronomical
-    cutouts or similar types of image datasets. This dataset loader supports dynamic masking, pixel value clipping,
-    optional positional channels, and custom transformations.
-
-    The class can handle datasets where each sample consists of an image (cutout) and optionally additional labels,
-    such as RA (Right Ascension) and Dec (Declination) or other specified metadata. It also supports generating masks
-    for images dynamically using a `MaskGenerator` instance based on specified criteria like image size, patch size,
-    and maximum mask ratio.
-
-    Parameters:
-        data_file (str): Path to the H5 file containing the dataset.
-        img_size (int): The size to which images will be resized or cropped.
-        patch_size (int): The size of each patch for the purpose of mask generation.
-        num_channels (int): The number of channels in the images.
-        max_mask_ratio (float, optional): The maximum ratio of the image that can be masked by the `MaskGenerator`.
-        num_patches (int, optional): The number of patches into which the positional channel is divided.
-        label_keys (list of str, optional): Keys to retrieve additional labels from the H5 file.
-        transform (callable, optional): A function/transform that takes in an image and returns a transformed version.
-        pixel_min (float, optional): The minimum pixel value for clipping.
-        pixel_max (float, optional): The maximum pixel value for clipping.
-        indices (list of int, optional): A list of indices specifying which samples to include in the dataset.
-                                         If None, all samples in the file are included.
-
-    Methods:
-        __len__(): Returns the number of samples in the dataset.
-        __getitem__(idx): Returns the sample at index `idx` along with its mask and labels. The sample consists of an
-                          image (cutout), a dynamically generated mask if `max_mask_ratio` is specified, and labels
-                          (either RA and Dec or those specified by `label_keys`).
+    A UNIONS-specific version of H5Dataset without streaming.
     """
 
     def __init__(self, data_file, img_size, patch_size, num_channels, max_mask_ratio, 
@@ -535,8 +454,8 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
         self.img_size = img_size
         self.num_patches = num_patches
         self.label_keys = label_keys
-        self.pixel_min = pixel_min
-        self.pixel_max = pixel_max
+        #self.pixel_min = pixel_min
+        #self.pixel_max = pixel_max
         self.indices = indices
         self.max_mask_ratio = max_mask_ratio
         self.dwarf = dwarf
@@ -570,9 +489,8 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
             self.median = np.nanmedian(all_cutouts) 
             self.mad = median_abs_deviation(all_cutouts, nan_policy='omit', axis=None)
 
-        print(f'VALIDATION (centered cutouts): median={self.median}, mad={self.mad}')
-
         '''
+        print(f'VALIDATION (centered cutouts): median={self.median}, mad={self.mad}')
         if self.label_keys is not None:
                 labels = [f[k][idx] for k in self.label_keys]
                 labels = torch.from_numpy(np.asarray(labels).astype(np.float32))

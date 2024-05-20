@@ -52,8 +52,7 @@ def plot_umap_projection(latent_representation, label_value, label_name, umap_fi
 
 def scatter_plot_as_images(images, z_emb, inds_use, nx=8, ny=8, npix_show=96, iseed=13579, display_image=True):
     """
-
-    TAKEN FROM: https://github.com/georgestein/ssl-legacysurvey/blob/main/ssl_legacysurvey/utils/plotting_tools.py
+    ADAPTED FROM: https://github.com/georgestein/ssl-legacysurvey/blob/main/ssl_legacysurvey/utils/plotting_tools.py
     """
     z_emb = z_emb[:, :2] # keep only first two dimensions
 
@@ -97,7 +96,6 @@ def scatter_plot_as_images(images, z_emb, inds_use, nx=8, ny=8, npix_show=96, is
             if len(inds) > 0:
                 ind_plt = np.random.choice(inds)
                 inds_used.append(inds_use[ind_plt])
-
 
     # load in all images
     iimg = 0
@@ -143,12 +141,12 @@ def plot_umap_cutotus(latent_representation, cutouts):
     im = scatter_plot_as_images(cutouts, umap_projection, inds_use, nx=nx, ny=ny)
 
     # Plot UMAP projection with colored points
-    #plt.figure(figsize=(8, 6))
-    #plt.scatter(umap_projection[:, 0], umap_projection[:, 1])
-    #plt.title('UMAP of Validation Set')
-    #plt.xlabel('UMAP Dimension 1')
-    #plt.ylabel('UMAP Dimension 2')
-    #plt.savefig('umap_cutouts.png')
+    plt.figure(figsize=(8, 6))
+    plt.scatter(umap_projection[:, 0], umap_projection[:, 1])
+    plt.title('UMAP of Validation Set')
+    plt.xlabel('UMAP Dimension 1')
+    plt.ylabel('UMAP Dimension 2')
+    plt.savefig('umap_cutouts.png')
 
 def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler,
              losses_cp, mode='train', save_sample=True):
@@ -255,7 +253,6 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         y_pred_test = regressor.predict(X_test)
         y_pred_train = regressor.predict(X_train)
 
-        # TEMP
         fig = plt.figure()
         plt.scatter(y_test, y_pred_test, alpha=0.1)
         #print('max(y_test):', max(y_test))

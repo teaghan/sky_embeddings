@@ -55,7 +55,6 @@ def main(args):
     model, losses, cur_iter, optimizer, lr_scheduler = build_model(config, model_filename, 
                                                                    device, build_optimizer=True)
 
-
     # Data loader stuff
     num_workers = min([os.cpu_count(),12*n_gpu])
     if num_workers>1:
@@ -75,7 +74,7 @@ def main(args):
 
     # Build dataloaders
     if 'survey' in config['DATA'] and config['DATA']['survey'] == 'UNIONS': 
-        # Using Nick's data streaming method
+        # using Nick's data streaming method for pre-training dataloader
         dataloader_train = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
                                                 num_workers=num_workers,
                                                 patch_size=int(config['ARCHITECTURE']['patch_size']), 
@@ -86,6 +85,7 @@ def main(args):
         print('The training set streaming has begun') 
         train_nested_batches = False
 
+        # all other dataloaders are from already saved HDF5 files
         dataloader_val = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
                                                 num_workers=num_workers,
                                                 patch_size=int(config['ARCHITECTURE']['patch_size']), 
@@ -167,7 +167,7 @@ def main(args):
                                             shuffle=True)
 
         # just a band-aid fix for now
-        dataloader_regess, dataloader_classfication = dataloader_val, dataloader_val
+        dataloader_regress, dataloader_classfication = dataloader_val, dataloader_val
 
     
     train_network(model, dataloader_train, dataloader_val, dataloader_regress, dataloader_classfication,
