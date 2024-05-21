@@ -18,8 +18,9 @@ from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve
 import seaborn as sns
 from matplotlib import pyplot as plt
 from scipy.stats import binned_statistic_2d
-import umap
+#import umap
 
+'''
 def plot_umap_projection(latent_representation, label_value, label_name, umap_fit=None):
     # Create UMAP object
     if umap_fit == None:
@@ -148,6 +149,8 @@ def plot_umap_cutotus(latent_representation, cutouts):
     plt.ylabel('UMAP Dimension 2')
     plt.savefig('umap_cutouts.png')
 
+'''
+
 def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler,
              losses_cp, mode='train', save_sample=True):
         
@@ -239,7 +242,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              y_label='zspec', combine=combine, remove_cls=remove_cls)
         
 
-        umap_fit = plot_umap_projection(x, y, label_name='redshift')
+        ##umap_fit = plot_umap_projection(x, y, label_name='redshift')
     
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
@@ -276,7 +279,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
                              model, device, dataloader_template_class, regression=False,
                              y_label='is_dwarf', combine=combine, remove_cls=remove_cls)
         
-        plot_umap_projection(x, y, label_name='is_dwarf', umap_fit=umap_fit)
+        ##plot_umap_projection(x, y, label_name='is_dwarf', umap_fit=umap_fit)
         
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
