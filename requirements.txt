@@ -1,0 +1,4 @@
+torch==2.0.1
+h5py
+scikit-learn
+timm==0.9.16
