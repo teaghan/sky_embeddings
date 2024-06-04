@@ -152,7 +152,7 @@ def build_h5_dataloader(filename, batch_size, num_workers, patch_size=8, num_cha
                                        pin_memory=True)
 
 def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=5, 
-                        max_mask_ratio=None, label_keys=None, img_size=64, eval=False,
+                        max_mask_ratio=None, label_keys=None, img_size=32, eval=False,
                         num_patches=None, augment=False, shuffle=True, indices=None, transforms=None,
                         eval_data_file='/home/a4ferrei/scratch/data/dr5_eval_set_validation.h5', dwarf=False):
     # ^note that num_workers, augment, and shuffle are not used
