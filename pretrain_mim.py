@@ -75,6 +75,8 @@ def main(args):
     # Build dataloaders
     if 'survey' in config['DATA'] and config['DATA']['survey'] == 'UNIONS': 
         # using Nick's data streaming method for pre-training dataloader
+        
+        '''
         dataloader_train = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
                                                 num_workers=num_workers,
                                                 patch_size=int(config['ARCHITECTURE']['patch_size']), 
@@ -82,6 +84,16 @@ def main(args):
                                                 max_mask_ratio=max_mask_ratio, 
                                                 img_size=int(config['ARCHITECTURE']['img_size']),
                                                 num_patches=model.module.patch_embed.num_patches)
+        '''
+        # TEMP
+        dataloader_train = build_unions_dataloader(batch_size=int(config['TRAINING']['batch_size']), 
+                                                num_workers=num_workers,
+                                                patch_size=int(config['ARCHITECTURE']['patch_size']), 
+                                                num_channels=int(config['ARCHITECTURE']['num_channels']), 
+                                                max_mask_ratio=max_mask_ratio, eval=True,
+                                                img_size=int(config['ARCHITECTURE']['img_size']),
+                                                num_patches=model.module.patch_embed.num_patches,
+                                                eval_data_file=(config['DATA']['val_data_file']))  
         print('The training set streaming has begun') 
         train_nested_batches = False
 
