@@ -2,7 +2,7 @@ import h5py
 import random
 import numpy as np
 
-root_dir = '/home/a4ferrei/scratch/data/'
+root_dir = '/home/a4ferrei/projects/def-sfabbro/a4ferrei/data/'
 dwarf_file = root_dir + 'dr5_eval_set_dwarfs_only_may2024.h5' # exists
 validation_file = root_dir + 'dr5_eval_set_validation.h5' # exist
 dwarf_class_file = root_dir + 'dr5_eval_set_dwarfs_class_may2024.h5' # to create

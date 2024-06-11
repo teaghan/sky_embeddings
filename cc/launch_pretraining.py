@@ -57,13 +57,13 @@ def parseArguments():
                         type=str, default='False')
     parser.add_argument("-vfn", "--val_data_file", 
                         help="Filename for validation samples.", 
-                        type=str, default='/home/a4ferrei/scratch/data/dr5_eval_set_validation.h5') 
+                        type=str, default='/home/a4ferrei/projects/def-sfabbro/a4ferrei/data/dr5_eval_set_validation.h5') 
     parser.add_argument("-cfn", "--lp_class_data_file", 
                         help="Filename for linear probe classification samples.", 
                         type=str, default=None) 
     parser.add_argument("-rfn", "--lp_regress_data_file", 
                         help="Filename for linear probe regression samples.", 
-                        type=str, default='/home/a4ferrei/scratch/data/dr5_eval_set_redshift.h5') 
+                        type=str, default='/home/a4ferrei/projects/def-sfabbro/a4ferrei/data/dr5_eval_set_redshift.h5') 
 
     parser.add_argument("-bs", "--batch_size", 
                         help="Training batchsize.", 

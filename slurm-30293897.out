@@ -1,0 +1,16 @@
+
+Lmod is automatically replacing "intel/2020.1.217" with "gcc/9.3.0".
+
+
+Lmod is automatically replacing "intel/2020.1.217" with "gcc/9.3.0".
+
+Traceback (most recent call last):
+  File "/home/a4ferrei/projects/def-sfabbro/a4ferrei/github/sky_embeddings/pretrain_mim.py", line 11, in <module>
+    from utils.pretrain_fns import run_iter, linear_probe
+  File "/lustre06/project/6016730/a4ferrei/github/sky_embeddings/utils/pretrain_fns.py", line 8, in <module>
+    from dataloaders import build_h5_dataloader
+  File "/lustre06/project/6016730/a4ferrei/github/sky_embeddings/utils/dataloaders.py", line 21, in <module>
+    from dataloader import dataset_wrapper
+  File "/home/a4ferrei/projects/def-sfabbro/a4ferrei//github/TileSlicer/dataloader.py", line 8, in <module>
+    from vos import Client
+ModuleNotFoundError: No module named 'vos'

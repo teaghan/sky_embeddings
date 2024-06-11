@@ -2,12 +2,12 @@ import numpy as np
 import h5py
 
 import sys
-src = '/home/a4ferrei/scratch/' 
-cc_dataloader_path = '/github/extra/TileSlicer/'
+src = '/home/a4ferrei/projects/def-sfabbro/a4ferrei/' 
+cc_dataloader_path = '/github/TileSlicer/'
 sys.path.insert(0, src+cc_dataloader_path)
 from dataloader import dataset_wrapper
 
-eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_redshift_6k_may2024_under1.h5'
+eval_dataset_path = '/home/a4ferrei/projects/def-sfabbro/a4ferrei/data/dr5_eval_set_redshift_6k_may2024_under1.h5'
 #eval_dataset_path = '~/projects/  / /data/dr5_eval_set_redshift_6k_may2024_under1.h5'
 eval_tiles = set(range(1000))  # specify tiles to evaluate, only taking 6k of each
 

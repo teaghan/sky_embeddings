@@ -3,13 +3,13 @@ import numpy as np
 import h5py
 
 import sys
-src = '/home/a4ferrei/scratch/' 
-cc_dataloader_path = '/github/extra/TileSlicer/'
+src = '/home/a4ferrei/projects/def-sfabbro/a4ferrei/' 
+cc_dataloader_path = '/github/TileSlicer/'
 sys.path.insert(0, src+cc_dataloader_path)
 from dataloader import dataset_wrapper
 print('done imports')
 
-eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_dwarfs_1k.h5' # lets see if we can fill 1k
+eval_dataset_path = '/home/a4ferrei/projects/def-sfabbro/a4ferrei/data/dr5_eval_set_dwarfs_1k.h5' # lets see if we can fill 1k
 eval_tiles = set(range(50000))  
 
 # Initialize dataset wrapper

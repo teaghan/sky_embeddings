@@ -12,12 +12,12 @@ from astropy.wcs import WCS
 
 # TEMP
 import sys
-src = '/home/a4ferrei/scratch/' 
-cc_dataloader_path = '/github/extra/TileSlicer/'
+src = '/home/a4ferrei/projects/def-sfabbro/a4ferrei/' 
+cc_dataloader_path = '/github/TileSlicer/'
 sys.path.insert(0, src+cc_dataloader_path)
 from dataloader import dataset_wrapper
 
-eval_dataset_path = '/home/a4ferrei/scratch/data/dr5_eval_set_2.h5'
+eval_dataset_path = '/home/a4ferrei/projects/def-sfabbro/a4ferrei/data/dr5_eval_set_2.h5'
 # dr5_eval_set.h5 just has (285, 281)
 
 found = 0

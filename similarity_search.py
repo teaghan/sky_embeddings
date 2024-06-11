@@ -54,7 +54,7 @@ def parseArguments():
     # Alternative data directory than sky_embeddings/data/
     parser.add_argument("-dd", "--data_dir", 
                         help="Data directory", 
-                        type=str, default='/home/a4ferrei/scratch/data/')
+                        type=str, default='/home/a4ferrei/projects/def-sfabbro/a4ferrei/data/')
     
     return parser
 

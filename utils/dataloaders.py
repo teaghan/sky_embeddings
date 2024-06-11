@@ -15,8 +15,8 @@ from torch.utils.data import IterableDataset, DataLoader
 
 # TEMP
 import sys
-src = '/home/a4ferrei/scratch/' 
-cc_dataloader_path = '/github/extra/TileSlicer/'
+src = '/home/a4ferrei/projects/def-sfabbro/a4ferrei/' 
+cc_dataloader_path = '/github/TileSlicer/'
 sys.path.insert(0, src+cc_dataloader_path)
 from dataloader import dataset_wrapper
 
@@ -154,7 +154,7 @@ def build_h5_dataloader(filename, batch_size, num_workers, patch_size=8, num_cha
 def build_unions_dataloader(batch_size, num_workers, patch_size=8, num_channels=5, 
                         max_mask_ratio=None, label_keys=None, img_size=32, eval=False,
                         num_patches=None, augment=False, shuffle=True, indices=None, transforms=None,
-                        eval_data_file='/home/a4ferrei/scratch/data/dr5_eval_set_validation.h5', dwarf=False):
+                        eval_data_file='/home/a4ferrei/projects/def-sfabbro/a4ferrei/data/dr5_eval_set_validation.h5', dwarf=False):
     # ^note that num_workers, augment, and shuffle are not used
     if eval:
         print('using evaluation dataloder (not streaming)')

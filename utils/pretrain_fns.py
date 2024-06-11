@@ -263,7 +263,7 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         plt.plot(line, line, '--')
         plt.xlabel('true zspec')
         plt.ylabel('predicted zspec')
-        fig.savefig('/home/a4ferrei/scratch/github/sky_embeddings/figures/zspec_predictions_2.png')
+        fig.savefig('/home/a4ferrei/projects/def-sfabbro/a4ferrei/github/sky_embeddings/figures/zspec_predictions_2.png')
         
         # Evaluating the regressor
         #mse_test = mean_squared_error(y_test, y_pred_test)
