@@ -1,0 +1,22 @@
+# Ignore these files and folders
+data/
+data_test/
+figures/
+cutouts/
+__pycache__/
+TileSlicer.code-workspace
+notebooks/.ipynb_checkpoints/
+.vscode/
+.idea/
+ruff.toml
+tables/redshifts-2024-01-04.parquet
+tables/redshifts-2024-05-07.parquet
+tables/unions/
+tables/redshifts
+tables/cutout_cat_master.parquet
+logs/
+tables/cutout_catalog_master.parquet
+.conda/
+cadcproxy.pem
+*.out
+*.whl
