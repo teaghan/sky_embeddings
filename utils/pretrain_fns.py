@@ -232,10 +232,10 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
     if combine=='token':
         remove_cls = False
 
-    print('class_data_path:', class_data_path)
-    
     model.train(False)
     if regress_data_path:
+        print('doing linear probe for regression')
+
         # Regression task
         x,y = get_embeddings(regress_data_path, 
                              model, device, dataloader_template_reg, regression=True,
@@ -256,24 +256,15 @@ def linear_probe(model, losses_cp, device, dataloader_template_reg, dataloader_t
         y_pred_test = regressor.predict(X_test)
         y_pred_train = regressor.predict(X_train)
 
-        fig = plt.figure()
-        plt.scatter(y_test, y_pred_test, alpha=0.1)
-        #print('max(y_test):', max(y_test))
-        line = np.linspace(0,max(y_test), num=5)
-        plt.plot(line, line, '--')
-        plt.xlabel('true zspec')
-        plt.ylabel('predicted zspec')
-        fig.savefig('/home/a4ferrei/projects/def-sfabbro/a4ferrei/github/sky_embeddings/figures/zspec_predictions_2.png')
-        
         # Evaluating the regressor
-        #mse_test = mean_squared_error(y_test, y_pred_test)
-        #mse_train = mean_squared_error(y_train, y_pred_train)
         r2_test = r2_score(y_test, y_pred_test)
         r2_train = r2_score(y_train, y_pred_train)
         losses_cp['train_lp_r2'].append(float(r2_train))
         losses_cp['val_lp_r2'].append(float(r2_test))
 
-    elif class_data_path:
+    if class_data_path:
+        print('doing linear probe for classification')
+        
         # Classifier task
         x,y = get_embeddings(class_data_path, 
                              model, device, dataloader_template_class, regression=False,

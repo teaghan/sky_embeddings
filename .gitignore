@@ -1,6 +1,7 @@
 # Ignore these files and folders
 data/
 data_test/
+models/
 figures/
 cutouts/
 __pycache__/

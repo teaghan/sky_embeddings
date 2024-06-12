@@ -93,7 +93,8 @@ def main(args):
                                                 max_mask_ratio=max_mask_ratio, eval=True,
                                                 img_size=int(config['ARCHITECTURE']['img_size']),
                                                 num_patches=model.module.patch_embed.num_patches,
-                                                eval_data_file=(config['DATA']['val_data_file']))  
+                                                eval_data_file=(config['DATA']['val_data_file'])) 
+    
         print('The training set streaming has begun') 
         train_nested_batches = False
 
@@ -210,10 +211,9 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
     print('Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'%
           (verbose_iters, cp_time))
     
-    print('lp_class_data_file:', lp_class_data_file)
-    
     # Train the neural networks
     losses_cp = defaultdict(list)
+    print('losses_cp:', losses_cp)
     cp_start_time = time.time()
     #time1 = time.time()
     while cur_iter < (total_batch_iters):
@@ -238,6 +238,7 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
                                                                  mask_ratio, optimizer, 
                                                                  lr_scheduler, 
                                                                  losses_cp, mode='train')
+            print('losses_cp:', losses_cp)
             print('training iter done.')
             
             #if cur_iter % 100 == 0:
@@ -261,6 +262,7 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
                                                                              mask_ratio, optimizer, 
                                                                              lr_scheduler, 
                                                                              losses_cp, mode='val')
+                        print('losses_cp:', losses_cp)
                         # Don't bother with the whole dataset
                         if i>=1000:
                             break
@@ -269,7 +271,6 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
                         # Run Linear Probing tests
                         linear_probe(model, losses_cp, device, dataloader_regress, dataloader_classification,
                                      lp_class_data_file, lp_regress_data_file, combine=lp_combine)
-                        print(lp_class_data_file)
                 
                 # Calculate averages
                 for k in losses_cp.keys():
@@ -287,7 +288,9 @@ def train_network(model, dataloader_train, dataloader_val, dataloader_regress, d
                 if lp_class_data_file or lp_regress_data_file:
                     print('Linear Probing Results:')
                     if lp_class_data_file:
-                        print('\tClassification Accuracy:') # these keys are missing
+                        print('\tClassification Accuracy:') 
+                        print(losses['train_lp_acc']) # just not a key
+                        print(losses['val_lp_acc'])
                         print('\t\tTraining: %0.3f, Validation: %0.3f'% (losses['train_lp_acc'][-1], losses['val_lp_acc'][-1]))
                     if lp_regress_data_file:
                         print('\tRegression R2')

@@ -17,8 +17,8 @@ Ensure you have the following installed:
 - Python 3.11.5
 - PyTorch: `pip install torch==2.0.1`
 - h5py: `pip install h5py`
-- Scikit-learn `pip install scikit-learn`
-- Timm `pip install timm==0.9.16` (I think, 0.3.2 didn't work)
+- Scikit-learn: `pip install scikit-learn`
+- Timm: `pip install timm==0.9.16` (I think, 0.3.2 didn't work)
 
 <br><br>
 

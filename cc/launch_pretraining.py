@@ -4,6 +4,8 @@ import sys
 import argparse
 import configparser
 
+# python cc/queue_cc.py --account "def-sfabbro" --todo_dir "scripts/todo/" --done_dir "scripts/done/" --output_dir "scripts/stdout/" --num_jobs 1 --num_runs 3 --num_gpu 1 --num_cpu 6 --mem 10G --time_limit "00-03:00"
+
 def parseArguments():
     # Create argument parser
     parser = argparse.ArgumentParser()
