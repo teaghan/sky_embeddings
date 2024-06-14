@@ -5,12 +5,12 @@ import pandas as pd
 
 # TEMP
 import sys
-src = '/home/a4ferrei/projects/def-sfabbro/a4ferrei/' 
+src = '/home/heesters/projects/def-sfabbro/a4ferrei/' 
 cc_dataloader_path = '/github/TileSlicer/'
 sys.path.insert(0, src+cc_dataloader_path)
 from dataloader import dataset_wrapper
 
-eval_dataset_path = '/home/a4ferrei/projects/def-sfabbro/a4ferrei/data/dr5_eval_set_validation_10kx5tiles.h5' # just a 10k sample
+eval_dataset_path = '/home/heesters/projects/def-sfabbro/a4ferrei/data/dr5_eval_set_validation_10kx5tiles.h5' # just a 10k sample
 num_tiles_to_save = 5  # specify the number of tiles to save
 
 # Initialize dataset wrapper

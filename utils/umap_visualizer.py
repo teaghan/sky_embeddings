@@ -40,7 +40,7 @@ dataloader = build_unions_dataloader(batch_size=128,
                                                 img_size=64,
                                                 num_patches=model.module.patch_embed.num_patches,
                                                 label_keys=['is_dwarf'],
-                                                eval_data_file='/home/a4ferrei/projects/def-sfabbro/a4ferrei/data/dr5_eval_set_redshift_6k_may2024.h5',
+                                                eval_data_file='/home/heesters/projects/def-sfabbro/a4ferrei/data/dr5_eval_set_redshift_6k_may2024.h5',
                                                 augment=False)
 
 #x,y = get_embeddings(class_data_path, 

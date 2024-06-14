@@ -18,7 +18,7 @@ python cc/queue_cc.py --account "def-sfabbro" --todo_dir "scripts/todo/" --done_
 you can see all these jobs when you sq but all of them after the first will show (Dependency) next to them as they will wait for the first one to complete. you also need to make sure this is hooked up to a streaming dataloader that either pulls tiles randomly or keeps track of what has been pulled already.
 
 other notes:
-- need to change all /home/a4ferrei to your home
+- need to change all /home/heesters to your home
 - maybe change my env folder to your env
 - change github folder to where your code is
 - currently valiation set is being used for training and testing, change this when doing real runs
