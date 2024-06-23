@@ -51,8 +51,8 @@ class RandomChannelNaN:
         Applies the RandomChannelNaN transformation to an input image tensor, randomly replacing up to `max_channels` channels with NaN values.
 
         Args:
-            img (torch.Tensor): The input image tensor. Expected shape: (C, H, W) where
-                C is the number of channels, H is the height, and W is the width.
+            img (torch.Tensor): The input image tensor. Expected shape: (C, H, W) or (B, C, H, W) where
+                C is the number of channels, H is the height, and W is the width, and B is the batch size.
 
         Returns:
             torch.Tensor: The augmented image tensor with a random number of channels replaced by NaN values, up to `max_channels`.
@@ -61,19 +61,28 @@ class RandomChannelNaN:
         if not isinstance(img, torch.Tensor):
             raise TypeError("img must be a torch.Tensor")
 
+        # Check if the tensor has a batch dimension
+        if img.dim() == 3:
+            img = img.unsqueeze(0)  # Add a batch dimension if it's not there
+
+        B, C, H, W = img.shape
+
         # Ensure max_channels is not greater than the number of channels in the image
-        C, _, _ = img.shape
         if self.max_channels > C:
             raise ValueError(f"max_channels must be less than or equal to the number of channels in the image. Got {self.max_channels} for an image with {C} channels.")
 
-        # Randomly decide the number of channels to replace, up to max_channels
-        n_channels_to_replace = random.randint(0, self.max_channels)
+        for b in range(B):
+            # Randomly decide the number of channels to replace, up to max_channels
+            n_channels_to_replace = random.randint(0, self.max_channels)
 
-        # Randomly select n_channels_to_replace to replace with NaN
-        channels_to_replace = random.sample(range(C), n_channels_to_replace)
+            # Randomly select n_channels_to_replace to replace with NaN
+            channels_to_replace = random.sample(range(C), n_channels_to_replace)
 
-        for c in channels_to_replace:
-            img[c, :, :] = torch.nan
+            for c in channels_to_replace:
+                img[b, c, :, :] = torch.nan
+
+        if img.shape[0] == 1:
+            img = img.squeeze(0)  # Remove the batch dimension if it was originally not there
 
         return img
 
