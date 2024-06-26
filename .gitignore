@@ -1,3 +1,6 @@
 notebooks/data
 .vscode
 slurm*
+figures/
+models/
+ruff.toml
