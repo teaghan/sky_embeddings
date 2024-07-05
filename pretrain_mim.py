@@ -7,7 +7,11 @@ from collections import defaultdict
 import numpy as np
 import torch
 
-from utils.dataloaders import build_fits_dataloader, build_h5_dataloader, build_unions_dataloader
+from utils.dataloaders import (
+    build_fits_dataloader,
+    build_h5_dataloader,
+    build_unions_dataloader,
+)
 from utils.eval_fns import mae_predict
 from utils.mim_vit import build_model
 from utils.misc import parseArguments, str2bool
@@ -105,7 +109,7 @@ def main(args):
             max_mask_ratio=max_mask_ratio,
             eval=True,
             img_size=int(config['ARCHITECTURE']['img_size']),
-            num_patches=model.module.patch_embed.num_patches,
+            num_patches=model.module.patch_embed.num_patches,  # type: ignore
             eval_data_file=(config['DATA']['val_data_file']),
         )
 
@@ -121,7 +125,7 @@ def main(args):
             max_mask_ratio=max_mask_ratio,
             eval=True,
             img_size=int(config['ARCHITECTURE']['img_size']),
-            num_patches=model.module.patch_embed.num_patches,
+            num_patches=model.module.patch_embed.num_patches,  # type: ignore
             eval_data_file=(config['DATA']['val_data_file']),
         )
 
@@ -134,7 +138,7 @@ def main(args):
                 max_mask_ratio=0.0,
                 eval=True,
                 img_size=int(config['ARCHITECTURE']['img_size']),
-                num_patches=model.module.patch_embed.num_patches,
+                num_patches=model.module.patch_embed.num_patches,  # type: ignore
                 label_keys=['zspec'],
                 eval_data_file=(config['DATA']['lp_regress_data_file']),
             )
@@ -150,7 +154,7 @@ def main(args):
                 max_mask_ratio=0.0,
                 eval=True,
                 img_size=int(config['ARCHITECTURE']['img_size']),
-                num_patches=model.module.patch_embed.num_patches,
+                num_patches=model.module.patch_embed.num_patches,  # type: ignore
                 label_keys=['is_dwarf'],
                 eval_data_file=(config['DATA']['lp_class_data_file']),
             )
@@ -171,7 +175,7 @@ def main(args):
                 num_channels=int(config['ARCHITECTURE']['num_channels']),
                 max_mask_ratio=max_mask_ratio,
                 img_size=int(config['ARCHITECTURE']['img_size']),
-                num_patches=model.module.patch_embed.num_patches,
+                num_patches=model.module.patch_embed.num_patches,  # type: ignore
                 shuffle=True,
             )
             print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
@@ -204,7 +208,7 @@ def main(args):
             num_channels=int(config['ARCHITECTURE']['num_channels']),
             max_mask_ratio=max_mask_ratio,
             img_size=int(config['ARCHITECTURE']['img_size']),
-            num_patches=model.module.patch_embed.num_patches,
+            num_patches=model.module.patch_embed.num_patches,  # type: ignore
             shuffle=True,
         )
 

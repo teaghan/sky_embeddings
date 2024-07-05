@@ -12,12 +12,14 @@ from scipy.stats import median_abs_deviation
 from torch.utils.data import IterableDataset
 from torchvision.transforms import v2
 
+from utils.helper import shuffle_dataset, tensor_compatible
+
 torchvision.disable_beta_transforms_warning()
 # TEMP
 src = '/home/heesters/projects/def-sfabbro/heesters/'
 cc_dataloader_path = 'github/TileSlicer/'
 sys.path.insert(0, src + cc_dataloader_path)
-from dataloader import dataset_wrapper
+from dataloader import dataset_wrapper  # type: ignore # noqa: E402
 
 
 # Custom brightness adjustment for images
@@ -105,7 +107,10 @@ def get_augmentations(
     if crop:
         transforms.append(
             v2.RandomResizedCrop(
-                size=(img_size, img_size), scale=(0.8, 1.0), ratio=(0.9, 1.1), antialias=True
+                size=(img_size, img_size),
+                scale=(0.8, 1.0),
+                ratio=(0.9, 1.1),
+                antialias=True,
             )
         )
     if brightness is not None:
@@ -165,7 +170,7 @@ def build_fits_dataloader(
     )
 
     # Build dataloader
-    return torch.utils.data.DataLoader(
+    return torch.utils.data.DataLoader(  # type: ignore
         dataset,
         batch_size=1,
         shuffle=shuffle,
@@ -217,14 +222,25 @@ def build_h5_dataloader(
     )
 
     # Build dataloader
-    return torch.utils.data.DataLoader(
+    return torch.utils.data.DataLoader(  # type: ignore
         dataset, batch_size=batch_size, shuffle=shuffle, num_workers=0, pin_memory=True
     )
 
 
 def build_unions_dataloader(
+    update_tiles,
+    off_limit_tiles,
+    min_num_bands,
+    processed_file,
+    exclude_processed,
+    obj_per_tile,
+    queue_length,
     batch_size,
+    in_dict,
     num_workers,
+    world_size=1,
+    rank=0,
+    collator=None,
     patch_size=8,
     num_channels=5,
     max_mask_ratio=None,
@@ -238,6 +254,9 @@ def build_unions_dataloader(
     transforms=None,
     eval_data_file='/home/heesters/projects/def-sfabbro/a4ferrei/data/dr5_eval_set_validation.h5',
     dwarf=False,
+    do_norm=False,
+    band_means=[0.0, 0.0, 0.0, 0.0, 0.0],
+    band_stds=[1.0, 1.0, 1.0, 1.0, 1.0],
 ):
     # ^note that num_workers, augment, and shuffle are not used
     if eval:
@@ -248,6 +267,14 @@ def build_unions_dataloader(
                 v2.ToTensor(),
             ]
         )
+        if do_norm:
+            transforms = v2.Compose(
+                [
+                    v2.CenterCrop(img_size),
+                    v2.ToTensor(),
+                    v2.Normalize(mean=band_means, std=band_stds),
+                ]
+            )
 
         dataset = EvaluationDataset_UNIONS(
             eval_data_file,
@@ -263,17 +290,24 @@ def build_unions_dataloader(
         )
 
     else:
-        # if (transforms is None) and augment:
-        #    transforms = get_augmentations(img_size=img_size)
-
         transforms = v2.Compose(
             [
                 v2.RandomCrop(img_size),  # to not center image
                 v2.ToTensor(),
             ]
         )
+
+        if do_norm:
+            transforms = v2.Compose(
+                [
+                    v2.RandomCrop(img_size),
+                    v2.ToTensor(),
+                    v2.Normalize(mean=band_means, std=band_stds),
+                ]
+            )
         # norm_pix_loss turned on so not applying addtional normalization
 
+    if collator is None:
         # Build dataset
         dataset = StreamDataset_UNIONS(
             img_size=img_size,
@@ -285,15 +319,40 @@ def build_unions_dataloader(
             transform=transforms,
             indices=indices,
         )
+        dataloader = torch.utils.data.DataLoader(  # type: ignore
+            dataset,
+            batch_size=batch_size,
+            num_workers=0,
+            pin_memory=True,
+            drop_last=True,
+            shuffle=False,
+        )
+    else:
+        # Build dataset
+        dataset = StreamDataset_UNIONS_jepa(
+            off_limit_tiles=off_limit_tiles,
+            img_size=img_size,
+            update_tiles=update_tiles,
+            min_num_bands=min_num_bands,
+            in_dict=in_dict,
+            processed_file=processed_file,
+            exclude_processed=exclude_processed,
+            obj_per_tile=obj_per_tile,
+            queue_length=queue_length,
+            world_size=world_size,
+            rank=rank,
+        )
+        dataloader = torch.utils.data.DataLoader(  # type: ignore
+            dataset,
+            batch_size=batch_size,
+            num_workers=0,
+            pin_memory=True,
+            drop_last=True,
+            shuffle=False,
+            collate_fn=collator,
+        )
 
-    return torch.utils.data.DataLoader(
-        dataset,
-        batch_size=batch_size,
-        num_workers=0,
-        pin_memory=True,
-        drop_last=True,
-        shuffle=False,
-    )
+    return dataloader
 
 
 class MaskGenerator:
@@ -365,7 +424,7 @@ class MaskGenerator:
         return masks
 
 
-class H5Dataset(torch.utils.data.Dataset):
+class H5Dataset(torch.utils.data.Dataset):  # type: ignore
     """
     A PyTorch dataset class for loading and transforming data from H5 files, specifically designed for astronomical
     cutouts or similar types of image datasets. This dataset loader supports dynamic masking, pixel value clipping,
@@ -437,7 +496,7 @@ class H5Dataset(torch.utils.data.Dataset):
             return len(self.indices)
         else:
             with h5py.File(self.data_file, 'r') as f:
-                num_samples = len(f['cutouts'])
+                num_samples = len(f['cutouts'])  # type: ignore
             return num_samples
 
     def __getitem__(self, idx):
@@ -446,24 +505,26 @@ class H5Dataset(torch.utils.data.Dataset):
             idx = self.indices[idx]
         with h5py.File(self.data_file, 'r') as f:
             # Load cutout
-            cutout = f['cutouts'][idx]
+            cutout = f['cutouts'][idx]  # type: ignore
 
             # Clip pixel values
             if self.pixel_min is not None:
-                cutout[cutout < self.pixel_min] = self.pixel_min
+                cutout[cutout < self.pixel_min] = self.pixel_min  # type: ignore
             if self.pixel_max is not None:
-                cutout[cutout > self.pixel_max] = self.pixel_max
+                cutout[cutout > self.pixel_max] = self.pixel_max  # type: ignore
 
-            if (np.array(cutout.shape[1:]) > self.img_size).any():
+            if (np.array(cutout.shape[1:]) > self.img_size).any():  # type: ignore
                 # Select central cutout
                 cutout = extract_center(cutout, self.img_size)
 
             # Load RA and Dec
-            ra_dec = torch.from_numpy(np.asarray([f['ra'][idx], f['dec'][idx]]).astype(np.float32))
+            ra_dec = torch.from_numpy(
+                np.asarray([f['ra'][idx], f['dec'][idx]]).astype(np.float32)  # type: ignore
+            )
 
             # Load labels
             if self.label_keys is not None:
-                labels = [f[k][idx] for k in self.label_keys]
+                labels = [f[k][idx] for k in self.label_keys]  # type: ignore
                 if 'class' in self.label_keys:
                     labels = torch.from_numpy(np.asarray(labels).astype(np.int64)).long()
                 else:
@@ -582,10 +643,59 @@ class StreamDataset_UNIONS(IterableDataset):
             if self.label_keys is None:
                 yield batch_cutouts, batch_masks, batch_ra_dec
             else:
-                yield batch_cutouts, batch_masks, batch_ra_dec, labels
+                yield batch_cutouts, batch_masks, batch_ra_dec, labels  # type: ignore # noqa: F821
 
 
-class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
+class StreamDataset_UNIONS_jepa(IterableDataset):
+    """
+    A simplified version of StreamDataset_UNIONS for use with a collator function.
+    """
+
+    def __init__(
+        self,
+        off_limit_tiles,
+        update_tiles,
+        min_num_bands,
+        in_dict,
+        img_size,
+        processed_file,
+        exclude_processed,
+        obj_per_tile,
+        queue_length,
+        world_size,
+        rank,
+    ):
+        # self.off_limit_tiles = [(285, 281)]  # this one was saved for eval dataset
+        self.off_limit_tiles = off_limit_tiles
+        self.datastream = dataset_wrapper(
+            update_tiles=update_tiles,
+            band_constr=min_num_bands,
+            in_dict=in_dict,
+            size=img_size,
+            processed=processed_file,
+            exclude_processed=exclude_processed,
+            num_objects=obj_per_tile,
+            q_size=queue_length,
+            world_size=world_size,
+            rank=rank,
+        )
+
+    def __iter__(self):
+        for cutout_stack, catalog, tile in self.datastream:
+            if cutout_stack is None or tile in self.off_limit_tiles:
+                continue
+            cutout_stack, catalog = shuffle_dataset(cutout_stack, catalog)
+            catalog = tensor_compatible(catalog)
+            cutout_stack = torch.from_numpy(cutout_stack).to(dtype=torch.float32)
+            catalog = torch.from_numpy(catalog.values).to(dtype=torch.float32)
+            for cutout, metadata in zip(cutout_stack, catalog):
+                yield (
+                    cutout,
+                    metadata,
+                )  # Yielding individual cutouts and their respective metadata
+
+
+class EvaluationDataset_UNIONS(torch.utils.data.Dataset):  # type: ignore
     """
     A UNIONS-specific version of H5Dataset without streaming.
     """
@@ -638,14 +748,14 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
             return len(self.indices)
         else:
             with h5py.File(self.data_file, 'r') as f:
-                num_samples = len(f[self.image_key])
+                num_samples = len(f[self.image_key])  # type: ignore
             return num_samples
 
     def __printstats__(self):
         with h5py.File(self.data_file, 'r') as f:
             all_cutouts = f[self.image_key]
-            self.median = np.nanmedian(all_cutouts)
-            self.mad = median_abs_deviation(all_cutouts, nan_policy='omit', axis=None)
+            self.median = np.nanmedian(all_cutouts)  # type: ignore
+            self.mad = median_abs_deviation(all_cutouts, nan_policy='omit', axis=None)  # type: ignore
 
         """
         print(f'VALIDATION (centered cutouts): median={self.median}, mad={self.mad}')
@@ -662,7 +772,7 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
             idx = self.indices[idx]
         with h5py.File(self.data_file, 'r') as f:
             # Load cutout
-            cutout = f[self.image_key][idx]
+            cutout = f[self.image_key][idx]  # type: ignore
 
             # Clip pixel values
             # if self.pixel_min is not None:
@@ -675,11 +785,13 @@ class EvaluationDataset_UNIONS(torch.utils.data.Dataset):
             #    cutout = extract_center(cutout, self.img_size)
 
             # Load RA and Dec
-            ra_dec = torch.from_numpy(np.asarray([f['ra'][idx], f['dec'][idx]]).astype(np.float32))
+            ra_dec = torch.from_numpy(
+                np.asarray([f['ra'][idx], f['dec'][idx]]).astype(np.float32)  # type: ignore
+            )
 
             # Load labels
             if self.label_keys is not None:
-                labels = [f[k][idx] for k in self.label_keys]
+                labels = [f[k][idx] for k in self.label_keys]  # type: ignore
                 labels = torch.from_numpy(np.asarray(labels).astype(np.float32))
                 print('labels.shape:', labels.shape)
 
@@ -800,7 +912,7 @@ def load_fits_bands(patch_filenames, return_wc=False):
             try:
                 # Attempt to open the FITS file
                 with fits.open(fn, mode='readonly', ignore_missing_simple=True) as hdul:
-                    data = hdul[1].data
+                    data = hdul[1].data  # type: ignore
                     if reference_shape is None:
                         reference_shape = data.shape  # Found our reference shape
                     imgs.append(data)
@@ -808,7 +920,7 @@ def load_fits_bands(patch_filenames, return_wc=False):
                     # Collect pixel to world coord
                     if not wc_collected:
                         if return_wc:
-                            wcs = WCS(hdul[1].header)
+                            wcs = WCS(hdul[1].header)  # type: ignore
 
                             # Return function for determining RA and Dec from pixel coords
                             def pix_to_radec(x, y):
@@ -816,7 +928,7 @@ def load_fits_bands(patch_filenames, return_wc=False):
                                 # confusing to me, but I'm pretty sure this is right...
                                 return wcs.all_pix2world(x, y, 0)
                         else:
-                            pix_to_radec = None
+                            pix_to_radec = None  # type: ignore
                         wc_collected = True
 
             except Exception as e:
@@ -827,7 +939,7 @@ def load_fits_bands(patch_filenames, return_wc=False):
     # Now, ensure all placeholders are replaced with np.nan arrays of the correct shape
     for i, item in enumerate(imgs):
         if item is None:
-            imgs[i] = np.full(reference_shape, np.nan)
+            imgs[i] = np.full(reference_shape, np.nan)  # type: ignore
 
     # Organize into (C, H, W) and convert to a single NumPy array
     return np.stack(imgs), pix_to_radec
@@ -865,7 +977,7 @@ def random_cutouts(input_array, img_size, n_cutouts, pix_to_radec=None):
     return cutouts
 
 
-class FitsDataset(torch.utils.data.Dataset):
+class FitsDataset(torch.utils.data.Dataset):  # type: ignore
     """
     A PyTorch dataset class for loading astronomical image data from FITS files, designed to handle multi-band
     astronomical images and generate cutouts of a specified size. This dataset supports dynamic mask generation,
@@ -962,9 +1074,9 @@ class FitsDataset(torch.utils.data.Dataset):
 
         # Clip pixel values
         if self.pixel_min is not None:
-            cutouts[cutouts < self.pixel_min] = self.pixel_min
+            cutouts[cutouts < self.pixel_min] = self.pixel_min  # type: ignore
         if self.pixel_max is not None:
-            cutouts[cutouts > self.pixel_max] = self.pixel_max
+            cutouts[cutouts > self.pixel_max] = self.pixel_max  # type: ignore
 
         # Apply any augmentations
         cutouts = torch.from_numpy(cutouts).to(torch.float32)

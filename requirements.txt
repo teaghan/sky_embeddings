@@ -1,0 +1,10 @@
+torch
+h5py
+scikit-learn
+timm==0.9.16
+astropy==6.0.0
+jupyter
+matplotlib
+scikit-image
+pandas
+filelock
