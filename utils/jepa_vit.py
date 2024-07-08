@@ -24,7 +24,7 @@ def build_model(
     pred_depth=6,
     pred_emb_dim=384,
 ):
-    encoder = globals().get(model_name)(img_size=[crop_size], patch_size=patch_size)
+    encoder = globals().get(model_name)(img_size=[crop_size], patch_size=patch_size)  # type: ignore
     predictor = vit_predictor(
         num_patches=encoder.patch_embed.num_patches,
         embed_dim=encoder.embed_dim,
@@ -74,31 +74,15 @@ def build_optimizer(
     ipe_scale=1.25,
 ):
     param_groups = [
+        {'params': (p for n, p in encoder.named_parameters() if ('bias' not in n) and (len(p.shape) != 1))},
+        {'params': (p for n, p in predictor.named_parameters() if ('bias' not in n) and (len(p.shape) != 1))},
         {
-            'params': (
-                p
-                for n, p in encoder.named_parameters()
-                if ('bias' not in n) and (len(p.shape) != 1)
-            )
-        },
-        {
-            'params': (
-                p
-                for n, p in predictor.named_parameters()
-                if ('bias' not in n) and (len(p.shape) != 1)
-            )
-        },
-        {
-            'params': (
-                p for n, p in encoder.named_parameters() if ('bias' in n) or (len(p.shape) == 1)
-            ),
+            'params': (p for n, p in encoder.named_parameters() if ('bias' in n) or (len(p.shape) == 1)),
             'WD_exclude': True,
             'weight_decay': 0,
         },
         {
-            'params': (
-                p for n, p in predictor.named_parameters() if ('bias' in n) or (len(p.shape) == 1)
-            ),
+            'params': (p for n, p in predictor.named_parameters() if ('bias' in n) or (len(p.shape) == 1)),
             'WD_exclude': True,
             'weight_decay': 0,
         },
@@ -152,9 +136,7 @@ def load_checkpoint(
             logger.info(list(checkpoint.keys()))
             pretrained_dict = checkpoint['target_encoder']
             msg = target_encoder.load_state_dict(pretrained_dict)
-            logger.info(
-                f'loaded pretrained encoder from batch iteration {cur_iter} with msg: {msg}'
-            )
+            logger.info(f'loaded pretrained encoder from batch iteration {cur_iter} with msg: {msg}')
 
         # load optimizer
         opt.load_state_dict(checkpoint['opt'])
@@ -234,17 +216,15 @@ class VisionTransformer(nn.Module):
         )
         num_patches = self.patch_embed.num_patches
         # --
-        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches, embed_dim), requires_grad=False)
+        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches, embed_dim), requires_grad=False)  # type: ignore
         pos_embed = get_2d_sincos_pos_embed(
             self.pos_embed.shape[-1],
-            int(self.patch_embed.num_patches**0.5),
+            int(self.patch_embed.num_patches**0.5),  # type: ignore
             cls_token=False,
         )
         self.pos_embed.data.copy_(torch.from_numpy(pos_embed).float().unsqueeze(0))
         # --
-        dpr = [
-            x.item() for x in torch.linspace(0, drop_path_rate, depth)
-        ]  # stochastic depth decay rule
+        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
         self.blocks = nn.ModuleList(
             [
                 Block(
@@ -354,9 +334,7 @@ class VisionTransformerPredictor(nn.Module):
         super().__init__()
         self.predictor_embed = nn.Linear(embed_dim, predictor_embed_dim, bias=True)
         self.mask_token = nn.Parameter(torch.zeros(1, 1, predictor_embed_dim))
-        dpr = [
-            x.item() for x in torch.linspace(0, drop_path_rate, depth)
-        ]  # stochastic depth decay rule
+        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
         # --
         self.predictor_pos_embed = nn.Parameter(
             torch.zeros(1, num_patches, predictor_embed_dim), requires_grad=False
@@ -364,9 +342,7 @@ class VisionTransformerPredictor(nn.Module):
         predictor_pos_embed = get_2d_sincos_pos_embed(
             self.predictor_pos_embed.shape[-1], int(num_patches**0.5), cls_token=False
         )
-        self.predictor_pos_embed.data.copy_(
-            torch.from_numpy(predictor_pos_embed).float().unsqueeze(0)
-        )
+        self.predictor_pos_embed.data.copy_(torch.from_numpy(predictor_pos_embed).float().unsqueeze(0))
         # --
         self.predictor_blocks = nn.ModuleList(
             [
@@ -414,9 +390,7 @@ class VisionTransformerPredictor(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
     def forward(self, x, masks_x, masks):
-        assert (masks is not None) and (
-            masks_x is not None
-        ), 'Cannot run predictor without mask indices'
+        assert (masks is not None) and (masks_x is not None), 'Cannot run predictor without mask indices'
 
         if not isinstance(masks_x, list):
             masks_x = [masks_x]
@@ -461,7 +435,10 @@ class VisionTransformerPredictor(nn.Module):
 
 def vit_predictor(**kwargs):
     model = VisionTransformerPredictor(
-        mlp_ratio=4, qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs
+        mlp_ratio=4,
+        qkv_bias=True,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
+        **kwargs,  # type: ignore
     )
     return model
 
@@ -474,7 +451,7 @@ def vit_tiny(patch_size=16, **kwargs):
         num_heads=3,
         mlp_ratio=4,
         qkv_bias=True,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
         **kwargs,
     )
     return model
@@ -488,7 +465,7 @@ def vit_small(patch_size=16, **kwargs):
         num_heads=6,
         mlp_ratio=4,
         qkv_bias=True,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
         **kwargs,
     )
     return model
@@ -502,7 +479,7 @@ def vit_base(patch_size=16, **kwargs):
         num_heads=12,
         mlp_ratio=4,
         qkv_bias=True,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
         **kwargs,
     )
     return model
@@ -516,7 +493,7 @@ def vit_large(patch_size=16, **kwargs):
         num_heads=16,
         mlp_ratio=4,
         qkv_bias=True,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
         **kwargs,
     )
     return model
@@ -530,7 +507,7 @@ def vit_huge(patch_size=16, **kwargs):
         num_heads=16,
         mlp_ratio=4,
         qkv_bias=True,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
         **kwargs,
     )
     return model
@@ -544,7 +521,7 @@ def vit_giant(patch_size=16, **kwargs):
         num_heads=16,
         mlp_ratio=48 / 11,
         qkv_bias=True,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
         **kwargs,
     )
     return model

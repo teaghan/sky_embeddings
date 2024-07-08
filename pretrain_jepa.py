@@ -64,16 +64,16 @@ def main(args):
         # Check available GPUs on this node
         n_gpus_per_node = torch.cuda.device_count()
         # Local rank is the GPU ID within the node
-        local_rank = int(os.environ.get('SLURM_LOCALID'))
+        local_rank = int(os.environ.get('SLURM_LOCALID'))  # type: ignore
         # Global rank is the GPU ID across all nodes
-        rank = int(os.environ.get('SLURM_NODEID')) * n_gpus_per_node + local_rank
+        rank = int(os.environ.get('SLURM_NODEID')) * n_gpus_per_node + local_rank  # type: ignore
         # World size is the total number of GPUs across all nodes
         world_size = args.world_size
         # Set the current device
         current_device = local_rank
         torch.cuda.set_device(current_device)
 
-        logger.info(f'Using Torch version: {torch.__version__} with CUDA {torch.version.cuda}.')
+        logger.info(f'Using Torch version: {torch.__version__} with CUDA {torch.version.cuda}.')  # type: ignore
         logger.info(f'Using a {device} device with {n_gpus_per_node} GPU(s) per node.')
 
         # Initialize distributed training environment
@@ -93,9 +93,7 @@ def main(args):
         # No GPU available, use CPU
         device = torch.device('cpu')
         current_device = 0
-        logger.info(
-            f'CUDA is not available. Using Torch version: {torch.__version__} without CUDA.'
-        )
+        logger.info(f'CUDA is not available. Using Torch version: {torch.__version__} without CUDA.')
         logger.info(f'Using a {device} device.')
 
     # Initialize torch multiprocessing
@@ -131,10 +129,10 @@ def main(args):
             logger.info(f'   {key}: {config[key_head][key]}')
 
     # Data parameters
-    update_tiles = config['DATA']['update_tiles']
+    update_tiles = ast.literal_eval(config['DATA']['update_tiles'])
     min_num_bands = int(config['DATA']['min_bands'])
     processed_file = config['DATA']['processed_file']
-    exclude_processed = config['DATA']['exclude_processed']
+    exclude_processed = ast.literal_eval(config['DATA']['exclude_processed'])
     obj_per_tile = int(config['DATA']['cutouts_per_tile'])
     crop_size = int(config['DATA']['img_size'])
     queue_length_datastream = int(config['DATA']['queue_length_datastream'])
@@ -153,19 +151,19 @@ def main(args):
     patch_size = int(config['ARCHITECTURE']['patch_size'])
     pred_depth = int(config['ARCHITECTURE']['pred_depth'])
     pred_emb_dim = int(config['ARCHITECTURE']['pred_emb_dim'])
-    use_bfloat16 = config['ARCHITECTURE']['use_bfloat16']
-    do_norm = config['ARCHITECTURE']['normalization']
+    use_bfloat16 = ast.literal_eval(config['ARCHITECTURE']['use_bfloat16'])
+    do_norm = ast.literal_eval(config['ARCHITECTURE']['normalization'])
     pixel_mean = ast.literal_eval(config['ARCHITECTURE']['pixel_mean'])
     pixel_std = ast.literal_eval(config['ARCHITECTURE']['pixel_std'])
 
     # Masking parameters
-    allow_overlap = config['MASK']['allow_overlap']  # overlap context/target blocks
+    allow_overlap = ast.literal_eval(config['MASK']['allow_overlap'])  # overlap context/target blocks
     num_enc_masks = int(config['MASK']['num_enc_masks'])  # number of context blocks
     num_pred_masks = int(config['MASK']['num_pred_masks'])  # number of target blocks
     min_keep = int(config['MASK']['min_keep'])  # min number of patches in context block
     enc_mask_scale = ast.literal_eval(config['MASK']['enc_mask_scale'])  # scale of context blocks
     pred_mask_scale = ast.literal_eval(config['MASK']['pred_mask_scale'])  # scale of target blocks
-    aspect_ratio_targets = config['MASK']['aspect_ratio_targets']  # ar of target blocks
+    aspect_ratio_targets = ast.literal_eval(config['MASK']['aspect_ratio_targets'])  # ar of target blocks
 
     # Optimizer parameters
     ema = ast.literal_eval(config['OPTIMIZATION']['ema'])
@@ -222,8 +220,8 @@ def main(args):
         img_size=crop_size,
         eval_data_file=val_data_file,
         do_norm=do_norm,
-        pixel_mean=pixel_mean,
-        pixel_std=pixel_std,
+        band_means=pixel_mean,
+        band_stds=pixel_std,
     )
 
     # Initialize optimizer
@@ -299,9 +297,7 @@ def main(args):
 
     # Training loop
     logger.info('Starting training at batch iteration %d' % (start_iter))
-    logger.info(
-        f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ..'
-    )
+    logger.info(f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ..')
     logger.info(
         f'Progress will be displayed every {verbose_iters} batch iterations and the model will be saved every {cp_time} minutes.'
     )
@@ -313,20 +309,18 @@ def main(args):
 
     # Train the neural network
     losses_cp = defaultdict(list)
-    logger('losses_cp:', losses_cp)
+    logger.info('losses_cp:', losses_cp)
     cp_start_time = time.time()
     cur_iter = start_iter
     while cur_iter < total_batch_iters:
         for data, metadata, masks_enc, masks_pred in dataloader_train:
-            logger('cur_iter:', cur_iter)
+            logger.info('cur_iter:', cur_iter)
 
             def to_device():
                 images = data.to(current_device, non_blocking=True)
                 meta = metadata.to(current_device, non_blocking=True)
                 masks_encoder = [mask.to(current_device, non_blocking=True) for mask in masks_enc]
-                masks_predictor = [
-                    mask.to(current_device, non_blocking=True) for mask in masks_pred
-                ]
+                masks_predictor = [mask.to(current_device, non_blocking=True) for mask in masks_pred]
                 return images, meta, masks_encoder, masks_predictor
 
             images, meta, masks_enc, masks_pred = to_device()
@@ -344,7 +338,7 @@ def main(args):
                         B = len(h)
                         # create target representations
                         h = apply_masks(h, masks_pred)
-                        h = torch.repeat_interleave_batch(h, B, repeat=len(masks_enc))
+                        h = torch.repeat_interleave_batch(h, B, repeat=len(masks_enc))  # type: ignore
                         return h
 
                 def forward_context():
@@ -365,11 +359,11 @@ def main(args):
 
                 # Backward pass + step
                 if use_bfloat16:
-                    scaler.scale(loss).backward()
-                    scaler.step(optimizer)
-                    scaler.update()
+                    scaler.scale(loss).backward()  # type: ignore
+                    scaler.step(optimizer)  # type: ignore
+                    scaler.update()  # type: ignore
                 else:
-                    loss.backward()
+                    loss.backward()  # type: ignore
                     optimizer.step()
                 grad_stats = grad_logger(encoder.named_parameters())
                 optimizer.zero_grad()
@@ -380,7 +374,7 @@ def main(args):
                     for param_q, param_k in zip(encoder.parameters(), target_encoder.parameters()):
                         param_k.data.mul_(m).add_((1.0 - m) * param_q.detach().data)
 
-                return float(loss), _new_lr, _new_wd, grad_stats
+                return float(loss), _new_lr, _new_wd, grad_stats  # type: ignore
 
             (loss, _new_lr, _new_wd, grad_stats), etime = gpu_timer(train_step)
             loss_meter.update(loss)
@@ -412,8 +406,8 @@ def main(args):
                             'iter: [%5d] grad_stats: [%.2e %.2e] (%.2e, %.2e)'
                             % (
                                 cur_iter,
-                                grad_stats.first_layer,
-                                grad_stats.last_layer,
+                                grad_stats.first_layer,  # type: ignore
+                                grad_stats.last_layer,  # type: ignore
                                 grad_stats.min,
                                 grad_stats.max,
                             )
@@ -435,9 +429,7 @@ def main(args):
                 or (cur_iter + 1 % checkpoint_freq == 0)
                 or (cur_iter == total_batch_iters)
             ):
-                logger.info(
-                    f'Saving checkpoint at iteration {cur_iter} after {cp_time} minutes of training.'
-                )
+                logger.info(f'Saving checkpoint at iteration {cur_iter} after {cp_time} minutes of training.')
                 save_checkpoint(cur_iter)
                 cp_start_time = time.time()
 

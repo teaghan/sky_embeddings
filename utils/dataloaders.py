@@ -97,9 +97,7 @@ class RandomChannelNaN:
 
 
 # Define the augmentation pipeline
-def get_augmentations(
-    img_size=64, flip=True, crop=True, brightness=0.8, noise=0.01, nan_channels=2
-):
+def get_augmentations(img_size=64, flip=True, crop=True, brightness=0.8, noise=0.01, nan_channels=2):
     transforms = []
     if flip:
         transforms.append(v2.RandomHorizontalFlip())
@@ -237,7 +235,7 @@ def build_unions_dataloader(
     queue_length,
     batch_size,
     in_dict,
-    num_workers,
+    num_workers=0,
     world_size=1,
     rank=0,
     collator=None,
@@ -414,9 +412,7 @@ class MaskGenerator:
 
         # Scale to image size
         masks = masks.view(self.num_mask_chans, self.n_patches, self.n_patches)
-        masks = masks.repeat_interleave(self.patch_size, dim=1).repeat_interleave(
-            self.patch_size, dim=2
-        )
+        masks = masks.repeat_interleave(self.patch_size, dim=1).repeat_interleave(self.patch_size, dim=2)
 
         if self.num_mask_chans == 1:
             # Remove channel dimension if only one channel mask is generated
@@ -634,9 +630,7 @@ class StreamDataset_UNIONS(IterableDataset):
 
             if self.mask_generator is not None:
                 # Generate random mask
-                batch_masks = torch.stack(
-                    [self.mask_generator() for _ in range(len(batch_cutouts))]
-                )
+                batch_masks = torch.stack([self.mask_generator() for _ in range(len(batch_cutouts))])
             else:
                 batch_masks = torch.zeros_like(batch_cutouts)
 
@@ -1065,9 +1059,7 @@ class FitsDataset(torch.utils.data.Dataset):  # type: ignore
 
         # Split into a grid of cutouts based on img_size and overlap
         if self.ra_dec:
-            cutouts, ra_dec = random_cutouts(
-                cutouts, self.img_size, self.cutouts_per_tile, pix_to_radec
-            )
+            cutouts, ra_dec = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, pix_to_radec)
             ra_dec = torch.from_numpy(ra_dec.astype(np.float32))
         else:
             cutouts = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, pix_to_radec)

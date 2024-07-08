@@ -9,12 +9,12 @@ def gpu_timer(closure, log_timings=True):
     if log_timings:
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
-        start.record()
+        start.record()  # type: ignore
 
     result = closure()
 
     if log_timings:
-        end.record()
+        end.record()  # type: ignore
         torch.cuda.synchronize()
         elapsed_time = start.elapsed_time(end)
 
@@ -69,16 +69,16 @@ class AverageMeter(object):
 
 def grad_logger(named_params):
     stats = AverageMeter()
-    stats.first_layer = None
-    stats.last_layer = None
+    stats.first_layer = None  # type: ignore
+    stats.last_layer = None  # type: ignore
     for n, p in named_params:
         if (p.grad is not None) and not (n.endswith('.bias') or len(p.shape) == 1):
             grad_norm = float(torch.norm(p.grad.data))
             stats.update(grad_norm)
             if 'qkv' in n:
-                stats.last_layer = grad_norm
-                if stats.first_layer is None:
-                    stats.first_layer = grad_norm
-    if stats.first_layer is None or stats.last_layer is None:
-        stats.first_layer = stats.last_layer = 0.0
+                stats.last_layer = grad_norm  # type: ignore
+                if stats.first_layer is None:  # type: ignore
+                    stats.first_layer = grad_norm  # type: ignore
+    if stats.first_layer is None or stats.last_layer is None:  # type: ignore
+        stats.first_layer = stats.last_layer = 0.0  # type: ignore
     return stats

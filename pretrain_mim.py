@@ -274,9 +274,7 @@ def train_network(
     lp_regress_data_file,
     lp_combine,
 ):
-    print(
-        'Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size)
-    )
+    print('Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size))
     print(
         'Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'
         % (verbose_iters, cp_time)
