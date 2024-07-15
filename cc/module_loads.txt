@@ -1,3 +1,4 @@
 module load python/3.11.5
-source /home/obriaint/project/obriaint/torchnet/bin/activate
+source /home/a4ferrei/projects/def-sfabbro/a4ferrei/envs
+/mae_env/bin/activate
 module load hdf5/1.10.6
