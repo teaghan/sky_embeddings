@@ -109,9 +109,9 @@ def create_h5_subsets(fits_paths, out_name, labels_path, out_dir, patch_start, p
 img_size = 64
 
 #fits_paths = ['/project/rrg-kyi/astro/hsc/pdr3_wide','/project/rrg-kyi/astro/hsc/pdr3_dud']
-fits_paths = ['/home/obriaint/scratch/sky_embeddings/data/pdr3_dud']
+fits_paths = ['/project/rrg-kyi/astro/hsc/pdr3_dud/']
 
-out_dir = '/home/obriaint/scratch/sky_embeddings/data/'
+out_dir = ''/project/rrg-kyi/astro/hsc/'
 
 bands = ['G', 'I', 'R', 'Y', 'Z', 'NB0387', 'NB0816', 'NB0921', 'NB1010']
 
