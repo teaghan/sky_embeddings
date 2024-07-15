@@ -1,0 +1,5 @@
+figures/
+models/
+ruff.toml
+slurm-*.out
+.vscode/
