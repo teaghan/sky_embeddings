@@ -2,8 +2,7 @@
 
 # Module loads
 module load python/3.11.5
-source /projects/def-sfabbro/a4ferrei/envs
-/mae_env/bin/activate
+source/project/ def-sfabbro/a4ferrei/envs/mae_env/bin/activate
 module load hdf5/1.10.6
 
 # Copy files to slurm directory

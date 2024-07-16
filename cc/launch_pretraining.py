@@ -42,7 +42,7 @@ def parseArguments():
     # Config params
     parser.add_argument("-tfp", "--train_data_paths", 
                         help="List of directories for training fits files.", 
-                        default="['/project/rrg-kyi/astro/hsc/pdr3_wide','/project/rrg-kyi/astro/hsc/pdr3_dud/']") 
+                        default="[/project/rrg-kyi/astro/hsc/pdr3_dud']") # just use the "pdr3_dud" for now for comparison
     parser.add_argument("-bnd", "--bands", 
                         help="List of fits colour bands.", 
                         default="['G','I','R','Y','Z']") 
