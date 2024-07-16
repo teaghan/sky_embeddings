@@ -1,3 +1,4 @@
+import ast
 import os
 import sys
 from collections import defaultdict
@@ -15,6 +16,9 @@ from location_encoder import LocationEncoder
 from misc import str2bool
 from pos_embed import get_2d_sincos_pos_embed
 
+import utils.jepa_vit as jepa_vit
+from utils.jepa_tensors import trunc_normal_
+
 
 def build_model(config, model_filename, device, build_optimizer=False):
     # Model architecture
@@ -29,6 +33,18 @@ def build_model(config, model_filename, device, build_optimizer=False):
     loss_fn = config['TRAINING']['loss_fn']
     attn_pool = str2bool(config['ARCHITECTURE']['attn_pool'])
     ra_dec = str2bool(config['ARCHITECTURE']['ra_dec'])
+
+    # JEPA specific parameters
+    pred_depth = int(config['ARCHITECTURE']['pred_depth'])
+    pred_emb_dim = int(config['ARCHITECTURE']['pred_emb_dim'])
+    use_bfloat16 = ast.literal_eval(config['ARCHITECTURE']['use_bfloat16'])
+    allow_overlap = ast.literal_eval(config['MASK']['allow_overlap'])  # overlap context/target blocks
+    num_enc_masks = int(config['MASK']['num_enc_masks'])  # number of context blocks
+    num_pred_masks = int(config['MASK']['num_pred_masks'])  # number of target blocks
+    min_keep = int(config['MASK']['min_keep'])  # min number of patches in context block
+    enc_mask_scale = ast.literal_eval(config['MASK']['enc_mask_scale'])  # scale of context blocks
+    pred_mask_scale = ast.literal_eval(config['MASK']['pred_mask_scale'])  # scale of target blocks
+    aspect_ratio_targets = ast.literal_eval(config['MASK']['aspect_ratio_targets'])  # ar of target blocks
 
     # Construct the model
     if model_type == 'base':
@@ -123,11 +139,38 @@ def build_model(config, model_filename, device, build_optimizer=False):
             attn_pool=attn_pool,
             ra_dec=ra_dec,
         )
+    elif model_type == 'jepa':
+        encoder = jepa_vit.__dict__[model_type](img_size=[img_size], patch_size=patch_size)
+        predictor = jepa_vit.__dict__['vit_predictor'](
+            num_patches=encoder.patch_embed.num_patches,
+            embed_dim=encoder.embed_dim,
+            predictor_embed_dim=pred_emb_dim,
+            depth=pred_depth,
+            num_heads=encoder.num_heads,
+        )
 
-    model.to(device)
+        def init_weights(m):
+            if isinstance(m, torch.nn.Linear):
+                trunc_normal_(m.weight, std=0.02)
+                if m.bias is not None:
+                    torch.nn.init.constant_(m.bias, 0)
+            elif isinstance(m, torch.nn.LayerNorm):
+                torch.nn.init.constant_(m.bias, 0)
+                torch.nn.init.constant_(m.weight, 1.0)
 
-    # Use multiple GPUs if available
-    model = nn.DataParallel(model)
+        for m in encoder.modules():
+            init_weights(m)
+
+        for m in predictor.modules():
+            init_weights(m)
+
+    if 'jepa' in model_type:
+        encoder.to(device)
+        predictor.to(device)
+    else:
+        model.to(device)
+        # Use multiple GPUs if available
+        model = nn.DataParallel(model)
 
     if build_optimizer:
         total_batch_iters = int(float(config['TRAINING']['total_batch_iters']))
@@ -354,9 +397,7 @@ class MaskedAutoencoderViT(nn.Module):
                 cls_token=True,
                 ra_dec=self.ra_dec,
             )
-            self.decoder_pos_embed.data.copy_(
-                torch.from_numpy(decoder_pos_embed).float().unsqueeze(0)
-            )
+            self.decoder_pos_embed.data.copy_(torch.from_numpy(decoder_pos_embed).float().unsqueeze(0))
 
         # initialize patch_embed like nn.Linear (instead of nn.Conv2d)
         w = self.patch_embed.proj.weight.data
@@ -503,15 +544,11 @@ class MaskedAutoencoderViT(nn.Module):
                 x.shape[0], ids_restore.shape[1] + self.num_extra_tokens - x.shape[1], 1
             )
 
-            x_ = torch.cat(
-                [x[:, self.num_extra_tokens :, :], mask_tokens], dim=1
-            )  # no cls and ra_dec tokens
+            x_ = torch.cat([x[:, self.num_extra_tokens :, :], mask_tokens], dim=1)  # no cls and ra_dec tokens
             x_ = torch.gather(
                 x_, dim=1, index=ids_restore.unsqueeze(-1).repeat(1, 1, x.shape[2])
             )  # unshuffle
-            x = torch.cat(
-                [x[:, : self.num_extra_tokens, :], x_], dim=1
-            )  # append cls and ra_dec tokens
+            x = torch.cat([x[:, : self.num_extra_tokens, :], x_], dim=1)  # append cls and ra_dec tokens
 
             # add pos embed
             x = x + self.decoder_pos_embed
@@ -736,9 +773,7 @@ def patch_mean_and_var(imgs):
 
     # Calculate the variance of non-NaN values
     # Subtract the mean from only the non-NaN values and square the result.
-    diff_squared = (
-        torch.where(non_nan_mask, imgs - mean, torch.tensor(0.0, device=imgs.device)) ** 2
-    )
+    diff_squared = torch.where(non_nan_mask, imgs - mean, torch.tensor(0.0, device=imgs.device)) ** 2
     # Sum the squared differences, divide by the count of non-NaN values to get the variance.
     var = diff_squared.sum(dim=-1, keepdim=True) / non_nan_mask.sum(dim=-1, keepdim=True)
 
