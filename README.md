@@ -42,7 +42,7 @@ You can train the network using one of the following methods:
 
 ### Training Option 1: Local Training
 
-1. Set model architecture and parameters using a configuration file in [the config directory](./configs). Duplicate the [original configuration file](./configs/mim_1.ini) and modify as needed.
+1. Set model architecture and parameters using a configuration file in [the config directory](./configs). Duplicate the [original configuration file](./configs/mim_32.ini) and modify as needed.
 2. To train a model with a new config file named `mim_2.ini`, use `python pretrain_mim.py mim_2 -v 5000 -ct 10.00`, which will train your model displaying the progress every 5000 batch iterations and the model would be saved every 10 minutes. The script will also continue training from the last save point.
 
 ### Training Option 2: Compute Canada Cluster
