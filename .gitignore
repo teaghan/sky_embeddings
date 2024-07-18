@@ -3,3 +3,6 @@ models/
 ruff.toml
 slurm-*.out
 .vscode/
+__pycache__/
+notebooks/
+data/

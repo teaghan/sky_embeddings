@@ -113,7 +113,7 @@ class jepa_mask_generator(object):
         # 4. sample several pred block locations for each image (w/o seed)
         # 5. return enc mask and pred mask
         """
-        collated_batch = torch.utils.data.default_collate(batch)
+        collated_batch = torch.utils.data.default_collate(batch)  # type: ignore
 
         if len(collated_batch) == 2:
             collated_images = collated_batch[0]
@@ -162,14 +162,10 @@ class jepa_mask_generator(object):
                 min_keep_enc = min(min_keep_enc, len(mask))
             collated_masks_enc.append(masks_e)
 
-        collated_masks_pred = [
-            [cm[:min_keep_pred] for cm in cm_list] for cm_list in collated_masks_pred
-        ]
+        collated_masks_pred = [[cm[:min_keep_pred] for cm in cm_list] for cm_list in collated_masks_pred]
         collated_masks_pred = torch.utils.data.default_collate(collated_masks_pred)  # type: ignore
 
-        collated_masks_enc = [
-            [cm[:min_keep_enc] for cm in cm_list] for cm_list in collated_masks_enc
-        ]
+        collated_masks_enc = [[cm[:min_keep_enc] for cm in cm_list] for cm_list in collated_masks_enc]
         collated_masks_enc = torch.utils.data.default_collate(collated_masks_enc)  # type: ignore
 
         return collated_images, collated_metadata, collated_masks_enc, collated_masks_pred

@@ -64,3 +64,24 @@ class CosineWDSchedule(object):
             if ('WD_exclude' not in group) or not group['WD_exclude']:
                 group['weight_decay'] = new_wd
         return new_wd
+
+
+def build_momentum_scheduler(start_m, end_m, total_iters):
+    """
+    Create a linear momentum scheduler
+
+    Args:
+        start_m (float): starting momentum
+        end_m (float): ending momentum
+        total_iters (int): total number of batch iterations
+
+    Yields:
+        float: current momentum
+    """
+    step = (end_m - start_m) / total_iters
+    current_m = start_m
+    for _ in range(total_iters):
+        yield current_m
+        current_m += step
+        if current_m > end_m:
+            current_m = end_m

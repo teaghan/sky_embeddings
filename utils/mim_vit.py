@@ -1,4 +1,5 @@
 import ast
+import logging
 import os
 import sys
 from collections import defaultdict
@@ -7,17 +8,19 @@ from functools import partial
 import timm.optim.optim_factory as optim_factory
 import torch
 import torch.nn as nn
-from timm.layers import AttentionPoolLatent
-from timm.models.vision_transformer import Block, PatchEmbed
-
-cur_dir = os.path.dirname(__file__)
-sys.path.append(cur_dir)
 from location_encoder import LocationEncoder
 from misc import str2bool
 from pos_embed import get_2d_sincos_pos_embed
+from timm.layers import AttentionPoolLatent
+from timm.models.vision_transformer import Block, PatchEmbed
 
 import utils.jepa_vit as jepa_vit
 from utils.jepa_tensors import trunc_normal_
+
+cur_dir = os.path.dirname(__file__)
+sys.path.append(cur_dir)
+
+logger = logging.getLogger()
 
 
 def build_model(config, model_filename, device, build_optimizer=False):
@@ -38,13 +41,6 @@ def build_model(config, model_filename, device, build_optimizer=False):
     pred_depth = int(config['ARCHITECTURE']['pred_depth'])
     pred_emb_dim = int(config['ARCHITECTURE']['pred_emb_dim'])
     use_bfloat16 = ast.literal_eval(config['ARCHITECTURE']['use_bfloat16'])
-    allow_overlap = ast.literal_eval(config['MASK']['allow_overlap'])  # overlap context/target blocks
-    num_enc_masks = int(config['MASK']['num_enc_masks'])  # number of context blocks
-    num_pred_masks = int(config['MASK']['num_pred_masks'])  # number of target blocks
-    min_keep = int(config['MASK']['min_keep'])  # min number of patches in context block
-    enc_mask_scale = ast.literal_eval(config['MASK']['enc_mask_scale'])  # scale of context blocks
-    pred_mask_scale = ast.literal_eval(config['MASK']['pred_mask_scale'])  # scale of target blocks
-    aspect_ratio_targets = ast.literal_eval(config['MASK']['aspect_ratio_targets'])  # ar of target blocks
 
     # Construct the model
     if model_type == 'base':
@@ -169,8 +165,6 @@ def build_model(config, model_filename, device, build_optimizer=False):
         predictor.to(device)
     else:
         model.to(device)
-        # Use multiple GPUs if available
-        model = nn.DataParallel(model)
 
     if build_optimizer:
         total_batch_iters = int(float(config['TRAINING']['total_batch_iters']))
@@ -178,30 +172,56 @@ def build_model(config, model_filename, device, build_optimizer=False):
         init_lr = float(config['TRAINING']['init_lr'])
         final_lr_factor = float(config['TRAINING']['final_lr_factor'])
 
-        # Set weight decay to 0 for bias and norm layers
-        param_groups = optim_factory.param_groups_weight_decay(model, weight_decay)
+        if 'jepa' in model_type:
+            param_groups = [
+                {
+                    'params': (
+                        p
+                        for n, p in encoder.named_parameters()
+                        if ('bias' not in n) and (len(p.shape) != 1)
+                    )
+                },
+                {
+                    'params': (
+                        p
+                        for n, p in predictor.named_parameters()
+                        if ('bias' not in n) and (len(p.shape) != 1)
+                    )
+                },
+                {
+                    'params': (
+                        p for n, p in encoder.named_parameters() if ('bias' in n) or (len(p.shape) == 1)
+                    ),
+                    'WD_exclude': True,
+                    'weight_decay': 0,
+                },
+                {
+                    'params': (
+                        p
+                        for n, p in predictor.named_parameters()
+                        if ('bias' in n) or (len(p.shape) == 1)
+                    ),
+                    'WD_exclude': True,
+                    'weight_decay': 0,
+                },
+            ]
+        else:
+            # Set weight decay to 0 for bias and norm layers
+            param_groups = optim_factory.param_groups_weight_decay(model, weight_decay)
 
         # Optimizer
         optimizer = torch.optim.AdamW(param_groups, lr=init_lr, betas=(0.9, 0.95))
 
         # Learning rate scheduler
-        """
-        lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, init_lr,
-                                                           total_steps=int(total_batch_iters), 
-                                                           pct_start=0.05, anneal_strategy='cos', 
-                                                           cycle_momentum=True, 
-                                                           base_momentum=0.85, 
-                                                           max_momentum=0.95, div_factor=25.0, 
-                                                           final_div_factor=final_lr_factor, 
-                                                           three_phase=False)
-        """
         lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer, int(total_batch_iters), eta_min=init_lr / final_lr_factor
         )
 
+        scaler = torch.cuda.amp.GradScaler() if use_bfloat16 else None
+
         model, losses, cur_iter = load_model(model, model_filename, optimizer, lr_scheduler)
 
-        return model, losses, cur_iter, optimizer, lr_scheduler
+        return model, losses, cur_iter, optimizer, lr_scheduler, scaler
     else:
         model, losses, cur_iter = load_model(model, model_filename)
         return model, losses, cur_iter
@@ -224,8 +244,22 @@ def load_model(model, model_filename, optimizer=None, lr_scheduler=None):
         if lr_scheduler is not None:
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
 
-        # Load model weights
-        model.module.load_state_dict(checkpoint['model'])
+        # encoder/predictor models (jepa)
+        if isinstance(model, tuple) and len(model) == 2:
+            encoder, predictor = model
+            msg = encoder.load_state_dict(checkpoint['encoder'])
+            logger.info(f'loaded pretrained encoder from batch iteration {cur_iter} with msg: {msg}')
+
+            msg = predictor.load_state_dict(checkpoint['predictor'])
+            logger.info(f'loaded pretrained predictor from batch iteration {cur_iter} with msg: {msg}')
+            model = encoder, predictor
+        elif isinstance(model, nn.Module):
+            # Load model weights
+            model.module.load_state_dict(checkpoint['model'])
+        else:
+            raise ValueError(
+                'Unsupported model format! Model should be a nn.Module or a tuple of two nn.Module.'
+            )
 
     else:
         print('\nStarting fresh model to train...')
@@ -300,13 +334,14 @@ class MaskedAutoencoderViT(nn.Module):
 
         # Fixed sin-cos embedding to identify the spatial position of each patch
         self.pos_embed = nn.Parameter(
-            torch.zeros(1, num_patches + self.num_extra_tokens, embed_dim), requires_grad=False
+            torch.zeros(1, num_patches + self.num_extra_tokens, embed_dim),  # type: ignore
+            requires_grad=False,  # type: ignore
         )
 
         # Transformer blocks
         self.blocks = nn.ModuleList(
             [
-                Block(embed_dim, num_heads, mlp_ratio, qkv_bias=True, norm_layer=norm_layer)
+                Block(embed_dim, num_heads, mlp_ratio, qkv_bias=True, norm_layer=norm_layer)  # type: ignore
                 for i in range(depth)
             ]
         )
@@ -323,7 +358,10 @@ class MaskedAutoencoderViT(nn.Module):
         if self.simmim:
             if attn_pool:
                 self.attn_pool = AttentionPoolLatent(
-                    embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, norm_layer=norm_layer
+                    embed_dim,
+                    num_heads=num_heads,
+                    mlp_ratio=mlp_ratio,
+                    norm_layer=norm_layer,  # type: ignore
                 )
                 dec_upsample_size = img_size
 
@@ -350,7 +388,7 @@ class MaskedAutoencoderViT(nn.Module):
             self.mask_token = nn.Parameter(torch.zeros(1, 1, decoder_embed_dim))
 
             self.decoder_pos_embed = nn.Parameter(
-                torch.zeros(1, num_patches + self.num_extra_tokens, decoder_embed_dim),
+                torch.zeros(1, num_patches + self.num_extra_tokens, decoder_embed_dim),  # type: ignore
                 requires_grad=False,
             )  # fixed sin-cos embedding
 
@@ -361,7 +399,7 @@ class MaskedAutoencoderViT(nn.Module):
                         decoder_num_heads,
                         mlp_ratio,
                         qkv_bias=True,
-                        norm_layer=norm_layer,
+                        norm_layer=norm_layer,  # type: ignore
                     )
                     for i in range(decoder_depth)
                 ]
@@ -384,7 +422,7 @@ class MaskedAutoencoderViT(nn.Module):
         # initialize (and freeze) pos_embed by sin-cos embedding
         pos_embed = get_2d_sincos_pos_embed(
             self.pos_embed.shape[-1],
-            int(self.patch_embed.num_patches**0.5),
+            int(self.patch_embed.num_patches**0.5),  # type: ignore
             cls_token=True,
             ra_dec=self.ra_dec,
         )
@@ -393,7 +431,7 @@ class MaskedAutoencoderViT(nn.Module):
         if not self.simmim:
             decoder_pos_embed = get_2d_sincos_pos_embed(
                 self.decoder_pos_embed.shape[-1],
-                int(self.patch_embed.num_patches**0.5),
+                int(self.patch_embed.num_patches**0.5),  # type: ignore
                 cls_token=True,
                 ra_dec=self.ra_dec,
             )
@@ -432,7 +470,7 @@ class MaskedAutoencoderViT(nn.Module):
         h = w = imgs.shape[2] // p
         x = imgs.reshape(shape=(imgs.shape[0], self.in_chans, h, p, w, p))
         x = torch.einsum('nchpwq->nhwpqc', x)
-        x = x.reshape(shape=(imgs.shape[0], h * w, p**2 * self.in_chans))
+        x = x.reshape(shape=(imgs.shape[0], h * w, p**2 * self.in_chans))  # type: ignore
         return x
 
     def unpatchify(self, x):
@@ -446,7 +484,7 @@ class MaskedAutoencoderViT(nn.Module):
 
         x = x.reshape(shape=(x.shape[0], h, w, p, p, self.in_chans))
         x = torch.einsum('nhwpqc->nchpwq', x)
-        imgs = x.reshape(shape=(x.shape[0], self.in_chans, h * p, h * p))
+        imgs = x.reshape(shape=(x.shape[0], self.in_chans, h * p, h * p))  # type: ignore
         return imgs
 
     def random_masking(self, x, mask_ratio):
@@ -544,7 +582,9 @@ class MaskedAutoencoderViT(nn.Module):
                 x.shape[0], ids_restore.shape[1] + self.num_extra_tokens - x.shape[1], 1
             )
 
-            x_ = torch.cat([x[:, self.num_extra_tokens :, :], mask_tokens], dim=1)  # no cls and ra_dec tokens
+            x_ = torch.cat(
+                [x[:, self.num_extra_tokens :, :], mask_tokens], dim=1
+            )  # no cls and ra_dec tokens
             x_ = torch.gather(
                 x_, dim=1, index=ids_restore.unsqueeze(-1).repeat(1, 1, x.shape[2])
             )  # unshuffle
@@ -668,7 +708,7 @@ def mae_vit_base_with_simple_decoder(**kwargs):
         decoder_depth=1,
         decoder_num_heads=1,
         mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
         **kwargs,
     )
     return model
@@ -682,7 +722,7 @@ def mae_vit_base(**kwargs):
         decoder_depth=8,
         decoder_num_heads=16,
         mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
         **kwargs,
     )
     return model
@@ -696,7 +736,7 @@ def mae_vit_large(**kwargs):
         decoder_depth=8,
         decoder_num_heads=16,
         mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
         **kwargs,
     )
     return model
@@ -710,7 +750,7 @@ def mae_vit_huge(**kwargs):
         decoder_depth=8,
         decoder_num_heads=16,
         mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
         **kwargs,
     )
     return model
@@ -728,7 +768,7 @@ def simmim_vit(**kwargs):
         decoder_depth=8,
         decoder_num_heads=16,
         mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
         **kwargs,
     )
     return model
@@ -742,7 +782,7 @@ def mim_vit_large(**kwargs):
         decoder_depth=8,
         decoder_num_heads=16,
         mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
         **kwargs,
     )
     return model
@@ -756,7 +796,7 @@ def mim_vit_huge(**kwargs):
         decoder_depth=8,
         decoder_num_heads=16,
         mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore
         **kwargs,
     )
     return model
