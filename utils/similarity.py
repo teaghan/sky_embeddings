@@ -1,11 +1,49 @@
 import torch
+import time
+
+def get_train_samples(dataloader, nested_batches):
+    '''Accomodates both dataloaders.'''
+    if nested_batches:
+        # Iterate through all of the tiles
+        for sample_batches, masks, ra_decs in dataloader:
+            # Iterate through each batch of images in this tile of the sky
+            for samples, mask, ra_dec in zip(sample_batches[0], masks[0], ra_decs[0]):
+                yield samples, mask, ra_dec
+    else:
+        for samples, mask, ra_dec in dataloader:
+            yield samples, mask, ra_dec
+
+import torch
+
+def update_best_scores(samples, ra_decs, similarity_scores, 
+                       best_samples, best_ra_decs, best_scores, n_save, metric):
+    if metric == 'cosine':
+        combined_scores = torch.cat((best_scores, similarity_scores), dim=0)
+        combined_samples = torch.cat((best_samples, samples), dim=0)
+        combined_ra_decs = torch.cat((best_ra_decs, ra_decs), dim=0)
+        sorted_indices = torch.argsort(combined_scores, descending=True)
+    else:
+        combined_scores = torch.cat((best_scores, similarity_scores), dim=0)
+        combined_samples = torch.cat((best_samples, samples), dim=0)
+        combined_ra_decs = torch.cat((best_ra_decs, ra_decs), dim=0)
+        sorted_indices = torch.argsort(combined_scores, descending=False)
+
+    best_scores = combined_scores[sorted_indices][:n_save]
+    best_samples = combined_samples[sorted_indices][:n_save]
+    best_ra_decs = combined_ra_decs[sorted_indices][:n_save]
+
+    return best_samples, best_ra_decs, best_scores
 
 def mae_simsearch(model, target_latent, dataloader, device, n_batches=None, 
-                  metric='cosine', combine='min', use_weights=True, max_pool=False, cls_token=False):
-    
-    if n_batches is None:
-        n_batches = len(dataloader)
-    print(f'Performing similarity search on {min(len(dataloader), n_batches)} batches...')
+                  metric='cosine', combine='min', use_weights=True, max_pool=False, 
+                  cls_token=False, nested_batches=True, n_save=256, verbose=100):
+
+    if not nested_batches:
+        if n_batches is None:
+            n_batches = len(dataloader)
+        print(f'Performing similarity search on {min(len(dataloader), n_batches)} batches...')
+    else:
+        print(f'Performing similarity search on {len(dataloader)} tiles...')
     model.eval()
 
     if hasattr(model, 'module'):
@@ -17,7 +55,6 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None,
     if cls_token:
         # Use cls token
         target_latent = target_latent[:,:1]
-        print(target_latent.shape)
     else:
         # Remove cls token and any other extra tokens
         target_latent = target_latent[:,num_extra_tokens:]
@@ -25,14 +62,19 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None,
             # Select max feature across all samples
             target_latent, _ = torch.max(target_latent, dim=1, keepdim=True)
 
-    sim_scores = []
+    best_ra_decs = torch.empty((n_save, 2), device=device)
+    best_scores = torch.full((n_save,), float('-inf') if metric == 'cosine' else float('inf'), device=device)
+
+    time_start = time.time()
     with torch.no_grad():
         # Loop through spectra in dataset
-        for i, (samples, _, ra_decs) in enumerate(dataloader):
-            
+        for i, (samples, masks, ra_decs) in enumerate(get_train_samples(dataloader, nested_batches)):   
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
             ra_decs = ra_decs.to(device, non_blocking=True)
+
+            if i==0:
+                best_samples = torch.empty((n_save, *samples.shape[1:]), device=device)
 
             # Map to latent space
             if hasattr(model, 'module'):
@@ -53,22 +95,41 @@ def mae_simsearch(model, target_latent, dataloader, device, n_batches=None,
                     test_latent, _ = torch.max(test_latent, dim=1, keepdim=True)
 
             # Try to put all features on the same scale
-            if i==0:
+            if i == 0:
                 mean_feats = test_latent.mean(dim=(0, 1))
                 std_feats = test_latent.std(dim=(0, 1), unbiased=True) 
-                print(mean_feats.shape, test_latent.shape)
                 target_latent = (target_latent - mean_feats) / (std_feats + 1e-8)
             test_latent = (test_latent - mean_feats) / (std_feats + 1e-8)
 
             # Compute similarity score for each sample
             test_similarity = compute_similarity(target_latent, test_latent, 
-                                                 metric='cosine', combine='min', use_weights=True)
-            sim_scores.append(test_similarity)
+                                                 metric=metric, combine=combine, use_weights=use_weights)
             
-            if len(sim_scores)>=n_batches:
-                break
+            best_samples, best_ra_decs, best_scores = update_best_scores(samples, ra_decs, 
+                                                                         test_similarity, best_samples, 
+                                                                         best_ra_decs, best_scores, n_save, metric)
+            
+            if not nested_batches:
+                if (i+1) % verbose == 0:
+                    print(f'Processed {i+1}/{n_batches} image batches...', end='\r')
+                
+                if (i+1) >= n_batches:
+                    break
+            else:
+                if (i+1) % verbose == 0:
+                    time_spent = time.time() - time_start # s
+                    time_per_batch = time_spent/(i+1)
+                    print(f'Processed {i+1} image batches ({time_per_batch:0.2f} seconds per batch)...', end='\r')
+
+        # Map to latent space
+        if hasattr(model, 'module'):
+            best_latent, _, _ = model.module.forward_features(best_samples, ra_dec=best_ra_decs, 
+                                                                reshape_out=False)
+        else:
+            best_latent, _, _ = model.forward_features(best_samples, ra_dec=best_ra_decs,
+                                                        reshape_out=False)
     
-    return torch.cat(sim_scores)
+    return best_samples, best_latent, best_ra_decs, best_scores
 
 def determine_target_features(target_latent):
 

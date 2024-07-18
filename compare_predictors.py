@@ -11,7 +11,7 @@ from utils.plotting_fns import photoz_prediction_metrics
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from matplotlib.ticker import ScalarFormatter
+from matplotlib.ticker import LogLocator, ScalarFormatter, LogFormatter, FuncFormatter
 
 plt.rcParams.update({
     "text.usetex": True,
@@ -20,12 +20,16 @@ plt.rcParams.update({
     "font.size": 10})
 
 # Category names and model names in corresponding order
-categories = ['Fully Supervised', 'Fine-tuning', 'Attentive Probing']
-colors = ['#377eb8', '#ff7f00', '#4daf4a']
-num_samples = np.array([2.5e2, 5e2, 1e3, 2e3, 4e3, 8e3, 16e3]).astype(int)
-model_names = [['cls_fs_025k', 'cls_fs_05k', 'cls_fs_1k', 'cls_fs_2k', 'cls_fs_4k', 'cls_fs_8k', 'cls_fs_16k'],
-               ['cls_ft_025k', 'cls_ft_05k', 'cls_ft_1k', 'cls_ft_2k', 'cls_ft_4k', 'cls_ft_8k', 'cls_ft_16k'],
-               ['cls_ap_025k', 'cls_ap_05k', 'cls_ap_1k', 'cls_ap_2k', 'cls_ap_4k', 'cls_ap_8k', 'cls_ap_16k']]
+categories = ['Fully Supervised', 'Fine-tuning', 'Attentive Probing', 'Fine-tuning (Wide)', 'Fine-tuning (Wide+Large)']
+colors = ['#377eb8', '#ff7f00', '#4daf4a', '#984ea3', '#e41a1c']
+#num_samples = np.array([2.5e2, 5e2, 1e3, 2e3, 4e3, 8e3, 16e3]).astype(int)
+num_samples = (2**np.arange(7,15)).astype(int)
+model_names = [['cls_fs_012k', 'cls_fs_05k', 'cls_fs_1k', 'cls_fs_2k', 'cls_fs_4k', 'cls_fs_8k', 'cls_fs_16k'],
+               ['cls_ft_012k', 'cls_ft_025k', 'cls_ft_05k', 'cls_ft_1k', 'cls_ft_2k', 'cls_ft_4k', 'cls_ft_8k', 'cls_ft_16k'],
+               ['cls_ap_012k', 'cls_ap_025k', 'cls_ap_05k', 'cls_ap_1k', 'cls_ap_2k', 'cls_ap_4k', 'cls_ap_8k', 'cls_ap_16k'],
+               ['cls_ft_012k_wide', 'cls_ft_025k_wide', 'cls_ft_05k_wide', 'cls_ft_1k_wide', 'cls_ft_2k_wide', 'cls_ft_4k_wide', 'cls_ft_8k_wide', 'cls_ft_16k_wide'],
+               ['cls_ft_012k_large', 'cls_ft_025k_large', 'cls_ft_05k_large', 'cls_ft_1k_large', 'cls_ft_2k_large', 'cls_ft_4k_large', 'cls_ft_8k_large', 'cls_ft_16k_large']]
+
 
 # Name of data file to be used to calculate metric
 val_data_file = 'HSC_dud_classes_calexp_GIRYZ7610_64_val.h5'
@@ -75,9 +79,13 @@ def metrics_vs_n(num_samples, metrics, categories, colors, fontsize=12,
             ax.set_xlabel('Number of Training Samples', size=fontsize)
         ax.grid(alpha=0.2)
 
+    if len(categories)>=3:
+        ncol = 3
+    else:
+        ncol = len(categories)
     fig.legend(handles, labels, loc='upper center', 
                fontsize=fontsize,
-               ncol=len(categories), bbox_to_anchor=(0.5, 1.))
+               ncol=ncol, bbox_to_anchor=(0.5, 1.))
 
     plt.subplots_adjust(top=0.87)
 
@@ -104,16 +112,40 @@ def accuracy_vs_n(num_samples, accuracies, categories, colors, fontsize=12, y_li
         ax.plot(num_samples, accuracies[j], linestyle='--', c=colors[j])
 
     # Customize ticks and grids
-    ax.set_xticks(num_samples)
-    ax.tick_params(labelsize=10)
-    ax.tick_params(labelsize=10, axis='x', rotation=90)
+    #ax.set_xticks(num_samples)
+    #ax.tick_params(labelsize=10)
+    #ax.tick_params(labelsize=10, axis='x', rotation=90)
+    #ax.grid(alpha=0.2)
+
+    # Customize ticks and grids
+    #ax.set_xscale('log', base=2)
+    #ax.xaxis.set_major_locator(LogLocator(base=2.0))
+    #ax.xaxis.set_major_formatter(LogFormatter(base=2, labelOnlyBase=True))
+    #ax.grid(alpha=0.2)
+
+    # Customize ticks and grids
+    ax.set_xscale('log', base=2)
+    ax.xaxis.set_major_locator(LogLocator(base=2.0))
+    
+    def log_formatter(x, pos):
+        return f"$2^{{{int(np.log2(x))}}}$"
+    
+    ax.xaxis.set_major_formatter(FuncFormatter(log_formatter))
     ax.grid(alpha=0.2)
 
     # Add legend
-    fig.legend(loc='upper center', fontsize=fontsize, ncol=len(categories), bbox_to_anchor=(0.5, 1.))
+    if len(categories)>=3:
+        ncol = 3
+        top = 0.8
+    else:
+        ncol = len(categories)
+        top = 1.0
+    fig.legend(loc='upper center', 
+               fontsize=fontsize,
+               ncol=ncol, bbox_to_anchor=(0.5, 1.))
 
     # Adjust layout
-    #plt.subplots_adjust(top=1.1)
+    plt.subplots_adjust(top=top)
 
     # Save or show the plot
     if savename is not None:

@@ -6,10 +6,13 @@ source /home/obriaint/project/obriaint/torchnet/bin/activate
 module load hdf5/1.10.6
 
 # Copy files to slurm directory
-cp /lustre07/scratch/obriaint/sky_embeddings/cc/../data/HSC_dwarf_galaxies_GRIZY_64_new.h5 $SLURM_TMPDIR
-cp /lustre07/scratch/obriaint/sky_embeddings/cc/../data/HSC_unkown_GRIZY_64_new.h5 $SLURM_TMPDIR
-cp /lustre07/scratch/obriaint/sky_embeddings/cc/../data/HSC_strong_lens_candidates_GRIZY_64.h5 $SLURM_TMPDIR
+cp /home/obriaint/scratch/sky_embeddings/data/HSC_dud_dwarf_galaxy_calexp_GIRYZ7610_64_new.h5 $SLURM_TMPDIR
+cp /home/obriaint/scratch/sky_embeddings/data/HSC_dud_dwarf_galaxy_GIRYZ7610_64_new.h5 $SLURM_TMPDIR
+cp /home/obriaint/scratch/sky_embeddings/cc/../data/HSC_dud_unknown_calexp_GIRYZ7610_64_new.h5 $SLURM_TMPDIR
+cp /home/obriaint/scratch/sky_embeddings/cc/../data/HSC_dud_unknown_GIRYZ7610_64_new.h5 $SLURM_TMPDIR
+#cp /home/obriaint/scratch/sky_embeddings/cc/../data/HSC_dud_strong_lens_calexp_GIRYZ7610_64_new.h5 $SLURM_TMPDIR
 
-python /lustre07/scratch/obriaint/sky_embeddings/cc/../similarity_search.py sim_22 -dd $SLURM_TMPDIR/ -bs 256
-
-python /lustre07/scratch/obriaint/sky_embeddings/cc/../similarity_search.py sim_22 -dd $SLURM_TMPDIR/ -tgt_fn HSC_strong_lens_candidates_GRIZY_64.h5 -tgt_i [1,5,13,15,16,33,49] -snr [5,1000] -bs 256
+#python /home/obriaint/scratch/sky_embeddings/cc/../similarity_search.py mim_25 -dd $SLURM_TMPDIR/ -bs 256 -mp False -tgt_i [1,2,3,4,7] -snr [0,10] -tgt_fn HSC_dud_dwarf_galaxy_calexp_GIRYZ7610_64_new.h5 -tst_fn HSC_dud_unknown_calexp_GIRYZ7610_64_new.h5
+#python /home/obriaint/scratch/sky_embeddings/cc/../similarity_search.py mim_30 -dd $SLURM_TMPDIR/ -bs 256 -mp False -tgt_i [1,2,3,4,7] -snr [0,10] -tgt_fn HSC_dud_dwarf_galaxy_GIRYZ7610_64_new.h5 -tst_fn HSC_dud_unknown_GIRYZ7610_64_new.h5
+#python /home/obriaint/scratch/sky_embeddings/cc/../similarity_search.py mim_32 -dd $SLURM_TMPDIR/ -bs 256 -mp False -tgt_i [1,2,3,4,7] -snr [0,10] -tgt_fn HSC_dud_dwarf_galaxy_GIRYZ7610_64_new.h5 -tst_fn HSC_dud_unknown_GIRYZ7610_64_new.h5
+python /home/obriaint/scratch/sky_embeddings/cc/../sky_sim_search.py mim_32 -dd $SLURM_TMPDIR/ -bs 512 -mp False -tgt_i [1,2,3,4,7] -snr [0,10] -tgt_fn HSC_dud_dwarf_galaxy_GIRYZ7610_64_new.h5 -tst_dir /project/rrg-kyi/astro/hsc/pdr3_dud/

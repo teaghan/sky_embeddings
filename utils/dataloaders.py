@@ -109,7 +109,8 @@ def build_fits_dataloader(fits_paths, bands, min_bands, batch_size, num_workers,
                           patch_size=8, max_mask_ratio=None, 
                           img_size=64, cutouts_per_tile=1024, use_calexp=True,
                           augment=False, brightness=0.8, noise=0.01, nan_channels=2, 
-                          shuffle=True, ra_dec=True, transforms=None):
+                          shuffle=True, ra_dec=True, transforms=None,
+                          use_overlap=False, overlap=0.5):
     '''Return a dataloader to be used during training.'''
 
     if (transforms is None) and augment:
@@ -122,7 +123,8 @@ def build_fits_dataloader(fits_paths, bands, min_bands, batch_size, num_workers,
                           bands=bands, min_bands=min_bands, img_size=img_size, 
                           cutouts_per_tile=cutouts_per_tile,
                           batch_size=batch_size, ra_dec=ra_dec,
-                          transform=transforms, use_calexp=use_calexp)
+                          transform=transforms, use_calexp=use_calexp,
+                          use_overlap=use_overlap, overlap=overlap)
 
     # Build dataloader
     return torch.utils.data.DataLoader(dataset, batch_size=1, 
@@ -476,6 +478,63 @@ def random_cutouts(input_array, img_size, n_cutouts, pix_to_radec=None):
 
     return cutouts
 
+def generate_overlap_coords(img_shape, cutout_size, overlap):
+    """
+    Generate the top-left coordinates for overlapping cutouts.
+
+    Parameters:
+    - img_shape: Tuple (H, W) of the input image dimensions.
+    - cutout_size: Size of the cutouts.
+    - overlap: Overlap percentage (0 to 1).
+
+    Returns:
+    - List of (x, y) coordinates for the top-left corner of each cutout.
+    """
+    H, W = img_shape
+    step_size = int(cutout_size * (1 - overlap))
+    coords = [(i, j) for i in range(0, H - cutout_size + 1, step_size)
+                     for j in range(0, W - cutout_size + 1, step_size)]
+
+    # Ensure we cover the right and bottom edges
+    if H % step_size != 0:
+        for j in range(0, W - cutout_size + 1, step_size):
+            coords.append((H - cutout_size, j))
+    if W % step_size != 0:
+        for i in range(0, H - cutout_size + 1, step_size):
+            coords.append((i, W - cutout_size))
+    if (H % step_size != 0) and (W % step_size != 0):
+        coords.append((H - cutout_size, W - cutout_size))
+
+    return coords
+
+def overlapping_cutouts(input_array, img_size, overlap, pix_to_radec=None):
+    """
+    Generate overlapping cutouts from a larger 3D numpy array.
+
+    Args:
+    - input_array: The larger 3D numpy array of shape (C, H, W).
+    - img_size: The desired size of each cutout in both height and width.
+    - overlap: The percentage overlap between cutouts.
+
+    Returns:
+    - A numpy array of shape (n_cutouts, C, img_size, img_size).
+    """
+    C, H, W = input_array.shape
+    coords = generate_overlap_coords((H, W), img_size, overlap)
+    cutouts = np.zeros((len(coords), C, img_size, img_size), dtype=input_array.dtype)
+
+    for i, (h_start, w_start) in enumerate(coords):
+        cutouts[i] = input_array[:, h_start:h_start+img_size, w_start:w_start+img_size]
+
+    if pix_to_radec is not None:
+        # Collect RA and Dec at centre of each cutout
+        h_centers = [h + img_size // 2 for h, w in coords]
+        w_centers = [w + img_size // 2 for h, w in coords]
+        ra, dec = pix_to_radec(h_centers, w_centers)
+        return cutouts, np.vstack((ra, dec)).T
+
+    return cutouts
+
 class FitsDataset(torch.utils.data.Dataset):
     
     """
@@ -511,9 +570,9 @@ class FitsDataset(torch.utils.data.Dataset):
         large-scale astronomical data for deep learning models.
     """
 
-    def __init__(self, fits_paths,  patch_size=8, max_mask_ratio=None, bands=['G','R','I','Z','Y'], min_bands=5,
+    def __init__(self, fits_paths, patch_size=8, max_mask_ratio=None, bands=['G','R','I','Z','Y'], min_bands=5,
                  img_size=64, cutouts_per_tile=1024, batch_size=64, ra_dec=False,
-                 transform=None, pixel_min=-3., pixel_max=None, use_calexp=True):
+                 transform=None, pixel_min=-3., pixel_max=None, use_calexp=True, use_overlap=False, overlap=0.5):
         
         self.fits_paths = fits_paths
         self.img_size = img_size
@@ -524,6 +583,8 @@ class FitsDataset(torch.utils.data.Dataset):
         self.pixel_min = pixel_min
         self.pixel_max = pixel_max
         self.use_calexp = use_calexp
+        self.use_overlap = use_overlap
+        self.overlap = overlap
 
         # Find names of patch fits files
         self.band_filenames = find_HSC_bands(fits_paths, bands, min_bands, use_calexp=use_calexp)
@@ -542,7 +603,6 @@ class FitsDataset(torch.utils.data.Dataset):
         return len(self.band_filenames)
     
     def __getitem__(self, idx):
-
         # Grab fits filenames
         patch_filenames = self.band_filenames[idx]
         
@@ -550,12 +610,18 @@ class FitsDataset(torch.utils.data.Dataset):
         # Any missing channels will be filled with np.nan
         cutouts, pix_to_radec = load_fits_bands(patch_filenames, return_wc=self.ra_dec)
 
-        # Split into a grid of cutouts based on img_size and overlap
-        if self.ra_dec:
-            cutouts, ra_dec = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, pix_to_radec)
-            ra_dec = torch.from_numpy(ra_dec.astype(np.float32))
+        if self.use_overlap:
+            if self.ra_dec:
+                cutouts, ra_dec = overlapping_cutouts(cutouts, self.img_size, self.overlap, pix_to_radec)
+                ra_dec = torch.from_numpy(ra_dec.astype(np.float32))
+            else:
+                cutouts = overlapping_cutouts(cutouts, self.img_size, self.overlap, pix_to_radec)
         else:
-            cutouts = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, pix_to_radec)
+            if self.ra_dec:
+                cutouts, ra_dec = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, pix_to_radec)
+                ra_dec = torch.from_numpy(ra_dec.astype(np.float32))
+            else:
+                cutouts = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, pix_to_radec)
 
         # Clip pixel values
         if self.pixel_min is not None:
