@@ -13,6 +13,4 @@ cp /home/obriaint/scratch/sky_embeddings/cc/../data/HSC_dud_galaxy_zspec_GIRYZ76
 python /home/obriaint/scratch/sky_embeddings/cc/../train_predictor.py z_ft_2 -v 1000 -ct 10.00 -dd $SLURM_TMPDIR/
 
 python /home/obriaint/scratch/sky_embeddings/cc/../test_predictor.py z_ft_2 -dd $SLURM_TMPDIR/
-# Compare all
-#python /home/obriaint/scratch/sky_embeddings/cc/../compare_predictors.py _ -dd $SLURM_TMPDIR/
 
