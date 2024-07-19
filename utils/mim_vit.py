@@ -137,7 +137,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
         )
     elif 'jepa' in model_type:
         encoder = jepa_vit.__dict__[model_type](img_size=[img_size], patch_size=patch_size)
-        predictor = jepa_vit.__dict__['vit_predictor'](
+        predictor = jepa_vit.__dict__['jepa_vit_predictor'](
             num_patches=encoder.patch_embed.num_patches,
             embed_dim=encoder.embed_dim,
             predictor_embed_dim=pred_emb_dim,
@@ -176,9 +176,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
             param_groups = [
                 {
                     'params': (
-                        p
-                        for n, p in encoder.named_parameters()
-                        if ('bias' not in n) and (len(p.shape) != 1)
+                        p for n, p in encoder.named_parameters() if ('bias' not in n) and (len(p.shape) != 1)
                     )
                 },
                 {
@@ -197,14 +195,13 @@ def build_model(config, model_filename, device, build_optimizer=False):
                 },
                 {
                     'params': (
-                        p
-                        for n, p in predictor.named_parameters()
-                        if ('bias' in n) or (len(p.shape) == 1)
+                        p for n, p in predictor.named_parameters() if ('bias' in n) or (len(p.shape) == 1)
                     ),
                     'WD_exclude': True,
                     'weight_decay': 0,
                 },
             ]
+            model = encoder, predictor
         else:
             # Set weight decay to 0 for bias and norm layers
             param_groups = optim_factory.param_groups_weight_decay(model, weight_decay)
@@ -231,7 +228,7 @@ def load_model(model, model_filename, optimizer=None, lr_scheduler=None):
     # Check for pre-trained weights
     if os.path.exists(model_filename):
         # Load saved model state
-        print('\nLoading saved model weights...')
+        logger.info('Loading saved model weights...')
 
         # Load model info
         checkpoint = torch.load(model_filename, map_location=lambda storage, loc: storage)
@@ -255,14 +252,14 @@ def load_model(model, model_filename, optimizer=None, lr_scheduler=None):
             model = encoder, predictor
         elif isinstance(model, nn.Module):
             # Load model weights
-            model.module.load_state_dict(checkpoint['model'])
+            model.module.load_state_dict(checkpoint['model'])  # type: ignore
         else:
             raise ValueError(
                 'Unsupported model format! Model should be a nn.Module or a tuple of two nn.Module.'
             )
 
     else:
-        print('\nStarting fresh model to train...')
+        logger.info('Starting fresh model to train...')
         losses = defaultdict(list)
         cur_iter = 1
 
@@ -582,9 +579,7 @@ class MaskedAutoencoderViT(nn.Module):
                 x.shape[0], ids_restore.shape[1] + self.num_extra_tokens - x.shape[1], 1
             )
 
-            x_ = torch.cat(
-                [x[:, self.num_extra_tokens :, :], mask_tokens], dim=1
-            )  # no cls and ra_dec tokens
+            x_ = torch.cat([x[:, self.num_extra_tokens :, :], mask_tokens], dim=1)  # no cls and ra_dec tokens
             x_ = torch.gather(
                 x_, dim=1, index=ids_restore.unsqueeze(-1).repeat(1, 1, x.shape[2])
             )  # unshuffle

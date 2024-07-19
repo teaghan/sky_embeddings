@@ -28,14 +28,13 @@ from utils.pretrain_fns import linear_probe, run_iter, val_iter
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
+_GLOBAL_SEED = 0
+np.random.seed(_GLOBAL_SEED)
+torch.manual_seed(_GLOBAL_SEED)
+torch.backends.cudnn.benchmark = True
+
 
 def main(args):
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    n_gpu = torch.cuda.device_count()
-
-    print(f'Using Torch version: {torch.__version__}')
-    print(f'Using a {device} device with {n_gpu} GPU(s)')
-
     # Directories
     cur_dir = os.path.dirname(__file__)
     config_dir = os.path.join(cur_dir, 'configs')
@@ -45,25 +44,28 @@ def main(args):
     if data_dir is None:
         data_dir = os.path.join(cur_dir, 'data')
     fig_dir = os.path.join(cur_dir, 'figures')
-    if not os.path.exists(model_dir):
-        os.mkdir(model_dir)
-    if not os.path.exists(fig_dir):
-        os.mkdir(fig_dir)
+    os.makedirs(log_dir, exist_ok=True)
+    os.makedirs(model_dir, exist_ok=True)
+    os.makedirs(fig_dir, exist_ok=True)
 
     # Load model configuration
     model_name = args.model_name
     config = configparser.ConfigParser()
-    config.read(config_dir + model_name + '.ini')
+    config.read(os.path.join(config_dir, model_name + '.ini'))
 
     # Initialize logging
     setup_logging(log_dir=log_dir, script_name=__file__, logging_level=config['LOGGING']['level'])
     logger = logging.getLogger()
+
+    logger.debug(f'Loading model configuration from {os.path.join(config_dir, model_name+".ini")}')
 
     # Check for CUDA
     if torch.cuda.is_available():
         device = torch.device('cuda')
         # Check available GPUs on this node
         n_gpus_per_node = torch.cuda.device_count()
+        logger.info(f'Using Torch version: {torch.__version__}')
+        logger.info(f'Using a {device} device with {n_gpus_per_node} GPU(s)')
         # Local rank is the GPU ID within the node
         local_rank = int(os.environ.get('SLURM_LOCALID'))  # type: ignore
         # Global rank is the GPU ID across all nodes
@@ -77,6 +79,7 @@ def main(args):
         logger.info(f'Using Torch version: {torch.__version__} with CUDA {torch.version.cuda}.')  # type: ignore
         logger.info(f'Using a {device} device with {n_gpus_per_node} GPU(s) per node.')
 
+        # if world_size > 1:
         # Initialize distributed training environment
         logger.info(f'From rank {rank}/{world_size-1}: initializing process group..')
         if init_distributed(
@@ -86,6 +89,9 @@ def main(args):
             rank=rank,
         ):
             logger.info(f'From rank {rank}/{world_size-1}: process group initialized.')
+            logger.info(f'Distributed training available: {dist.is_available()}')
+            logger.info(f'Distributed training initialized: {dist.is_initialized()}')
+            logger.info(f'World size: {dist.get_world_size()}   Rank: {dist.get_rank()}')
             # Only display logs from rank 0 to avoid clutter
             if rank > 0:
                 logger.setLevel(logging.ERROR)
@@ -136,15 +142,15 @@ def main(args):
     verbose_iters = args.verbose_iters
     cp_time = args.cp_time
     cp_freq = args.cp_freq
-    total_batch_iters = int(config['TRAINING']['total_batch_iters'])
+    total_batch_iters = int(ast.literal_eval(config['TRAINING']['total_batch_iters']))
     batch_size = int(config['TRAINING']['batch_size'])
     ema = ast.literal_eval(config['TRAINING']['ema'])
+    use_bfloat16 = ast.literal_eval(config['TRAINING']['use_bfloat16'])
 
     # Architecture parameters
     model_type = config['ARCHITECTURE']['model_type']
     num_channels = int(config['ARCHITECTURE']['num_channels'])
     patch_size = int(config['ARCHITECTURE']['patch_size'])
-    use_bfloat16 = ast.literal_eval(config['ARCHITECTURE']['use_bfloat16'])
 
     # Masking parameters
     max_mask_ratio = float(config['MASK']['max_mask_ratio'])
@@ -155,19 +161,17 @@ def main(args):
     min_keep = int(config['MASK']['min_keep'])  # min number of patches in context block
     enc_mask_scale = ast.literal_eval(config['MASK']['enc_mask_scale'])  # scale of context blocks
     pred_mask_scale = ast.literal_eval(config['MASK']['pred_mask_scale'])  # scale of target blocks
-    aspect_ratio_targets = ast.literal_eval(
-        config['MASK']['aspect_ratio_targets']
-    )  # ar of target blocks
+    aspect_ratio_targets = ast.literal_eval(config['MASK']['aspect_ratio_targets'])  # ar of target blocks
 
     # Display model configuration
-    print('\nCreating model: %s' % model_name)
-    print('\nConfiguration:')
+    logger.info('Creating model: %s' % model_name)
+    logger.info('Configuration:')
     for key_head in config.keys():
         if key_head == 'DEFAULT':
             continue
-        print('  %s' % key_head)
+        logger.info('%s' % key_head)
         for key in config[key_head].keys():
-            print('    %s: %s' % (key, config[key_head][key]))
+            logger.info('  %s: %s' % (key, config[key_head][key]))
 
     # Construct the model and optimizer
     model_path = os.path.join(model_dir, model_name + '.pth.tar')
@@ -216,7 +220,7 @@ def main(args):
         collator = None
 
     if isinstance(model, torch.nn.DataParallel):
-        num_patches = model.module.patch_embed.num_patches
+        num_patches = model.module.patch_embed.num_patches  # type: ignore
     # model is (encoder, predictor) for jepa
     elif isinstance(model, tuple):
         num_patches = model[0].patch_embed.num_patches
@@ -235,7 +239,7 @@ def main(args):
         max_mask_ratio = None
 
     # Build dataloaders
-    num_workers = min([os.cpu_count(), 12 * n_gpu])  # type: ignore
+    num_workers = min([os.cpu_count(), 12 * n_gpus_per_node])  # type: ignore
     if num_workers > 1:
         num_workers -= 1
 
@@ -252,12 +256,12 @@ def main(args):
             num_patches=num_patches,
             shuffle=True,
         )
-        print('The training set consists of %i cutouts.' % (len(dataloader_train.dataset)))
+        logger.info(f'The training set consists of {len(dataloader_train.dataset)} cutouts.')
         train_nested_batches = False
     else:
         # Using fits files in training directory
         # Might need to decrease num_workers and increase cutouts_per_tile
-        dataloader_train = build_fits_dataloader(
+        _, dataloader_train, datasampler_train = build_fits_dataloader(
             ast.literal_eval(config['DATA']['train_data_paths']),
             bands=bands,
             min_bands=min_num_bands,
@@ -351,6 +355,7 @@ def main(args):
             lp_class_data_file,
             lp_regress_data_file,
             lp_combine,
+            logger,
         )
 
 
@@ -395,12 +400,9 @@ def train_network_jepa(
     lp_regress_data_file,
     lp_combine,
 ):
+    logger.info(f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ...')
     logger.info(
-        'Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size)
-    )
-    logger.info(
-        'Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'
-        % (verbose_iters, cp_time)
+        f'Progress will be displayed every {verbose_iters} batch iterations and the model will be saved every {cp_time} minutes.'
     )
 
     loss_meter = AverageMeter()
@@ -603,9 +605,7 @@ def train_network_jepa(
                 or (cur_iter + 1 % cp_freq == 0)
                 or (cur_iter == total_batch_iters)
             ):
-                logger.info(
-                    f'Saving checkpoint at iteration {cur_iter} after {cp_time} minutes of training.'
-                )
+                logger.info(f'Saving checkpoint at iteration {cur_iter} after {cp_time} minutes of training.')
                 save_checkpoint(cur_iter)
                 cp_start_time = time.time()
 
@@ -631,11 +631,11 @@ def train_network(
     lp_class_data_file,
     lp_regress_data_file,
     lp_combine,
+    logger,
 ):
-    print('Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size))
-    print(
-        'Progress will be displayed every %i batch iterations and the model will be saved every %i minutes.'
-        % (verbose_iters, cp_time)
+    logger.info(f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ...')
+    logger.info(
+        f'Progress will be displayed every {verbose_iters} batch iterations and the model will be saved every {cp_time} minutes.'
     )
 
     # Train the neural networks
@@ -663,10 +663,6 @@ def train_network(
                 mode='train',
             )
 
-            # if cur_iter % 100 == 0:
-            #    time_el = time.time()-time1
-            #    print(f'{time_el:0.1f} seconds elapsed.')
-            #    time1 = time.time()
             # Evaluate validation set and display losses
             if cur_iter % verbose_iters == 0:
                 with torch.no_grad():
@@ -711,23 +707,23 @@ def train_network(
                 losses['batch_iters'].append(cur_iter)
 
                 # Print current status
-                print('\nBatch Iterations: %i/%i ' % (cur_iter, total_batch_iters))
-                print('Losses:')
-                print('\tTraining Dataset')
-                print('\t\tTotal Loss: %0.3f' % (losses['train_loss'][-1]))
-                print('\tValidation Dataset')
-                print('\t\tTotal Loss: %0.3f' % (losses['val_loss'][-1]))
+                logger.info('Batch Iterations: %i/%i ' % (cur_iter, total_batch_iters))
+                logger.info('Losses:')
+                logger.info('\tTraining Dataset')
+                logger.info('\t\tTotal Loss: %0.3f' % (losses['train_loss'][-1]))
+                logger.info('\tValidation Dataset')
+                logger.info('\t\tTotal Loss: %0.3f' % (losses['val_loss'][-1]))
                 if lp_class_data_file or lp_regress_data_file:
-                    print('Linear Probing Results:')
+                    logger.info('Linear Probing Results:')
                     if lp_class_data_file:
-                        print('\tClassification Accuracy:')
-                        print(
+                        logger.info('\tClassification Accuracy:')
+                        logger.info(
                             '\t\tTraining: %0.3f, Validation: %0.3f'
                             % (losses['train_lp_acc'][-1], losses['val_lp_acc'][-1])
                         )
                     if lp_regress_data_file:
-                        print('\tRegression R2')
-                        print(
+                        logger.info('\tRegression R2')
+                        logger.info(
                             '\t\tTraining: %0.3f, Validation: %0.3f'
                             % (losses['train_lp_r2'][-1], losses['val_lp_r2'][-1])
                         )
@@ -764,7 +760,7 @@ def train_network(
 
             if (time.time() - cp_start_time) >= cp_time * 60:
                 # Save periodically
-                print('Saving network...')
+                logger.info('Saving network...')
                 torch.save(
                     {
                         'batch_iters': cur_iter,
@@ -780,7 +776,7 @@ def train_network(
 
             if cur_iter > total_batch_iters:
                 # Save after training
-                print('Saving network...')
+                logger.info('Saving network...')
                 torch.save(
                     {
                         'batch_iters': cur_iter,

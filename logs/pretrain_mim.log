@@ -1,0 +1,63 @@
+2024-07-19 17:32:12,360 - INFO - Using Torch version: 2.3.0 with CUDA 12.2.
+2024-07-19 17:32:12,360 - INFO - Using a cuda device with 1 GPU(s) per node.
+2024-07-19 17:32:12,360 - INFO - From rank 0/0: initializing process group..
+2024-07-19 17:32:12,363 - INFO - From rank 0/0: process group initialized.
+2024-07-19 17:32:12,364 - INFO - Distributed training available: True
+2024-07-19 17:32:12,364 - INFO - Distributed training initialized: True
+2024-07-19 17:32:12,364 - INFO - World size: 1   Rank: 0
+2024-07-19 17:32:12,365 - INFO - Creating model: jepa_test
+2024-07-19 17:32:12,365 - INFO - Configuration:
+2024-07-19 17:32:12,365 - INFO - DATA
+2024-07-19 17:32:12,365 - INFO -   train_data_paths: ['/arc/projects/ots/pdr3_dud']
+2024-07-19 17:32:12,365 - INFO -   bands: ['G', 'I', 'R', 'Y', 'Z']
+2024-07-19 17:32:12,365 - INFO -   min_bands: 5
+2024-07-19 17:32:12,365 - INFO -   cutouts_per_tile: 1024
+2024-07-19 17:32:12,365 - INFO -   img_size: 64
+2024-07-19 17:32:12,365 - INFO -   val_data_file: HSC_dud_galaxy_GIRYZ7610_64_new.h5
+2024-07-19 17:32:12,365 - INFO -   pos_channel: False
+2024-07-19 17:32:12,365 - INFO -   lp_class_data_file: HSC_dud_simple_classifier_data_GIRYZ7610_64.h5
+2024-07-19 17:32:12,365 - INFO -   lp_regress_data_file: HSC_dud_simple_regressor_data_GIRYZ7610_64.h5
+2024-07-19 17:32:12,365 - INFO -   use_calexp: False
+2024-07-19 17:32:12,365 - INFO -   pixel_mean: 0.0
+2024-07-19 17:32:12,365 - INFO -   pixel_std: 1.0
+2024-07-19 17:32:12,365 - INFO -   lp_combine: central
+2024-07-19 17:32:12,365 - INFO - TRAINING
+2024-07-19 17:32:12,365 - INFO -   batch_size: 64
+2024-07-19 17:32:12,365 - INFO -   ema: [0.996, 1.0]
+2024-07-19 17:32:12,365 - INFO -   total_batch_iters: 1000000.0
+2024-07-19 17:32:12,365 - INFO -   weight_decay: 0.04
+2024-07-19 17:32:12,365 - INFO -   final_weight_decay: 0.4
+2024-07-19 17:32:12,365 - INFO -   loss_fn: smooth_l1_loss
+2024-07-19 17:32:12,366 - INFO -   start_lr: 0.0002
+2024-07-19 17:32:12,366 - INFO -   ref_lr: 0.001
+2024-07-19 17:32:12,366 - INFO -   final_lr: 1.0e-06
+2024-07-19 17:32:12,366 - INFO -   final_lr_factor: 10000000.0
+2024-07-19 17:32:12,366 - INFO -   norm_pix_loss: False
+2024-07-19 17:32:12,366 - INFO -   use_bfloat16: True
+2024-07-19 17:32:12,366 - INFO - MASK
+2024-07-19 17:32:12,366 - INFO -   allow_overlap: False
+2024-07-19 17:32:12,366 - INFO -   aspect_ratio_targets: [0.75, 1.5]
+2024-07-19 17:32:12,366 - INFO -   min_keep: 5
+2024-07-19 17:32:12,366 - INFO -   num_enc_masks: 1
+2024-07-19 17:32:12,366 - INFO -   num_pred_masks: 4
+2024-07-19 17:32:12,366 - INFO -   enc_mask_scale: [0.85, 1.0]
+2024-07-19 17:32:12,366 - INFO -   pred_mask_scale: [0.15, 0.2]
+2024-07-19 17:32:12,366 - INFO -   max_mask_ratio: 0.9
+2024-07-19 17:32:12,366 - INFO -   mask_ratio: 0.75
+2024-07-19 17:32:12,366 - INFO - ARCHITECTURE
+2024-07-19 17:32:12,366 - INFO -   num_channels: 5
+2024-07-19 17:32:12,366 - INFO -   patch_size: 8
+2024-07-19 17:32:12,366 - INFO -   model_type: jepa_vit_small
+2024-07-19 17:32:12,366 - INFO -   pred_depth: 4
+2024-07-19 17:32:12,366 - INFO -   pred_emb_dim: 192
+2024-07-19 17:32:12,366 - INFO -   attn_pool: False
+2024-07-19 17:32:12,366 - INFO -   ra_dec: False
+2024-07-19 17:32:12,366 - INFO -   embed_dim: 1024
+2024-07-19 17:32:12,366 - INFO - LOGGING
+2024-07-19 17:32:12,366 - INFO -   level: DEBUG
+2024-07-19 17:32:12,366 - INFO - Notes
+2024-07-19 17:32:12,366 - INFO -   comment: Initial I-JEPA training.
+2024-07-19 17:32:14,684 - INFO - 
+Starting fresh model to train...
+2024-07-19 17:32:14,705 - INFO - From rank 0/0: initializing models..
+2024-07-19 17:32:15,044 - INFO - From rank 0/0: models initialized.

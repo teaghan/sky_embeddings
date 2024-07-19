@@ -3,7 +3,8 @@ import sys
 
 import numpy as np
 import torch
-from dataloaders import get_augmentations
+
+from utils.dataloaders import get_augmentations
 
 cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)

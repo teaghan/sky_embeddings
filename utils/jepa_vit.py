@@ -6,7 +6,7 @@ import torch.nn as nn
 from pos_embed import get_2d_sincos_pos_embed
 
 from utils.jepa_masking import apply_masks
-from utils.tensors import repeat_interleave_batch, trunc_normal_
+from utils.jepa_tensors import repeat_interleave_batch, trunc_normal_
 
 
 def drop_path(x, drop_prob: float = 0.0, training: bool = False):
@@ -32,9 +32,7 @@ class DropPath(nn.Module):
 
 
 class MLP(nn.Module):
-    def __init__(
-        self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.0
-    ):
+    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.0):
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
