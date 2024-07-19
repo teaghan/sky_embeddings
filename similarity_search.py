@@ -165,39 +165,17 @@ target_latent, target_images = mae_latent(model, target_dataloader, device, retu
 display_images(normalize_images(target_images[:,display_channel,:,:].data.cpu().numpy()), 
                                 vmin=0., vmax=1, savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_target.png'))
 
-# Compute similarity score for all test samples
-test_similarity = mae_simsearch(model, target_latent, test_dataloader, 
+# Compute similarity score for all test samples and select the best ones
+test_images, test_latent, test_ra_decs, test_scores = mae_simsearch(model, target_latent, test_dataloader, 
                                 device, metric=metric, combine=combine, use_weights=True,
-                               max_pool=max_pool, cls_token=cls_token)
-
-# Sort by similarity score
-sim_order = torch.argsort(test_similarity).cpu()
-if metric=='cosine':
-    sim_order = reversed(sim_order)
-
-# Determine which samples to save
-save_indices = test_indices[sim_order[:n_save]]
-
-# Create a new dataloader for these samples
-test_dataloader = build_h5_dataloader(os.path.join(data_dir, test_fn), 
-                                   batch_size=batch_size, 
-                                   num_workers=num_workers,
-                                   img_size=int(config['ARCHITECTURE']['img_size']),
-                                   num_patches=model.module.patch_embed.num_patches,
-                                   patch_size=int(mae_config['ARCHITECTURE']['patch_size']), 
-                                   num_channels=int(mae_config['ARCHITECTURE']['num_channels']), 
-                                   max_mask_ratio=None,
-                                   shuffle=False,
-                                   indices=save_indices)
-
-# Encode to latent features
-test_latent, test_images = mae_latent(model, test_dataloader, device, return_images=True)
+                               max_pool=max_pool, cls_token=cls_token, nested_batches=False, n_save=n_save)
 
 # Display top n_plot candidates
 display_images(normalize_images(test_images[:n_plot,display_channel,:,:].data.cpu().numpy()), 
-                                vmin=0., vmax=1, savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results.png'))
+                                vmin=0., vmax=1, savename=os.path.join(fig_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results_f.png'))
 
 # Save results
-np.savez(os.path.join(results_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results.npz'), indices=save_indices,
+np.savez(os.path.join(results_dir, f'{model_name}_{target_fn[:-3]}_simsearch_results_f.npz'), 
+         test_ra_decs=test_ra_decs.data.cpu().numpy(), test_scores=test_scores.data.cpu().numpy(),
         target_images=target_images.data.cpu().numpy(), target_features=target_latent.data.cpu().numpy(), 
         test_images=test_images.data.cpu().numpy(), test_features=test_latent.data.cpu().numpy())
