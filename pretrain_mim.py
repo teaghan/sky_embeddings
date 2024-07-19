@@ -9,6 +9,7 @@ from collections import defaultdict
 
 import numpy as np
 import torch
+import torch.distributed as dist
 import torch.multiprocessing as mp
 import torch.nn.functional as F
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -23,7 +24,7 @@ from utils.logging import AverageMeter, CSVLogger, gpu_timer, grad_logger, setup
 from utils.mim_vit import build_model
 from utils.misc import parseArguments
 from utils.plotting_fns import plot_batch, plot_progress
-from utils.pretrain_fns import linear_probe, run_iter
+from utils.pretrain_fns import linear_probe, run_iter, val_iter
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
@@ -118,6 +119,16 @@ def main(args):
     obj_per_tile = int(config['DATA']['cutouts_per_tile'])
     crop_size = int(config['DATA']['img_size'])
     val_data_file = os.path.join(data_dir, config['DATA']['val_data_file'])
+    lp_class_data_file = (
+        os.path.join(data_dir, config['DATA']['lp_class_data_file'])
+        if 'lp_class_data_file' in config['DATA']
+        else None
+    )
+    lp_regress_data_file = (
+        os.path.join(data_dir, config['DATA']['lp_regress_data_file'])
+        if 'lp_regress_data_file' in config['DATA']
+        else None
+    )
     use_calexp = ast.literal_eval(config['DATA']['use_calexp'])
     lp_combine = config['DATA']['lp_combine']
 
@@ -318,6 +329,9 @@ def main(args):
             logger=logger,
             csv_logger=csv_logger,
             use_bfloat16=use_bfloat16,
+            lp_class_data_file=lp_class_data_file,
+            lp_regress_data_file=lp_regress_data_file,
+            lp_combine=lp_combine,
         )
 
     else:
@@ -380,6 +394,9 @@ def train_network_jepa(
     logger,
     csv_logger,
     use_bfloat16,
+    lp_class_data_file,
+    lp_regress_data_file,
+    lp_combine,
 ):
     logger.info(
         'Training the network with a batch size of %i per GPU ...' % (dataloader_train.batch_size)
@@ -422,18 +439,22 @@ def train_network_jepa(
         for data, metadata, masks_enc, masks_pred in dataloader_train:
             logger.info('cur_iter:', cur_iter)
 
-            def to_device():
+            def to_device(data, metadata, masks_enc, masks_pred):
                 images = data.to(current_device, non_blocking=True)
                 meta = metadata.to(current_device, non_blocking=True)
                 masks_encoder = [mask.to(current_device, non_blocking=True) for mask in masks_enc]
                 masks_predictor = [mask.to(current_device, non_blocking=True) for mask in masks_pred]
                 return images, meta, masks_encoder, masks_predictor
 
-            images, meta, masks_enc, masks_pred = to_device()
+            images, meta, masks_enc, masks_pred = to_device(data, metadata, masks_enc, masks_pred)
             mask_enc_meter.update(len(masks_enc[0][0]))
             mask_pred_meter.update(len(masks_pred[0][0]))
 
             def train_step():
+                encoder.train()
+                predictor.train()
+                target_encoder.eval()  # target encoder is not trained through backprop
+
                 _new_lr = lr_scheduler.step()
 
                 def forward_target():
@@ -464,9 +485,9 @@ def train_network_jepa(
 
                 # Backward pass + step
                 if use_bfloat16:
-                    scaler.scale(loss).backward()  # type: ignore
-                    scaler.step(optimizer)  # type: ignore
-                    scaler.update()  # type: ignore
+                    scaler.scale(loss).backward()
+                    scaler.step(optimizer)
+                    scaler.update()
                 else:
                     loss.backward()  # type: ignore
                     optimizer.step()
@@ -526,11 +547,52 @@ def train_network_jepa(
                             )
                         )
 
+            def validate():
+                with torch.no_grad():
+                    for i, (data, metadata, masks_enc, masks_pred) in enumerate(dataloader_val):
+                        images, meta, masks_encoder, masks_predictor = to_device(
+                            data, metadata, masks_enc, masks_pred
+                        )
+                        loss = val_iter(
+                            encoder,
+                            predictor,
+                            target_encoder,
+                            images,
+                            masks_encoder,
+                            masks_predictor,
+                            use_bfloat16,
+                        )
+                        losses_cp['val_loss'].append(loss)
+
+                        if i >= 200:
+                            break
+                    if lp_class_data_file or lp_regress_data_file:
+                        # Run Linear Probing tests
+                        linear_probe(
+                            model=target_encoder,
+                            losses_cp=losses_cp,
+                            device=current_device,
+                            dataloader_template=dataloader_val,
+                            model_type='jepa',
+                            class_data_path=lp_class_data_file,
+                            regress_data_path=lp_regress_data_file,
+                            combine=lp_combine,
+                        )
+
             log_stats(losses_cp)
 
             assert not np.isnan(loss), 'loss is nan'
+            assert not np.isinf(loss), 'loss is inf'
 
-            # TODO: Implement validation
+            # Perform validation every 5000 iterations and only on rank 0
+            if cur_iter % verbose_iters == 0 and dist.get_rank() == 0:
+                logger.info(f'Performing validation at iteration {cur_iter}')
+                validate()
+                logger.info(f'Validation done at iteration {cur_iter}. Continuing training.')
+
+            # Synchronize all processes
+            if dist.is_initialized():
+                dist.barrier()
 
             # Increase the iteration
             cur_iter += 1

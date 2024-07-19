@@ -135,7 +135,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
             attn_pool=attn_pool,
             ra_dec=ra_dec,
         )
-    elif model_type == 'jepa':
+    elif 'jepa' in model_type:
         encoder = jepa_vit.__dict__[model_type](img_size=[img_size], patch_size=patch_size)
         predictor = jepa_vit.__dict__['vit_predictor'](
             num_patches=encoder.patch_embed.num_patches,
