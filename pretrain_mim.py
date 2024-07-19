@@ -138,12 +138,12 @@ def main(args):
     cp_freq = args.cp_freq
     total_batch_iters = int(config['TRAINING']['total_batch_iters'])
     batch_size = int(config['TRAINING']['batch_size'])
+    ema = ast.literal_eval(config['TRAINING']['ema'])
 
     # Architecture parameters
     model_type = config['ARCHITECTURE']['model_type']
     num_channels = int(config['ARCHITECTURE']['num_channels'])
     patch_size = int(config['ARCHITECTURE']['patch_size'])
-    use_bfloat16 = ast.literal_eval(config['ARCHITECTURE']['use_bfloat16'])
     use_bfloat16 = ast.literal_eval(config['ARCHITECTURE']['use_bfloat16'])
 
     # Masking parameters
@@ -158,9 +158,6 @@ def main(args):
     aspect_ratio_targets = ast.literal_eval(
         config['MASK']['aspect_ratio_targets']
     )  # ar of target blocks
-
-    # Optimizer parameters
-    ema = ast.literal_eval(config['OPTIMIZATION']['ema'])
 
     # Display model configuration
     print('\nCreating model: %s' % model_name)

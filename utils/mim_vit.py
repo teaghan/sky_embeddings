@@ -26,9 +26,9 @@ logger = logging.getLogger()
 def build_model(config, model_filename, device, build_optimizer=False):
     # Model architecture
     norm_pix_loss = str2bool(config['TRAINING']['norm_pix_loss'])
-    img_size = int(config['ARCHITECTURE']['img_size'])
-    pixel_mean = float(config['ARCHITECTURE']['pixel_mean'])
-    pixel_std = float(config['ARCHITECTURE']['pixel_std'])
+    img_size = int(config['DATA']['img_size'])
+    pixel_mean = float(config['DATA']['pixel_mean'])
+    pixel_std = float(config['DATA']['pixel_std'])
     num_channels = int(config['ARCHITECTURE']['num_channels'])
     embed_dim = int(config['ARCHITECTURE']['embed_dim'])
     patch_size = int(config['ARCHITECTURE']['patch_size'])
@@ -40,7 +40,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
     # JEPA specific parameters
     pred_depth = int(config['ARCHITECTURE']['pred_depth'])
     pred_emb_dim = int(config['ARCHITECTURE']['pred_emb_dim'])
-    use_bfloat16 = ast.literal_eval(config['ARCHITECTURE']['use_bfloat16'])
+    use_bfloat16 = ast.literal_eval(config['TRAINING']['use_bfloat16'])
 
     # Construct the model
     if model_type == 'base':
@@ -169,7 +169,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
     if build_optimizer:
         total_batch_iters = int(float(config['TRAINING']['total_batch_iters']))
         weight_decay = float(config['TRAINING']['weight_decay'])
-        init_lr = float(config['TRAINING']['init_lr'])
+        start_lr = float(config['TRAINING']['start_lr'])
         final_lr_factor = float(config['TRAINING']['final_lr_factor'])
 
         if 'jepa' in model_type:
@@ -210,11 +210,11 @@ def build_model(config, model_filename, device, build_optimizer=False):
             param_groups = optim_factory.param_groups_weight_decay(model, weight_decay)
 
         # Optimizer
-        optimizer = torch.optim.AdamW(param_groups, lr=init_lr, betas=(0.9, 0.95))
+        optimizer = torch.optim.AdamW(param_groups, lr=start_lr, betas=(0.9, 0.95))
 
         # Learning rate scheduler
         lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, int(total_batch_iters), eta_min=init_lr / final_lr_factor
+            optimizer, int(total_batch_iters), eta_min=start_lr / final_lr_factor
         )
 
         scaler = torch.cuda.amp.GradScaler() if use_bfloat16 else None

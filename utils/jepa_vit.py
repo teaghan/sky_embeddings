@@ -53,9 +53,7 @@ class MLP(nn.Module):
 
 
 class Attention(nn.Module):
-    def __init__(
-        self, dim, num_heads=8, qkv_bias=False, qk_scale=None, attn_drop=0.0, proj_drop=0.0
-    ):
+    def __init__(self, dim, num_heads=8, qkv_bias=False, qk_scale=None, attn_drop=0.0, proj_drop=0.0):
         super().__init__()
         self.num_heads = num_heads
         head_dim = dim // num_heads
@@ -68,9 +66,7 @@ class Attention(nn.Module):
 
     def forward(self, x):
         B, N, C = x.shape
-        qkv = (
-            self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
-        )
+        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
@@ -128,9 +124,7 @@ class Block(nn.Module):
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.norm2 = norm_layer(dim)
         mlp_hidden_dim = int(dim * mlp_ratio)
-        self.mlp = MLP(
-            in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop
-        )
+        self.mlp = MLP(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
 
     def forward(self, x, return_attention=False):
         y, attn = self.attn(self.norm1(x))
@@ -184,9 +178,7 @@ class VisionTransformer(nn.Module):
         )
         self.pos_embed.data.copy_(torch.from_numpy(pos_embed).float().unsqueeze(0))
         # --
-        dpr = [
-            x.item() for x in torch.linspace(0, drop_path_rate, depth)
-        ]  # stochastic depth decay rule
+        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
         self.blocks = nn.ModuleList(
             [
                 Block(
@@ -296,9 +288,7 @@ class VisionTransformerPredictor(nn.Module):
         super().__init__()
         self.predictor_embed = nn.Linear(embed_dim, predictor_embed_dim, bias=True)
         self.mask_token = nn.Parameter(torch.zeros(1, 1, predictor_embed_dim))
-        dpr = [
-            x.item() for x in torch.linspace(0, drop_path_rate, depth)
-        ]  # stochastic depth decay rule
+        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
         # --
         self.predictor_pos_embed = nn.Parameter(
             torch.zeros(1, num_patches, predictor_embed_dim), requires_grad=False
@@ -306,9 +296,7 @@ class VisionTransformerPredictor(nn.Module):
         predictor_pos_embed = get_2d_sincos_pos_embed(
             self.predictor_pos_embed.shape[-1], int(num_patches**0.5), cls_token=False
         )
-        self.predictor_pos_embed.data.copy_(
-            torch.from_numpy(predictor_pos_embed).float().unsqueeze(0)
-        )
+        self.predictor_pos_embed.data.copy_(torch.from_numpy(predictor_pos_embed).float().unsqueeze(0))
         # --
         self.predictor_blocks = nn.ModuleList(
             [
@@ -356,9 +344,7 @@ class VisionTransformerPredictor(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
     def forward(self, x, masks_x, masks):
-        assert (masks is not None) and (
-            masks_x is not None
-        ), 'Cannot run predictor without mask indices'
+        assert (masks is not None) and (masks_x is not None), 'Cannot run predictor without mask indices'
 
         if not isinstance(masks_x, list):
             masks_x = [masks_x]
@@ -401,7 +387,7 @@ class VisionTransformerPredictor(nn.Module):
         return x
 
 
-def vit_predictor(**kwargs):
+def jepa_vit_predictor(**kwargs):
     model = VisionTransformerPredictor(
         mlp_ratio=4,
         qkv_bias=True,
@@ -411,7 +397,7 @@ def vit_predictor(**kwargs):
     return model
 
 
-def vit_tiny(patch_size=16, **kwargs):
+def jepa_vit_tiny(patch_size=16, **kwargs):
     model = VisionTransformer(
         patch_size=patch_size,
         embed_dim=192,
@@ -425,7 +411,7 @@ def vit_tiny(patch_size=16, **kwargs):
     return model
 
 
-def vit_small(patch_size=16, **kwargs):
+def jepa_vit_small(patch_size=16, **kwargs):
     model = VisionTransformer(
         patch_size=patch_size,
         embed_dim=384,
@@ -439,7 +425,7 @@ def vit_small(patch_size=16, **kwargs):
     return model
 
 
-def vit_base(patch_size=16, **kwargs):
+def jepa_vit_base(patch_size=16, **kwargs):
     model = VisionTransformer(
         patch_size=patch_size,
         embed_dim=768,
@@ -453,7 +439,7 @@ def vit_base(patch_size=16, **kwargs):
     return model
 
 
-def vit_large(patch_size=16, **kwargs):
+def jepa_vit_large(patch_size=16, **kwargs):
     model = VisionTransformer(
         patch_size=patch_size,
         embed_dim=1024,
@@ -467,7 +453,7 @@ def vit_large(patch_size=16, **kwargs):
     return model
 
 
-def vit_huge(patch_size=16, **kwargs):
+def jepa_vit_huge(patch_size=16, **kwargs):
     model = VisionTransformer(
         patch_size=patch_size,
         embed_dim=1280,
@@ -481,7 +467,7 @@ def vit_huge(patch_size=16, **kwargs):
     return model
 
 
-def vit_giant(patch_size=16, **kwargs):
+def jepa_vit_giant(patch_size=16, **kwargs):
     model = VisionTransformer(
         patch_size=patch_size,
         embed_dim=1408,
@@ -496,10 +482,10 @@ def vit_giant(patch_size=16, **kwargs):
 
 
 VIT_EMBED_DIMS = {
-    'vit_tiny': 192,
-    'vit_small': 384,
-    'vit_base': 768,
-    'vit_large': 1024,
-    'vit_huge': 1280,
-    'vit_giant': 1408,
+    'jepa_vit_tiny': 192,
+    'jepa_vit_small': 384,
+    'jepa_vit_base': 768,
+    'jepa_vit_large': 1024,
+    'jepa_vit_huge': 1280,
+    'jepa_vit_giant': 1408,
 }
