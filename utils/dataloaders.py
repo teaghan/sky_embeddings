@@ -4,6 +4,7 @@ import random
 import h5py
 import numpy as np
 import torch
+import torch.distributed as dist
 import torchvision
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -166,9 +167,7 @@ def build_fits_dataloader(
             pixel_max=None,
             use_calexp=use_calexp,
         )
-        dist_sampler = torch.utils.data.distributed.DistributedSampler(  # type: ignore
-            dataset=dataset, num_replicas=world_size, rank=rank
-        )
+        dist_sampler = TileDistributedSampler(dataset=dataset, num_replicas=world_size, rank=rank)
         dataloader = torch.utils.data.DataLoader(  # type: ignore
             dataset,
             collate_fn=collator,
@@ -957,6 +956,57 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
             return cutout, ra_dec
         else:
             return cutout
+
+
+class TileDistributedSampler(torch.utils.data.Sampler):  # type: ignore
+    """
+    Custom distributed sampler that distributes tiles of images (each containing multiple cutouts)
+    across GPUs, ensuring each tile's cutouts are processed fully before moving to the next tile.
+    This minimizes I/O operations by loading and processing entire tiles on individual GPUs.
+
+    Attributes:
+        dataset (torch.utils.data.Dataset): Dataset to sample from.
+        num_replicas (int): Number of distributed replicas or processes.
+        rank (int): Rank of the current replica.
+        shuffle (bool): Whether to shuffle the tiles before distributing.
+    """
+
+    def __init__(self, dataset, num_replicas=1, rank=0, shuffle=True):
+        self.dataset = dataset
+        self.num_replicas = num_replicas
+        self.rank = rank
+        self.shuffle = shuffle
+        self.num_tiles = len(dataset.fits_paths)
+        self.num_tiles_per_replica = (self.num_tiles + self.num_replicas - 1) // self.num_replicas
+
+    def __iter__(self):
+        # Generate a tensor of tile indices
+        indices = torch.arange(self.num_tiles, dtype=torch.long)
+
+        if self.shuffle:
+            if self.rank == 0:
+                # Shuffling indices on the root rank
+                indices = indices[torch.randperm(indices.numel())]
+            # Ensure the indices tensor is on the correct device before broadcasting
+            indices = indices.to(torch.device('cuda', self.rank))
+            # Broadcast the shuffled or unshuffled indices tensor
+            dist.broadcast(indices, src=0)
+
+        # Calculate start and end indices for this replica
+        start_idx = self.rank * self.num_tiles_per_replica
+        end_idx = min(start_idx + self.num_tiles_per_replica, self.num_tiles)
+        indices = indices[start_idx:end_idx]
+
+        # Expand tile indices to cutout indices
+        cutout_indices = []
+        for idx in indices:
+            cutout_indices.extend(
+                range(idx * self.dataset.cutouts_per_tile, (idx + 1) * self.dataset.cutouts_per_tile)
+            )
+        return iter(cutout_indices)
+
+    def __len__(self):
+        return self.num_tiles_per_replica * self.dataset.cutouts_per_tile
 
 
 def extract_center(array, n):
