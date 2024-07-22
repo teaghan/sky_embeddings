@@ -1,4 +1,5 @@
 import glob
+import logging
 import random
 
 import h5py
@@ -11,6 +12,8 @@ from astropy.wcs import WCS
 from torchvision.transforms import v2
 
 torchvision.disable_beta_transforms_warning()
+
+logger = logging.getLogger()
 
 
 # Custom brightness adjustment for images
@@ -617,7 +620,7 @@ def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True):
             filenames.append(current_patch_files)
 
     if verbose:
-        print(f'Found {len(filenames)} patches with at least {min_bands} of the {bands} bands.')
+        logger.info(f'Found {len(filenames)} patches with at least {min_bands} of the {bands} bands.')
 
     return filenames
 
@@ -904,17 +907,18 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
         self.pixel_min = pixel_min
         self.pixel_max = pixel_max
         self.use_calexp = use_calexp
+        self.current_tile_index = None
 
         # Find names of patch fits files
         self.band_filenames = find_HSC_bands(fits_paths, bands, min_bands, use_calexp=use_calexp)
 
     def __len__(self):
         # Calculate the total number of cutouts
-        return len(self.fits_paths) * self.cutouts_per_tile
+        return len(self.band_filenames) * self.cutouts_per_tile
 
     def _load_and_preprocess_tile(self, tile_index):
         # This method handles loading a tile and processing it into cutouts
-        patch_filename = self.fits_paths[tile_index]
+        patch_filename = self.band_filenames[tile_index]
         self.current_cutouts, self.current_pix_to_radec = load_fits_bands(
             patch_filename, return_wc=self.ra_dec
         )
@@ -976,7 +980,7 @@ class TileDistributedSampler(torch.utils.data.Sampler):  # type: ignore
         self.num_replicas = num_replicas
         self.rank = rank
         self.shuffle = shuffle
-        self.num_tiles = len(dataset.fits_paths)
+        self.num_tiles = len(dataset.band_filenames)
         self.num_tiles_per_replica = (self.num_tiles + self.num_replicas - 1) // self.num_replicas
 
     def __iter__(self):

@@ -15,14 +15,13 @@ from sklearn.preprocessing import StandardScaler
 
 from utils.distributed import AllReduce
 from utils.jepa_masking import apply_masks
+from utils.jepa_tensors import repeat_interleave_batch
 
 cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)
 
 
-def run_iter(
-    model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler, losses_cp, mode='train'
-):
+def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler, losses_cp, mode='train'):
     if mode == 'train':
         model.train(True)
     else:
@@ -67,7 +66,7 @@ def val_iter(encoder, predictor, target_encoder, images, masks_enc, masks_pred, 
             B = len(h)
             # create target representations
             h = apply_masks(h, masks_pred)
-            h = torch.repeat_interleave_batch(h, B, repeat=len(masks_enc))  # type: ignore
+            h = repeat_interleave_batch(h, B, repeat=len(masks_enc))  # type: ignore
             return h
 
     def forward_context():
@@ -189,7 +188,7 @@ def get_embeddings(
         num_workers=dataloader_template.num_workers,
         img_size=dataloader_template.dataset.img_size,
         num_patches=dataloader_template.dataset.num_patches,
-        patch_size=model.module.patch_embed.patch_size[0],
+        patch_size=model.module.patch_embed.patch_size,
         num_channels=model.module.in_chans,
         max_mask_ratio=None,
         shuffle=False,
@@ -202,10 +201,10 @@ def get_embeddings(
     # Collect targets
     with h5py.File(data_path, 'r') as f:
         y = f[y_label][:]  # type: ignore
-
-    if model.module.attn_pool:
-        # There is only one output set of features if there is an attention pooling layer
-        combine = 'flatten'
+    if 'jepa' not in model_type:
+        if model.module.attn_pool:
+            # There is only one output set of features if there is an attention pooling layer
+            combine = 'flatten'
 
     scale = True
     if combine == 'token':

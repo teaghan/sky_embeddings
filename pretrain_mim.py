@@ -20,7 +20,8 @@ from utils.eval_fns import mae_predict
 from utils.jepa_masking import apply_masks
 from utils.jepa_masking import jepa_mask_generator as jepa_mask_gen
 from utils.jepa_schedulers import build_momentum_scheduler
-from utils.logging import AverageMeter, CSVLogger, gpu_timer, grad_logger, setup_logging
+from utils.jepa_tensors import repeat_interleave_batch
+from utils.logging import AverageMeter, CSVLogger, gpu_timer, grad_logger, log_current_status, setup_logging
 from utils.mim_vit import build_model
 from utils.misc import parseArguments
 from utils.plotting_fns import plot_batch, plot_progress
@@ -64,8 +65,8 @@ def main(args):
         device = torch.device('cuda')
         # Check available GPUs on this node
         n_gpus_per_node = torch.cuda.device_count()
-        logger.info(f'Using Torch version: {torch.__version__}')
-        logger.info(f'Using a {device} device with {n_gpus_per_node} GPU(s)')
+        logger.info(f'Using Torch version: {torch.__version__} with CUDA version {torch.version.cuda}.')
+        logger.info(f'Using a {device} device with {n_gpus_per_node} GPU(s).')
         # Local rank is the GPU ID within the node
         local_rank = int(os.environ.get('SLURM_LOCALID'))  # type: ignore
         # Global rank is the GPU ID across all nodes
@@ -76,9 +77,6 @@ def main(args):
         current_device = local_rank
         torch.cuda.set_device(current_device)
 
-        logger.info(f'Using Torch version: {torch.__version__} with CUDA {torch.version.cuda}.')  # type: ignore
-        logger.info(f'Using a {device} device with {n_gpus_per_node} GPU(s) per node.')
-
         # if world_size > 1:
         # Initialize distributed training environment
         logger.info(f'From rank {rank}/{world_size-1}: initializing process group..')
@@ -88,10 +86,12 @@ def main(args):
             world_size=world_size,
             rank=rank,
         ):
-            logger.info(f'From rank {rank}/{world_size-1}: process group initialized.')
-            logger.info(f'Distributed training available: {dist.is_available()}')
-            logger.info(f'Distributed training initialized: {dist.is_initialized()}')
-            logger.info(f'World size: {dist.get_world_size()}   Rank: {dist.get_rank()}')
+            logger.info(
+                f'From rank {rank}/{world_size-1}: distributed training available: {dist.is_available()} and initialized: {dist.is_initialized()}'
+            )
+            logger.info(
+                f'From rank {rank}/{world_size-1}: World size: {dist.get_world_size()}; Rank: {dist.get_rank()}'
+            )
             # Only display logs from rank 0 to avoid clutter
             if rank > 0:
                 logger.setLevel(logging.ERROR)
@@ -178,7 +178,7 @@ def main(args):
     latest_path = os.path.join(model_dir, model_name + '_latest.pth.tar')
     save_path = os.path.join(model_dir, model_name + '_iter_{current_iter}.pth.tar')
 
-    model, losses, cur_iter, optimizer, lr_scheduler, scaler = build_model(  # type: ignore
+    model, losses, cur_iter, optimizer, lr_scheduler, wd_scheduler, scaler = build_model(  # type: ignore
         config, model_path, device, build_optimizer=True
     )
 
@@ -290,6 +290,8 @@ def main(args):
         img_size=crop_size,
         num_patches=num_patches,
         shuffle=True,
+        collator=mask_generator,
+        model_type=model_type,
     )
 
     # Linear probing validation data files
@@ -314,6 +316,7 @@ def main(args):
             dataloader_val=dataloader_val,
             optimizer=optimizer,
             lr_scheduler=lr_scheduler,
+            wd_scheduler=wd_scheduler,
             momentum_scheduler=momentum_scheduler,
             scaler=scaler,
             losses=losses,
@@ -322,6 +325,8 @@ def main(args):
             verbose_iters=verbose_iters,
             cp_time=cp_time,
             cp_freq=cp_freq,
+            model_name=model_name,
+            fig_dir=fig_dir,
             latest_path=latest_path,
             save_path=save_path,
             world_size=world_size,
@@ -380,6 +385,7 @@ def train_network_jepa(
     dataloader_val,
     optimizer,
     lr_scheduler,
+    wd_scheduler,
     momentum_scheduler,
     scaler,
     losses,
@@ -388,6 +394,8 @@ def train_network_jepa(
     verbose_iters,
     cp_time,
     cp_freq,
+    model_name,
+    fig_dir,
     latest_path,
     save_path,
     world_size,
@@ -416,9 +424,10 @@ def train_network_jepa(
             'predictor': predictor.state_dict(),
             'target_encoder': target_encoder.state_dict(),
             'optimizer': optimizer.state_dict(),
-            'lr_scheduler': lr_scheduler.state_dict(),
-            'lr': _new_lr,
             'scaler': None if scaler is None else scaler.state_dict(),
+            'lr_scheduler': lr_scheduler.state_dict(),
+            'wd_scheduler': None if wd_scheduler is None else wd_scheduler.state_dict(),
+            'lr': _new_lr,
             'cur_iter': cur_iter,
             'loss': loss_meter.avg,
             'world_size': world_size,
@@ -436,7 +445,7 @@ def train_network_jepa(
     while cur_iter < (total_batch_iters):
         # Iterate through training dataset
         for data, metadata, masks_enc, masks_pred in dataloader_train:
-            logger.info('cur_iter:', cur_iter)
+            logger.info(f'Current iteration: {cur_iter}')
 
             def to_device(data, metadata, masks_enc, masks_pred):
                 images = data.to(current_device, non_blocking=True)
@@ -455,6 +464,8 @@ def train_network_jepa(
                 target_encoder.eval()  # target encoder is not trained through backprop
 
                 _new_lr = lr_scheduler.step()
+                _new_wd = wd_scheduler.step()
+                logger.info(f'Iter: {cur_iter}; learning rate: {_new_lr}')
 
                 def forward_target():
                     with torch.no_grad():
@@ -463,7 +474,7 @@ def train_network_jepa(
                         B = len(h)
                         # create target representations
                         h = apply_masks(h, masks_pred)
-                        h = torch.repeat_interleave_batch(h, B, repeat=len(masks_enc))  # type: ignore
+                        h = repeat_interleave_batch(h, B, repeat=len(masks_enc))  # type: ignore
                         return h
 
                 def forward_context():
@@ -481,6 +492,7 @@ def train_network_jepa(
                     h = forward_target()
                     z = forward_context()
                     loss = compute_loss(z, h)
+                    logger.info(f'loss is: {loss}, of datatype: {loss.dtype}')
 
                 # Backward pass + step
                 if use_bfloat16:
@@ -499,9 +511,9 @@ def train_network_jepa(
                     for param_q, param_k in zip(encoder.parameters(), target_encoder.parameters()):
                         param_k.data.mul_(m).add_((1.0 - m) * param_q.detach().data)
 
-                return float(loss), _new_lr, grad_stats  # type: ignore
+                return float(loss), _new_lr, _new_wd, grad_stats  # type: ignore
 
-            (loss, _new_lr, grad_stats), etime = gpu_timer(train_step)
+            (loss, _new_lr, _new_wd, grad_stats), etime = gpu_timer(train_step)
             loss_meter.update(loss)
             losses_cp['train_loss'].append(loss)
             time_meter.update(etime)
@@ -512,7 +524,7 @@ def train_network_jepa(
                     logger.info(
                         '[iter: %5d] loss: %.3f '
                         'masks: %.1f %.1f '
-                        '[lr: %.2e] '
+                        '[wd: %.2e] [lr: %.2e] '
                         '[mem: %.2e] '
                         '(%.1f ms)'
                         % (
@@ -520,6 +532,7 @@ def train_network_jepa(
                             loss_meter.avg,
                             mask_enc_meter.avg,
                             mask_pred_meter.avg,
+                            _new_wd,
                             _new_lr,
                             torch.cuda.max_memory_allocated() / 1024.0**2,
                             time_meter.avg,
@@ -530,6 +543,10 @@ def train_network_jepa(
                     for k in losses_cp.keys():
                         losses[k].append(np.mean(np.array(losses_cp[k]), axis=0))
                     losses['batch_iters'].append(cur_iter)
+
+                    log_current_status(
+                        cur_iter, total_batch_iters, losses, lp_class_data_file, lp_regress_data_file
+                    )
 
                     # Reset checkpoint loss dictionary
                     losses_cp = defaultdict(list)
@@ -578,10 +595,13 @@ def train_network_jepa(
                             combine=lp_combine,
                         )
 
-            log_stats(losses_cp)
-
-            assert not np.isnan(loss), 'loss is nan'
-            assert not np.isinf(loss), 'loss is inf'
+                    if len(losses['batch_iters']) > 1:
+                        # Plot progress
+                        plot_progress(
+                            losses,
+                            y_lims=[(0, 0.7), (0.8, 1.0), (0.6, 1.0)],
+                            savename=os.path.join(fig_dir, f'{model_name}_progress.png'),
+                        )
 
             # Perform validation every 5000 iterations and only on rank 0
             if cur_iter % verbose_iters == 0 and dist.get_rank() == 0:
@@ -592,6 +612,11 @@ def train_network_jepa(
             # Synchronize all processes
             if dist.is_initialized():
                 dist.barrier()
+
+            log_stats(losses_cp)
+
+            assert not np.isnan(loss), 'loss is nan'
+            assert not np.isinf(loss), 'loss is inf'
 
             # Increase the iteration
             cur_iter += 1

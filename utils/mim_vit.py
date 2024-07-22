@@ -15,6 +15,7 @@ from timm.layers import AttentionPoolLatent
 from timm.models.vision_transformer import Block, PatchEmbed
 
 import utils.jepa_vit as jepa_vit
+from utils.jepa_schedulers import CosineWDSchedule, WarmupCosineSchedule
 from utils.jepa_tensors import trunc_normal_
 
 cur_dir = os.path.dirname(__file__)
@@ -36,11 +37,20 @@ def build_model(config, model_filename, device, build_optimizer=False):
     loss_fn = config['TRAINING']['loss_fn']
     attn_pool = str2bool(config['ARCHITECTURE']['attn_pool'])
     ra_dec = str2bool(config['ARCHITECTURE']['ra_dec'])
+    total_batch_iters = int(float(config['TRAINING']['total_batch_iters']))
+    weight_decay = float(config['TRAINING']['weight_decay'])
+    start_lr = float(config['TRAINING']['start_lr'])
+    final_lr_factor = float(config['TRAINING']['final_lr_factor'])
 
-    # JEPA specific parameters
-    pred_depth = int(config['ARCHITECTURE']['pred_depth'])
-    pred_emb_dim = int(config['ARCHITECTURE']['pred_emb_dim'])
-    use_bfloat16 = ast.literal_eval(config['TRAINING']['use_bfloat16'])
+    if 'jepa' in model_type:
+        # JEPA specific parameters
+        pred_depth = int(config['ARCHITECTURE']['pred_depth'])
+        pred_emb_dim = int(config['ARCHITECTURE']['pred_emb_dim'])
+        use_bfloat16 = ast.literal_eval(config['TRAINING']['use_bfloat16'])
+        ref_lr = float(config['TRAINING']['ref_lr'])
+        final_lr = float(config['TRAINING']['final_lr'])
+        warmup_ratio = float(config['TRAINING']['warmup_ratio'])
+        final_weight_decay = float(config['TRAINING']['final_weight_decay'])
 
     # Construct the model
     if model_type == 'base':
@@ -136,7 +146,9 @@ def build_model(config, model_filename, device, build_optimizer=False):
             ra_dec=ra_dec,
         )
     elif 'jepa' in model_type:
-        encoder = jepa_vit.__dict__[model_type](img_size=[img_size], patch_size=patch_size)
+        encoder = jepa_vit.__dict__[model_type](
+            img_size=[img_size], patch_size=patch_size, in_chans=num_channels
+        )
         predictor = jepa_vit.__dict__['jepa_vit_predictor'](
             num_patches=encoder.patch_embed.num_patches,
             embed_dim=encoder.embed_dim,
@@ -167,64 +179,72 @@ def build_model(config, model_filename, device, build_optimizer=False):
         model.to(device)
 
     if build_optimizer:
-        total_batch_iters = int(float(config['TRAINING']['total_batch_iters']))
-        weight_decay = float(config['TRAINING']['weight_decay'])
-        start_lr = float(config['TRAINING']['start_lr'])
-        final_lr_factor = float(config['TRAINING']['final_lr_factor'])
-
         if 'jepa' in model_type:
-            param_groups = [
-                {
-                    'params': (
-                        p for n, p in encoder.named_parameters() if ('bias' not in n) and (len(p.shape) != 1)
-                    )
-                },
-                {
-                    'params': (
-                        p
-                        for n, p in predictor.named_parameters()
-                        if ('bias' not in n) and (len(p.shape) != 1)
-                    )
-                },
-                {
-                    'params': (
-                        p for n, p in encoder.named_parameters() if ('bias' in n) or (len(p.shape) == 1)
-                    ),
-                    'WD_exclude': True,
-                    'weight_decay': 0,
-                },
-                {
-                    'params': (
-                        p for n, p in predictor.named_parameters() if ('bias' in n) or (len(p.shape) == 1)
-                    ),
-                    'WD_exclude': True,
-                    'weight_decay': 0,
-                },
-            ]
+            # param_groups = [
+            #     {
+            #         'params': (
+            #             p for n, p in encoder.named_parameters() if ('bias' not in n) and (len(p.shape) != 1)
+            #         )
+            #     },
+            #     {
+            #         'params': (
+            #             p
+            #             for n, p in predictor.named_parameters()
+            #             if ('bias' not in n) and (len(p.shape) != 1)
+            #         )
+            #     },
+            #     {
+            #         'params': (
+            #             p for n, p in encoder.named_parameters() if ('bias' in n) or (len(p.shape) == 1)
+            #         ),
+            #         'WD_exclude': True,
+            #         'weight_decay': 0,
+            #     },
+            #     {
+            #         'params': (
+            #             p for n, p in predictor.named_parameters() if ('bias' in n) or (len(p.shape) == 1)
+            #         ),
+            #         'WD_exclude': True,
+            #         'weight_decay': 0,
+            #     },
+            # ]
+            optimizer, scaler, lr_scheduler, wd_scheduler = init_optim_jepa(
+                encoder=encoder,
+                predictor=predictor,
+                total_batch_iters=total_batch_iters,
+                start_lr=start_lr,
+                ref_lr=ref_lr,
+                warmup_ratio=warmup_ratio,
+                weight_decay=weight_decay,
+                final_weight_decay=final_weight_decay,
+                final_lr=final_lr,
+                use_bfloat16=use_bfloat16,
+            )
             model = encoder, predictor
         else:
             # Set weight decay to 0 for bias and norm layers
             param_groups = optim_factory.param_groups_weight_decay(model, weight_decay)
 
-        # Optimizer
-        optimizer = torch.optim.AdamW(param_groups, lr=start_lr, betas=(0.9, 0.95))
+            # Optimizer
+            optimizer = torch.optim.AdamW(param_groups, lr=start_lr, betas=(0.9, 0.95))
 
-        # Learning rate scheduler
-        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, int(total_batch_iters), eta_min=start_lr / final_lr_factor
+            # Learning rate scheduler
+            lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer, int(total_batch_iters), eta_min=start_lr / final_lr_factor
+            )
+            wd_scheduler, scaler = None, None
+
+        model, losses, cur_iter = load_model(
+            model, model_filename, optimizer, lr_scheduler, wd_scheduler, scaler
         )
 
-        scaler = torch.cuda.amp.GradScaler() if use_bfloat16 else None
-
-        model, losses, cur_iter = load_model(model, model_filename, optimizer, lr_scheduler)
-
-        return model, losses, cur_iter, optimizer, lr_scheduler, scaler
+        return model, losses, cur_iter, optimizer, lr_scheduler, wd_scheduler, scaler
     else:
         model, losses, cur_iter = load_model(model, model_filename)
         return model, losses, cur_iter
 
 
-def load_model(model, model_filename, optimizer=None, lr_scheduler=None):
+def load_model(model, model_filename, optimizer=None, lr_scheduler=None, wd_scheduler=None, scaler=None):
     # Check for pre-trained weights
     if os.path.exists(model_filename):
         # Load saved model state
@@ -240,6 +260,10 @@ def load_model(model, model_filename, optimizer=None, lr_scheduler=None):
             optimizer.load_state_dict(checkpoint['optimizer'])
         if lr_scheduler is not None:
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+        if wd_scheduler is not None:
+            wd_scheduler.load_state_dict(checkpoint['wd_scheduler'])
+        if scaler is not None:
+            scaler.load_state_dict(checkpoint['scaler'])
 
         # encoder/predictor models (jepa)
         if isinstance(model, tuple) and len(model) == 2:
@@ -264,6 +288,51 @@ def load_model(model, model_filename, optimizer=None, lr_scheduler=None):
         cur_iter = 1
 
     return model, losses, cur_iter
+
+
+def init_optim_jepa(
+    encoder,
+    predictor,
+    total_batch_iters,
+    start_lr,
+    ref_lr,
+    warmup_ratio,  # Ratio of total iterations to use for warmup
+    weight_decay=1e-6,
+    final_weight_decay=1e-6,
+    final_lr=0.0,
+    use_bfloat16=False,
+):
+    param_groups = [
+        {'params': (p for n, p in encoder.named_parameters() if ('bias' not in n) and (len(p.shape) != 1))},
+        {'params': (p for n, p in predictor.named_parameters() if ('bias' not in n) and (len(p.shape) != 1))},
+        {
+            'params': (p for n, p in encoder.named_parameters() if ('bias' in n) or (len(p.shape) == 1)),
+            'WD_exclude': True,
+            'weight_decay': 0,
+        },
+        {
+            'params': (p for n, p in predictor.named_parameters() if ('bias' in n) or (len(p.shape) == 1)),
+            'WD_exclude': True,
+            'weight_decay': 0,
+        },
+    ]
+
+    logger.info('Using AdamW')
+    optimizer = torch.optim.AdamW(param_groups)
+    scheduler = WarmupCosineSchedule(
+        optimizer,
+        warmup_steps=int(warmup_ratio * total_batch_iters),
+        start_lr=start_lr,
+        ref_lr=ref_lr,
+        final_lr=final_lr,
+        T_max=total_batch_iters,
+    )
+    wd_scheduler = CosineWDSchedule(
+        optimizer, ref_wd=weight_decay, final_wd=final_weight_decay, T_max=total_batch_iters
+    )
+    scaler = torch.cuda.amp.GradScaler() if use_bfloat16 else None
+
+    return optimizer, scaler, scheduler, wd_scheduler
 
 
 class MaskedAutoencoderViT(nn.Module):
