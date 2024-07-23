@@ -3,8 +3,6 @@ import os
 
 import torch
 
-logger = logging.getLogger(__name__)
-
 
 def setup_logging(log_dir, script_name, logging_level):
     """
@@ -104,27 +102,3 @@ def grad_logger(named_params):
     if stats.first_layer is None or stats.last_layer is None:  # type: ignore
         stats.first_layer = stats.last_layer = 0.0  # type: ignore
     return stats
-
-
-def log_current_status(
-    cur_iter, total_batch_iters, losses, lp_class_data_file=None, lp_regress_data_file=None
-):
-    # Print current status
-    logger.info(f'Batch Iterations: {cur_iter}/{total_batch_iters}')
-    logger.info('Losses:')
-    logger.info('Training Dataset')
-    logger.info(f'  Total Loss: {losses["train_loss"][-1]:.3f}')
-    logger.info('  Validation Dataset')
-    logger.info(f'  Total Loss: {losses["val_loss"][-1]:.3f}')
-    if lp_class_data_file is not None or lp_regress_data_file is not None:
-        logger.info('Linear Probing Results:')
-        if lp_class_data_file:
-            logger.info('Classification Accuracy:')
-            logger.info(
-                f'  Training: {losses["train_lp_acc"][-1]:.3f}, Validation: {losses["val_lp_acc"][-1]:.3f}'
-            )
-        if lp_regress_data_file:
-            logger.info('Regression R2')
-            logger.info(
-                f' Training: {losses["train_lp_r2"][-1]:.3f}, Validation: {losses["val_lp_r2"][-1]:.3f}'
-            )

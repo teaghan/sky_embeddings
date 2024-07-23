@@ -1,24 +1,24 @@
-import os
-import sys
+import logging
 
 import h5py
 import numpy as np
 import torch
 import torch.nn.functional as F
-from dataloaders import build_h5_dataloader
-from eval_fns import mae_latent
-from misc import select_centre
 from sklearn.linear_model import ElasticNet, LogisticRegression
 from sklearn.metrics import accuracy_score, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
+from utils.dataloaders import build_h5_dataloader
 from utils.distributed import AllReduce
+from utils.eval_fns import mae_latent
 from utils.jepa_masking import apply_masks
 from utils.jepa_tensors import repeat_interleave_batch
 
-cur_dir = os.path.dirname(__file__)
-sys.path.append(cur_dir)
+# from lark import logger
+from utils.misc import select_centre
+
+logger = logging.getLogger()
 
 
 def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler, losses_cp, mode='train'):
@@ -231,3 +231,27 @@ def get_embeddings(
         x = scaler.fit_transform(x)
 
     return x, y
+
+
+def log_current_status(
+    cur_iter, total_batch_iters, losses, lp_class_data_file=None, lp_regress_data_file=None
+):
+    # Print current status
+    logger.info(f'Batch Iterations: {cur_iter}/{total_batch_iters}')
+    logger.info('Losses:')
+    logger.info('Training Dataset')
+    logger.info(f'  Total Loss: {losses["train_loss"][-1]:.3f}')
+    logger.info('  Validation Dataset')
+    logger.info(f'  Total Loss: {losses["val_loss"][-1]:.3f}')
+    if lp_class_data_file is not None or lp_regress_data_file is not None:
+        logger.info('Linear Probing Results:')
+        if lp_class_data_file:
+            logger.info('Classification Accuracy:')
+            logger.info(
+                f'  Training: {losses["train_lp_acc"][-1]:.3f}, Validation: {losses["val_lp_acc"][-1]:.3f}'
+            )
+        if lp_regress_data_file:
+            logger.info('Regression R2')
+            logger.info(
+                f' Training: {losses["train_lp_r2"][-1]:.3f}, Validation: {losses["val_lp_r2"][-1]:.3f}'
+            )

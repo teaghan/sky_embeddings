@@ -7,7 +7,7 @@
 #SBATCH --output=%N-%j.out
 
 # For debugging
-# salloc --time=1:0:0 --mem=100G --nodes 1 --tasks-per-node=1 --gres=gpu:1 --account=rrg-kyi
+# salloc --time=1:0:0 --mem-per-cpu=16G --nodes 1 --tasks-per-node=1 --cpus-per-task=4 --gres=gpu:1 --account=rrg-kyi
 
 module load StdEnv/2023
 module load gcc/12.3 arrow/16.1.0 python/3.11.5 hdf5/1.14.2 httpproxy
@@ -25,3 +25,5 @@ cp /project/rrg-kyi/astro/hsc/HSC_dud_simple_regressor_data_GIRYZ7610_64.h5 $SLU
 
 # Run JEPA training
 srun python /home/heesters/projects/def-sfabbro/heesters/github/sky_embeddings/pretrain_mim.py jepa_test --dist_backend nccl --init_method tcp://$MASTER_ADDR:3456 --world_size $((SLURM_NTASKS_PER_NODE * SLURM_JOB_NUM_NODES))  --batch_size 64 --verbose_iters 1 --cp_time 10.00 --cp_freq 100 -dd $SLURM_TMPDIR/
+
+# # salloc --time=1:0:0 --mem-per-cpu=16G --nodes 1 --tasks-per-node=1 --cpus-per-task=4 --gres=gpu:1 --account=rrg-kyi

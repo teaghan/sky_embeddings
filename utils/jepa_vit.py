@@ -1,12 +1,15 @@
+import logging
 import math
 from functools import partial
 
 import torch
 import torch.nn as nn
-from pos_embed import get_2d_sincos_pos_embed
 
 from utils.jepa_masking import apply_masks
 from utils.jepa_tensors import repeat_interleave_batch, trunc_normal_
+from utils.pos_embed import get_2d_sincos_pos_embed
+
+logger = logging.getLogger()
 
 
 def drop_path(x, drop_prob: float = 0.0, training: bool = False):

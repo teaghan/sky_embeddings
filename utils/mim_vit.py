@@ -1,25 +1,21 @@
 import ast
 import logging
 import os
-import sys
 from collections import defaultdict
 from functools import partial
 
 import timm.optim.optim_factory as optim_factory
 import torch
 import torch.nn as nn
-from location_encoder import LocationEncoder
-from misc import str2bool
-from pos_embed import get_2d_sincos_pos_embed
 from timm.layers import AttentionPoolLatent
 from timm.models.vision_transformer import Block, PatchEmbed
 
 import utils.jepa_vit as jepa_vit
 from utils.jepa_schedulers import CosineWDSchedule, WarmupCosineSchedule
 from utils.jepa_tensors import trunc_normal_
-
-cur_dir = os.path.dirname(__file__)
-sys.path.append(cur_dir)
+from utils.location_encoder import LocationEncoder
+from utils.misc import str2bool
+from utils.pos_embed import get_2d_sincos_pos_embed
 
 logger = logging.getLogger()
 

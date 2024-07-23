@@ -1,6 +1,8 @@
 import glob
 import logging
+import os
 import random
+import time
 
 import h5py
 import numpy as np
@@ -121,12 +123,19 @@ def get_augmentations(img_size=64, flip=True, crop=True, brightness=0.8, noise=0
     return v2.Compose(transforms)
 
 
+def worker_init_fn(worker_id):
+    worker_seed = (torch.initial_seed() + worker_id) % 2**32
+    logger.info(f'Setting seed {worker_seed} for worker {worker_id}')
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+
+
 def build_fits_dataloader(
     fits_paths,
     bands,
     min_bands,
     batch_size,
-    num_workers,
+    num_workers=2,
     patch_size=8,
     max_mask_ratio=None,
     img_size=64,
@@ -177,6 +186,7 @@ def build_fits_dataloader(
             sampler=dist_sampler,
             batch_size=batch_size,
             num_workers=num_workers,
+            worker_init_fn=worker_init_fn,
             pin_memory=True,
             drop_last=True,
             shuffle=False,
@@ -907,7 +917,7 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
         self.pixel_min = pixel_min
         self.pixel_max = pixel_max
         self.use_calexp = use_calexp
-        self.current_tile_index = None
+        self.current_tile_index = -1
 
         # Find names of patch fits files
         self.band_filenames = find_HSC_bands(fits_paths, bands, min_bands, use_calexp=use_calexp)
@@ -951,9 +961,18 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
 
         # Load the entire tile if it's not already loaded or if a new tile is needed
         if tile_index != self.current_tile_index:
+            load_prep_start = time.time()
+            logger.info(f'Worker {os.getpid()} accessing tile {tile_index} for cutout {local_index}.')
             self._load_and_preprocess_tile(tile_index)
-
-        cutout = self.current_cutouts[local_index]
+            load_prep_end = time.time()
+            logger.info(f'Prepared tile {tile_index} in {load_prep_end - load_prep_start:.2f} seconds.')
+            cutout = self.current_cutouts[local_index]
+        else:
+            # logger.info(f'Tile {tile_index} already loaded.')
+            cut_start = time.time()
+            cutout = self.current_cutouts[local_index]
+            cut_end = time.time()
+            logger.debug(f'Cutout {local_index} extracted in {cut_end - cut_start:.5f} seconds.')
 
         if self.ra_dec:
             ra_dec = self.current_radec[local_index]
@@ -1007,6 +1026,7 @@ class TileDistributedSampler(torch.utils.data.Sampler):  # type: ignore
             cutout_indices.extend(
                 range(idx * self.dataset.cutouts_per_tile, (idx + 1) * self.dataset.cutouts_per_tile)
             )
+        logger.info(f'Worker {self.rank} handles indices from {start_idx} to {end_idx-1}')
         return iter(cutout_indices)
 
     def __len__(self):

@@ -7,29 +7,33 @@ import time
 import warnings
 from collections import defaultdict
 
-import numpy as np
-import torch
-import torch.distributed as dist
-import torch.multiprocessing as mp
-import torch.nn.functional as F
-from torch.nn.parallel import DistributedDataParallel as DDP
+from utils.logging import setup_logging
 
-from utils.dataloaders import build_fits_dataloader, build_h5_dataloader
-from utils.distributed import AllReduce, init_distributed
-from utils.eval_fns import mae_predict
-from utils.jepa_masking import apply_masks
-from utils.jepa_masking import jepa_mask_generator as jepa_mask_gen
-from utils.jepa_schedulers import build_momentum_scheduler
-from utils.jepa_tensors import repeat_interleave_batch
-from utils.logging import AverageMeter, CSVLogger, gpu_timer, grad_logger, log_current_status, setup_logging
-from utils.mim_vit import build_model
-from utils.misc import parseArguments
-from utils.plotting_fns import plot_batch, plot_progress
-from utils.pretrain_fns import linear_probe, run_iter, val_iter
+setup_logging(log_dir='./logs', script_name=__file__, logging_level=logging.INFO)
+logger = logging.getLogger()
+
+import numpy as np  # noqa: E402
+import torch  # noqa: E402
+import torch.distributed as dist  # noqa: E402
+import torch.nn.functional as F  # noqa: E402
+from torch.nn.parallel import DistributedDataParallel as DDP  # noqa: E402
+
+from utils.dataloaders import build_fits_dataloader, build_h5_dataloader  # noqa: E402
+from utils.distributed import AllReduce, init_distributed  # noqa: E402
+from utils.eval_fns import mae_predict  # noqa: E402
+from utils.jepa_masking import apply_masks  # noqa: E402
+from utils.jepa_masking import jepa_mask_generator as jepa_mask_gen  # noqa: E402
+from utils.jepa_schedulers import build_momentum_scheduler  # noqa: E402
+from utils.jepa_tensors import repeat_interleave_batch  # noqa: E402
+from utils.logging import AverageMeter, CSVLogger, gpu_timer, grad_logger  # noqa: E402
+from utils.mim_vit import build_model  # noqa: E402
+from utils.misc import parseArguments  # noqa: E402
+from utils.plotting_fns import plot_batch, plot_progress  # noqa: E402
+from utils.pretrain_fns import linear_probe, log_current_status, run_iter, val_iter  # noqa: E402
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
-_GLOBAL_SEED = 0
+_GLOBAL_SEED = 123
 np.random.seed(_GLOBAL_SEED)
 torch.manual_seed(_GLOBAL_SEED)
 torch.backends.cudnn.benchmark = True
@@ -53,10 +57,6 @@ def main(args):
     model_name = args.model_name
     config = configparser.ConfigParser()
     config.read(os.path.join(config_dir, model_name + '.ini'))
-
-    # Initialize logging
-    setup_logging(log_dir=log_dir, script_name=__file__, logging_level=config['LOGGING']['level'])
-    logger = logging.getLogger()
 
     logger.debug(f'Loading model configuration from {os.path.join(config_dir, model_name+".ini")}')
 
@@ -104,10 +104,10 @@ def main(args):
         logger.info(f'Using a {device} device.')
 
     # Initialize torch multiprocessing
-    try:
-        mp.set_start_method('spawn')
-    except Exception:
-        pass
+    # try:
+    #     mp.set_start_method('spawn')
+    # except Exception:
+    #     pass
 
     # Initalize CSV logger
     csv_logger = CSVLogger(
@@ -239,9 +239,11 @@ def main(args):
         max_mask_ratio = None
 
     # Build dataloaders
-    num_workers = min([os.cpu_count(), 12 * n_gpus_per_node])  # type: ignore
-    if num_workers > 1:
-        num_workers -= 1
+    # num_workers = min([os.cpu_count(), 12 * n_gpus_per_node])  # type: ignore
+    # logger.info(f'Using {os.cpu_count()} cpus for data loading. Num workers is set to {num_workers}.')
+    # if num_workers > 1:
+    #     num_workers -= 1
+    num_workers = 2
 
     if 'train_data_file' in config['DATA']:
         # Using .h5 training file
@@ -442,6 +444,7 @@ def train_network_jepa(
     # Train the neural networks
     cp_start_time = time.time()
     losses_cp = defaultdict(list)
+    logger.info('Starting training loop...')
     while cur_iter < (total_batch_iters):
         # Iterate through training dataset
         for data, metadata, masks_enc, masks_pred in dataloader_train:

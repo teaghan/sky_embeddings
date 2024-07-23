@@ -1,70 +1,491 @@
-2024-07-22 03:32:25,543 - DEBUG - Loading model configuration from /home/heesters/projects/def-sfabbro/heesters/github/sky_embeddings/configs/jepa_test.ini
-2024-07-22 03:32:25,804 - INFO - Using Torch version: 2.3.0 with CUDA version 12.2.
-2024-07-22 03:32:25,804 - INFO - Using a cuda device with 1 GPU(s).
-2024-07-22 03:32:25,809 - INFO - From rank 0/0: initializing process group..
-2024-07-22 03:32:25,812 - INFO - From rank 0/0: distributed training available: True and initialized: True
-2024-07-22 03:32:25,812 - INFO - From rank 0/0: World size: 1; Rank: 0
-2024-07-22 03:32:25,814 - INFO - Creating model: jepa_test
-2024-07-22 03:32:25,814 - INFO - Configuration:
-2024-07-22 03:32:25,814 - INFO - DATA
-2024-07-22 03:32:25,814 - INFO -   train_data_paths: ['/project/rrg-kyi/astro/hsc/pdr3_dud/']
-2024-07-22 03:32:25,814 - INFO -   bands: ['G', 'I', 'R', 'Y', 'Z', 'NB0387', 'NB0816', 'NB0921', 'NB1010']
-2024-07-22 03:32:25,814 - INFO -   min_bands: 9
-2024-07-22 03:32:25,814 - INFO -   cutouts_per_tile: 1024
-2024-07-22 03:32:25,814 - INFO -   img_size: 64
-2024-07-22 03:32:25,814 - INFO -   val_data_file: HSC_dud_galaxy_GIRYZ7610_64_new.h5
-2024-07-22 03:32:25,814 - INFO -   pos_channel: False
-2024-07-22 03:32:25,814 - INFO -   lp_class_data_file: HSC_dud_simple_classifier_data_GIRYZ7610_64.h5
-2024-07-22 03:32:25,814 - INFO -   lp_regress_data_file: HSC_dud_simple_regressor_data_GIRYZ7610_64.h5
-2024-07-22 03:32:25,814 - INFO -   use_calexp: False
-2024-07-22 03:32:25,815 - INFO -   pixel_mean: 0.0
-2024-07-22 03:32:25,815 - INFO -   pixel_std: 1.0
-2024-07-22 03:32:25,815 - INFO -   lp_combine: central
-2024-07-22 03:32:25,815 - INFO - TRAINING
-2024-07-22 03:32:25,815 - INFO -   batch_size: 64
-2024-07-22 03:32:25,815 - INFO -   ema: [0.996, 1.0]
-2024-07-22 03:32:25,815 - INFO -   total_batch_iters: 1000000.0
-2024-07-22 03:32:25,815 - INFO -   warmup_ratio: 1.0e-5
-2024-07-22 03:32:25,815 - INFO -   weight_decay: 0.04
-2024-07-22 03:32:25,815 - INFO -   final_weight_decay: 0.4
-2024-07-22 03:32:25,815 - INFO -   loss_fn: smooth_l1_loss
-2024-07-22 03:32:25,815 - INFO -   start_lr: 0.0002
-2024-07-22 03:32:25,815 - INFO -   ref_lr: 0.001
-2024-07-22 03:32:25,815 - INFO -   final_lr: 1.0e-06
-2024-07-22 03:32:25,815 - INFO -   final_lr_factor: 10000000.0
-2024-07-22 03:32:25,815 - INFO -   norm_pix_loss: False
-2024-07-22 03:32:25,815 - INFO -   use_bfloat16: True
-2024-07-22 03:32:25,815 - INFO - MASK
-2024-07-22 03:32:25,815 - INFO -   allow_overlap: False
-2024-07-22 03:32:25,815 - INFO -   aspect_ratio_targets: [0.75, 1.5]
-2024-07-22 03:32:25,815 - INFO -   min_keep: 5
-2024-07-22 03:32:25,815 - INFO -   num_enc_masks: 1
-2024-07-22 03:32:25,815 - INFO -   num_pred_masks: 4
-2024-07-22 03:32:25,815 - INFO -   enc_mask_scale: [0.85, 1.0]
-2024-07-22 03:32:25,815 - INFO -   pred_mask_scale: [0.15, 0.2]
-2024-07-22 03:32:25,815 - INFO -   max_mask_ratio: 0.9
-2024-07-22 03:32:25,815 - INFO -   mask_ratio: 0.75
-2024-07-22 03:32:25,815 - INFO - ARCHITECTURE
-2024-07-22 03:32:25,815 - INFO -   num_channels: 9
-2024-07-22 03:32:25,815 - INFO -   patch_size: 8
-2024-07-22 03:32:25,815 - INFO -   model_type: jepa_vit_small
-2024-07-22 03:32:25,815 - INFO -   pred_depth: 4
-2024-07-22 03:32:25,816 - INFO -   pred_emb_dim: 192
-2024-07-22 03:32:25,816 - INFO -   attn_pool: False
-2024-07-22 03:32:25,816 - INFO -   ra_dec: False
-2024-07-22 03:32:25,816 - INFO -   embed_dim: 1024
-2024-07-22 03:32:25,816 - INFO - LOGGING
-2024-07-22 03:32:25,816 - INFO -   level: DEBUG
-2024-07-22 03:32:25,816 - INFO - Notes
-2024-07-22 03:32:25,816 - INFO -   comment: Initial I-JEPA training.
-2024-07-22 03:32:28,071 - INFO - Using AdamW
-2024-07-22 03:32:28,073 - INFO - Starting fresh model to train...
-2024-07-22 03:32:28,101 - INFO - From rank 0/0: initializing models..
-2024-07-22 03:32:28,433 - INFO - From rank 0/0: models initialized.
-2024-07-22 03:32:28,477 - INFO - Found 168 patches with at least 9 of the ['G', 'I', 'R', 'Y', 'Z', 'NB0387', 'NB0816', 'NB0921', 'NB1010'] bands.
-2024-07-22 03:32:28,479 - INFO - Training the network with a batch size of 64 per GPU ...
-2024-07-22 03:32:28,479 - INFO - Progress will be displayed every 1 batch iterations and the model will be saved every 10.0 minutes.
-2024-07-22 03:34:36,250 - INFO - Current iteration: 1
-2024-07-22 03:34:36,251 - INFO - Iter: 1; learning rate: 0.00028000000000000003
-2024-07-22 03:34:38,224 - INFO - loss is: 0.4430372416973114, of datatype: torch.float32
-2024-07-22 03:34:39,470 - INFO - Performing validation at iteration 1
+2024-07-22 22:34:47,545 - INFO - Note: NumExpr detected 64 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+2024-07-22 22:34:47,546 - INFO - NumExpr defaulting to 8 threads.
+2024-07-22 22:34:48,572 - INFO - Using Torch version: 2.3.0 with CUDA version 12.2.
+2024-07-22 22:34:48,573 - INFO - Using a cuda device with 1 GPU(s).
+2024-07-22 22:34:48,577 - INFO - From rank 0/0: initializing process group..
+2024-07-22 22:34:48,580 - INFO - From rank 0/0: distributed training available: True and initialized: True
+2024-07-22 22:34:48,580 - INFO - From rank 0/0: World size: 1; Rank: 0
+2024-07-22 22:34:48,582 - INFO - Creating model: jepa_test
+2024-07-22 22:34:48,582 - INFO - Configuration:
+2024-07-22 22:34:48,582 - INFO - DATA
+2024-07-22 22:34:48,582 - INFO -   train_data_paths: ['/project/rrg-kyi/astro/hsc/pdr3_dud/']
+2024-07-22 22:34:48,582 - INFO -   bands: ['G', 'I', 'R', 'Y', 'Z', 'NB0387', 'NB0816', 'NB0921', 'NB1010']
+2024-07-22 22:34:48,582 - INFO -   min_bands: 9
+2024-07-22 22:34:48,582 - INFO -   cutouts_per_tile: 1024
+2024-07-22 22:34:48,583 - INFO -   img_size: 64
+2024-07-22 22:34:48,583 - INFO -   val_data_file: HSC_dud_galaxy_GIRYZ7610_64_new.h5
+2024-07-22 22:34:48,583 - INFO -   pos_channel: False
+2024-07-22 22:34:48,583 - INFO -   lp_class_data_file: HSC_dud_simple_classifier_data_GIRYZ7610_64.h5
+2024-07-22 22:34:48,583 - INFO -   lp_regress_data_file: HSC_dud_simple_regressor_data_GIRYZ7610_64.h5
+2024-07-22 22:34:48,583 - INFO -   use_calexp: False
+2024-07-22 22:34:48,583 - INFO -   pixel_mean: 0.0
+2024-07-22 22:34:48,583 - INFO -   pixel_std: 1.0
+2024-07-22 22:34:48,583 - INFO -   lp_combine: central
+2024-07-22 22:34:48,583 - INFO - TRAINING
+2024-07-22 22:34:48,583 - INFO -   batch_size: 64
+2024-07-22 22:34:48,583 - INFO -   ema: [0.996, 1.0]
+2024-07-22 22:34:48,583 - INFO -   total_batch_iters: 1000000.0
+2024-07-22 22:34:48,583 - INFO -   warmup_ratio: 1.0e-5
+2024-07-22 22:34:48,583 - INFO -   weight_decay: 0.04
+2024-07-22 22:34:48,583 - INFO -   final_weight_decay: 0.4
+2024-07-22 22:34:48,583 - INFO -   loss_fn: smooth_l1_loss
+2024-07-22 22:34:48,583 - INFO -   start_lr: 0.0002
+2024-07-22 22:34:48,583 - INFO -   ref_lr: 0.001
+2024-07-22 22:34:48,583 - INFO -   final_lr: 1.0e-06
+2024-07-22 22:34:48,583 - INFO -   final_lr_factor: 10000000.0
+2024-07-22 22:34:48,583 - INFO -   norm_pix_loss: False
+2024-07-22 22:34:48,583 - INFO -   use_bfloat16: True
+2024-07-22 22:34:48,583 - INFO - MASK
+2024-07-22 22:34:48,583 - INFO -   allow_overlap: False
+2024-07-22 22:34:48,583 - INFO -   aspect_ratio_targets: [0.75, 1.5]
+2024-07-22 22:34:48,583 - INFO -   min_keep: 5
+2024-07-22 22:34:48,583 - INFO -   num_enc_masks: 1
+2024-07-22 22:34:48,583 - INFO -   num_pred_masks: 4
+2024-07-22 22:34:48,583 - INFO -   enc_mask_scale: [0.85, 1.0]
+2024-07-22 22:34:48,583 - INFO -   pred_mask_scale: [0.15, 0.2]
+2024-07-22 22:34:48,583 - INFO -   max_mask_ratio: 0.9
+2024-07-22 22:34:48,583 - INFO -   mask_ratio: 0.75
+2024-07-22 22:34:48,584 - INFO - ARCHITECTURE
+2024-07-22 22:34:48,584 - INFO -   num_channels: 9
+2024-07-22 22:34:48,584 - INFO -   patch_size: 8
+2024-07-22 22:34:48,584 - INFO -   model_type: jepa_vit_small
+2024-07-22 22:34:48,584 - INFO -   pred_depth: 4
+2024-07-22 22:34:48,584 - INFO -   pred_emb_dim: 192
+2024-07-22 22:34:48,584 - INFO -   attn_pool: False
+2024-07-22 22:34:48,584 - INFO -   ra_dec: True
+2024-07-22 22:34:48,584 - INFO -   embed_dim: 1024
+2024-07-22 22:34:48,584 - INFO - LOGGING
+2024-07-22 22:34:48,584 - INFO -   level: DEBUG
+2024-07-22 22:34:48,584 - INFO - Notes
+2024-07-22 22:34:48,584 - INFO -   comment: Initial I-JEPA training.
+2024-07-22 22:34:50,826 - INFO - Using AdamW
+2024-07-22 22:34:50,828 - INFO - Starting fresh model to train...
+2024-07-22 22:34:50,859 - INFO - From rank 0/0: initializing models..
+2024-07-22 22:34:51,153 - INFO - From rank 0/0: models initialized.
+2024-07-22 22:34:51,196 - INFO - Found 168 patches with at least 9 of the ['G', 'I', 'R', 'Y', 'Z', 'NB0387', 'NB0816', 'NB0921', 'NB1010'] bands.
+2024-07-22 22:34:51,198 - INFO - Training the network with a batch size of 64 per GPU ...
+2024-07-22 22:34:51,198 - INFO - Progress will be displayed every 10 batch iterations and the model will be saved every 10.0 minutes.
+2024-07-22 22:34:51,198 - INFO - Starting training loop...
+2024-07-22 22:34:54,037 - INFO - Setting seed 3035179996 for worker 0
+2024-07-22 22:34:54,077 - INFO - Worker 0 handles indices from 0 to 167
+2024-07-22 22:34:54,078 - INFO - Worker 3703521 accessing tile 119 for cutout 0.
+2024-07-22 22:34:54,082 - INFO - Setting seed 3035179998 for worker 1
+2024-07-22 22:34:54,083 - INFO - Worker 3703522 accessing tile 119 for cutout 64.
+2024-07-22 22:35:08,749 - INFO - Prepared tile 119 in 14.67 seconds.
+2024-07-22 22:35:08,761 - INFO - Prepared tile 119 in 14.68 seconds.
+2024-07-22 22:35:08,882 - INFO - Current iteration: 1
+2024-07-22 22:35:08,884 - INFO - Iter: 1; learning rate: 0.00028000000000000003
+2024-07-22 22:35:09,180 - INFO - loss is: 0.4496503472328186, of datatype: torch.float32
+2024-07-22 22:35:09,321 - INFO - avg. loss 0.450
+2024-07-22 22:35:09,321 - INFO - Current iteration: 2
+2024-07-22 22:35:09,323 - INFO - Iter: 2; learning rate: 0.00036
+2024-07-22 22:35:09,371 - INFO - loss is: 0.3802807629108429, of datatype: torch.float32
+2024-07-22 22:35:09,419 - INFO - avg. loss 0.415
+2024-07-22 22:35:09,419 - INFO - Current iteration: 3
+2024-07-22 22:35:09,420 - INFO - Iter: 3; learning rate: 0.00044
+2024-07-22 22:35:09,461 - INFO - loss is: 0.3299616873264313, of datatype: torch.float32
+2024-07-22 22:35:09,495 - INFO - avg. loss 0.387
+2024-07-22 22:35:09,495 - INFO - Current iteration: 4
+2024-07-22 22:35:09,496 - INFO - Iter: 4; learning rate: 0.0005200000000000001
+2024-07-22 22:35:09,545 - INFO - loss is: 0.29988324642181396, of datatype: torch.float32
+2024-07-22 22:35:09,574 - INFO - avg. loss 0.365
+2024-07-22 22:35:09,574 - INFO - Current iteration: 5
+2024-07-22 22:35:09,575 - INFO - Iter: 5; learning rate: 0.0006000000000000001
+2024-07-22 22:35:09,603 - INFO - loss is: 0.2719419002532959, of datatype: torch.float32
+2024-07-22 22:35:09,650 - INFO - avg. loss 0.346
+2024-07-22 22:35:09,650 - INFO - Current iteration: 6
+2024-07-22 22:35:09,651 - INFO - Iter: 6; learning rate: 0.00068
+2024-07-22 22:35:09,692 - INFO - loss is: 0.2385668307542801, of datatype: torch.float32
+2024-07-22 22:35:09,726 - INFO - avg. loss 0.328
+2024-07-22 22:35:09,726 - INFO - Current iteration: 7
+2024-07-22 22:35:09,727 - INFO - Iter: 7; learning rate: 0.0007599999999999999
+2024-07-22 22:35:09,774 - INFO - loss is: 0.21933995187282562, of datatype: torch.float32
+2024-07-22 22:35:09,802 - INFO - avg. loss 0.313
+2024-07-22 22:35:09,802 - INFO - Current iteration: 8
+2024-07-22 22:35:09,803 - INFO - Iter: 8; learning rate: 0.00084
+2024-07-22 22:35:09,844 - INFO - loss is: 0.18964478373527527, of datatype: torch.float32
+2024-07-22 22:35:09,882 - INFO - avg. loss 0.297
+2024-07-22 22:35:09,882 - INFO - Current iteration: 9
+2024-07-22 22:35:09,883 - INFO - Iter: 9; learning rate: 0.00092
+2024-07-22 22:35:09,916 - INFO - loss is: 0.169495090842247, of datatype: torch.float32
+2024-07-22 22:35:09,959 - INFO - avg. loss 0.283
+2024-07-22 22:35:09,959 - INFO - Current iteration: 10
+2024-07-22 22:35:09,960 - INFO - Iter: 10; learning rate: 0.001
+2024-07-22 22:35:10,007 - INFO - loss is: 0.14741040766239166, of datatype: torch.float32
+2024-07-22 22:35:10,033 - INFO - Performing validation at iteration 10
+2024-07-22 22:35:29,008 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:29,013 - INFO - Number of nan values in samples: 212992.
+2024-07-22 22:35:29,115 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:29,158 - INFO - Number of nan values in latent: 1277952.
+2024-07-22 22:35:29,191 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:29,218 - INFO - Number of nan values in samples: 200704.
+2024-07-22 22:35:29,224 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:29,251 - INFO - Number of nan values in latent: 1204224.
+2024-07-22 22:35:29,670 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:29,674 - INFO - Number of nan values in samples: 212992.
+2024-07-22 22:35:29,680 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:29,720 - INFO - Number of nan values in latent: 1204224.
+2024-07-22 22:35:29,787 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:29,792 - INFO - Number of nan values in samples: 200704.
+2024-07-22 22:35:29,797 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:29,819 - INFO - Number of nan values in latent: 1204224.
+2024-07-22 22:35:30,350 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:30,355 - INFO - Number of nan values in samples: 204800.
+2024-07-22 22:35:30,361 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:30,374 - INFO - Number of nan values in latent: 1228800.
+2024-07-22 22:35:30,438 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:30,443 - INFO - Number of nan values in samples: 184320.
+2024-07-22 22:35:30,448 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:30,462 - INFO - Number of nan values in latent: 1105920.
+2024-07-22 22:35:31,003 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:31,007 - INFO - Number of nan values in samples: 241664.
+2024-07-22 22:35:31,013 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:31,047 - INFO - Number of nan values in latent: 1376256.
+2024-07-22 22:35:31,115 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:31,119 - INFO - Number of nan values in samples: 196608.
+2024-07-22 22:35:31,125 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:31,140 - INFO - Number of nan values in latent: 1179648.
+2024-07-22 22:35:31,660 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:31,664 - INFO - Number of nan values in samples: 229376.
+2024-07-22 22:35:31,670 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:31,704 - INFO - Number of nan values in latent: 1376256.
+2024-07-22 22:35:31,774 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:31,778 - INFO - Number of nan values in samples: 208896.
+2024-07-22 22:35:31,784 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:31,817 - INFO - Number of nan values in latent: 1253376.
+2024-07-22 22:35:32,317 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:32,322 - INFO - Number of nan values in samples: 196608.
+2024-07-22 22:35:32,327 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:32,341 - INFO - Number of nan values in latent: 1179648.
+2024-07-22 22:35:32,423 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:32,427 - INFO - Number of nan values in samples: 180224.
+2024-07-22 22:35:32,433 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:32,447 - INFO - Number of nan values in latent: 1081344.
+2024-07-22 22:35:33,005 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:33,009 - INFO - Number of nan values in samples: 192512.
+2024-07-22 22:35:33,015 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:33,041 - INFO - Number of nan values in latent: 1155072.
+2024-07-22 22:35:33,112 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:33,116 - INFO - Number of nan values in samples: 212992.
+2024-07-22 22:35:33,122 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:33,137 - INFO - Number of nan values in latent: 1204224.
+2024-07-22 22:35:33,644 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:33,648 - INFO - Number of nan values in samples: 188416.
+2024-07-22 22:35:33,654 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:33,687 - INFO - Number of nan values in latent: 1130496.
+2024-07-22 22:35:33,734 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:33,738 - INFO - Number of nan values in samples: 196608.
+2024-07-22 22:35:33,744 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:33,758 - INFO - Number of nan values in latent: 1179648.
+2024-07-22 22:35:34,286 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:34,291 - INFO - Number of nan values in samples: 196608.
+2024-07-22 22:35:34,297 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:34,311 - INFO - Number of nan values in latent: 1179648.
+2024-07-22 22:35:34,378 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:34,383 - INFO - Number of nan values in samples: 180224.
+2024-07-22 22:35:34,388 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:34,402 - INFO - Number of nan values in latent: 1081344.
+2024-07-22 22:35:34,959 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:34,964 - INFO - Number of nan values in samples: 200704.
+2024-07-22 22:35:34,970 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:34,984 - INFO - Number of nan values in latent: 1204224.
+2024-07-22 22:35:35,048 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:35,053 - INFO - Number of nan values in samples: 196608.
+2024-07-22 22:35:35,059 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:35,098 - INFO - Number of nan values in latent: 1179648.
+2024-07-22 22:35:35,612 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:35,616 - INFO - Number of nan values in samples: 212992.
+2024-07-22 22:35:35,621 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:35,675 - INFO - Number of nan values in latent: 1277952.
+2024-07-22 22:35:35,676 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:35,680 - INFO - Number of nan values in samples: 204800.
+2024-07-22 22:35:35,686 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:35,700 - INFO - Number of nan values in latent: 1228800.
+2024-07-22 22:35:36,274 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:36,279 - INFO - Number of nan values in samples: 192512.
+2024-07-22 22:35:36,285 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:36,300 - INFO - Number of nan values in latent: 1155072.
+2024-07-22 22:35:36,344 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:36,348 - INFO - Number of nan values in samples: 204800.
+2024-07-22 22:35:36,353 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:36,367 - INFO - Number of nan values in latent: 1228800.
+2024-07-22 22:35:36,953 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:36,957 - INFO - Number of nan values in samples: 221184.
+2024-07-22 22:35:36,963 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:37,007 - INFO - Number of nan values in latent: 1327104.
+2024-07-22 22:35:37,008 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:37,012 - INFO - Number of nan values in samples: 196608.
+2024-07-22 22:35:37,017 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:37,031 - INFO - Number of nan values in latent: 1105920.
+2024-07-22 22:35:37,608 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:37,612 - INFO - Number of nan values in samples: 192512.
+2024-07-22 22:35:37,618 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:37,659 - INFO - Number of nan values in latent: 1155072.
+2024-07-22 22:35:37,659 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:37,663 - INFO - Number of nan values in samples: 188416.
+2024-07-22 22:35:37,669 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:37,688 - INFO - Number of nan values in latent: 1130496.
+2024-07-22 22:35:38,214 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:38,218 - INFO - Number of nan values in samples: 212992.
+2024-07-22 22:35:38,224 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:38,267 - INFO - Number of nan values in latent: 1277952.
+2024-07-22 22:35:38,268 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:38,284 - INFO - Number of nan values in samples: 204800.
+2024-07-22 22:35:38,301 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:38,312 - INFO - Number of nan values in latent: 1228800.
+2024-07-22 22:35:38,846 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:38,850 - INFO - Number of nan values in samples: 229376.
+2024-07-22 22:35:38,856 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:38,890 - INFO - Number of nan values in latent: 1376256.
+2024-07-22 22:35:38,891 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:38,895 - INFO - Number of nan values in samples: 208896.
+2024-07-22 22:35:38,923 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:38,939 - INFO - Number of nan values in latent: 1253376.
+2024-07-22 22:35:39,330 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:39,335 - INFO - Number of nan values in samples: 241664.
+2024-07-22 22:35:39,340 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:39,354 - INFO - Number of nan values in latent: 1449984.
+2024-07-22 22:35:39,383 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:39,388 - INFO - Number of nan values in samples: 221184.
+2024-07-22 22:35:39,393 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:39,407 - INFO - Number of nan values in latent: 1327104.
+2024-07-22 22:35:39,909 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:39,914 - INFO - Number of nan values in samples: 221184.
+2024-07-22 22:35:39,920 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:39,933 - INFO - Number of nan values in latent: 1327104.
+2024-07-22 22:35:39,944 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:39,948 - INFO - Number of nan values in samples: 221184.
+2024-07-22 22:35:39,953 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:39,977 - INFO - Number of nan values in latent: 1327104.
+2024-07-22 22:35:40,424 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:40,429 - INFO - Number of nan values in samples: 221184.
+2024-07-22 22:35:40,435 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:40,449 - INFO - Number of nan values in latent: 1327104.
+2024-07-22 22:35:40,479 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:40,482 - INFO - Number of nan values in samples: 229376.
+2024-07-22 22:35:40,488 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:40,502 - INFO - Number of nan values in latent: 1376256.
+2024-07-22 22:35:40,942 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:40,947 - INFO - Number of nan values in samples: 225280.
+2024-07-22 22:35:40,952 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:40,977 - INFO - Number of nan values in latent: 1351680.
+2024-07-22 22:35:40,978 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:40,982 - INFO - Number of nan values in samples: 212992.
+2024-07-22 22:35:40,987 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:41,014 - INFO - Number of nan values in latent: 1277952.
+2024-07-22 22:35:41,455 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:41,459 - INFO - Number of nan values in samples: 217088.
+2024-07-22 22:35:41,465 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:41,479 - INFO - Number of nan values in latent: 1302528.
+2024-07-22 22:35:41,504 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:41,509 - INFO - Number of nan values in samples: 229376.
+2024-07-22 22:35:41,514 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:41,548 - INFO - Number of nan values in latent: 1302528.
+2024-07-22 22:35:42,031 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:42,035 - INFO - Number of nan values in samples: 221184.
+2024-07-22 22:35:42,041 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:42,054 - INFO - Number of nan values in latent: 1327104.
+2024-07-22 22:35:42,066 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:42,070 - INFO - Number of nan values in samples: 204800.
+2024-07-22 22:35:42,076 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:42,098 - INFO - Number of nan values in latent: 1228800.
+2024-07-22 22:35:42,535 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:42,550 - INFO - Number of nan values in samples: 208896.
+2024-07-22 22:35:42,556 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:42,580 - INFO - Number of nan values in latent: 1253376.
+2024-07-22 22:35:42,581 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:42,585 - INFO - Number of nan values in samples: 204800.
+2024-07-22 22:35:42,590 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:42,617 - INFO - Number of nan values in latent: 1228800.
+2024-07-22 22:35:43,051 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:43,055 - INFO - Number of nan values in samples: 221184.
+2024-07-22 22:35:43,061 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:43,075 - INFO - Number of nan values in latent: 1327104.
+2024-07-22 22:35:43,125 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:43,129 - INFO - Number of nan values in samples: 212992.
+2024-07-22 22:35:43,135 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:43,169 - INFO - Number of nan values in latent: 1277952.
+2024-07-22 22:35:43,593 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:43,597 - INFO - Number of nan values in samples: 241664.
+2024-07-22 22:35:43,603 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:43,616 - INFO - Number of nan values in latent: 1376256.
+2024-07-22 22:35:43,645 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:43,650 - INFO - Number of nan values in samples: 225280.
+2024-07-22 22:35:43,656 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:43,670 - INFO - Number of nan values in latent: 1351680.
+2024-07-22 22:35:44,235 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:44,239 - INFO - Number of nan values in samples: 229376.
+2024-07-22 22:35:44,245 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:44,259 - INFO - Number of nan values in latent: 1376256.
+2024-07-22 22:35:44,259 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:44,263 - INFO - Number of nan values in samples: 225280.
+2024-07-22 22:35:44,268 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:44,310 - INFO - Number of nan values in latent: 1351680.
+2024-07-22 22:35:44,749 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:44,753 - INFO - Number of nan values in samples: 217088.
+2024-07-22 22:35:44,759 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:44,805 - INFO - Number of nan values in latent: 1302528.
+2024-07-22 22:35:44,806 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:44,810 - INFO - Number of nan values in samples: 217088.
+2024-07-22 22:35:44,816 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:44,869 - INFO - Number of nan values in latent: 1302528.
+2024-07-22 22:35:45,276 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:45,280 - INFO - Number of nan values in samples: 217088.
+2024-07-22 22:35:45,286 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:45,299 - INFO - Number of nan values in latent: 1302528.
+2024-07-22 22:35:45,327 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:45,331 - INFO - Number of nan values in samples: 221184.
+2024-07-22 22:35:45,337 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:45,350 - INFO - Number of nan values in latent: 1327104.
+2024-07-22 22:35:45,828 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:45,832 - INFO - Number of nan values in samples: 233472.
+2024-07-22 22:35:45,838 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:45,888 - INFO - Number of nan values in latent: 1400832.
+2024-07-22 22:35:45,889 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:45,893 - INFO - Number of nan values in samples: 233472.
+2024-07-22 22:35:45,921 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:45,923 - INFO - Number of nan values in latent: 1400832.
+2024-07-22 22:35:46,356 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:46,361 - INFO - Number of nan values in samples: 221184.
+2024-07-22 22:35:46,366 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:46,380 - INFO - Number of nan values in latent: 1253376.
+2024-07-22 22:35:46,409 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:46,414 - INFO - Number of nan values in samples: 225280.
+2024-07-22 22:35:46,420 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:46,434 - INFO - Number of nan values in latent: 1351680.
+2024-07-22 22:35:46,926 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:46,931 - INFO - Number of nan values in samples: 204800.
+2024-07-22 22:35:46,936 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:46,950 - INFO - Number of nan values in latent: 1228800.
+2024-07-22 22:35:46,978 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:46,983 - INFO - Number of nan values in samples: 217088.
+2024-07-22 22:35:46,988 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:47,003 - INFO - Number of nan values in latent: 1302528.
+2024-07-22 22:35:47,480 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:47,485 - INFO - Number of nan values in samples: 192512.
+2024-07-22 22:35:47,491 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:47,504 - INFO - Number of nan values in latent: 1155072.
+2024-07-22 22:35:47,539 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:47,543 - INFO - Number of nan values in samples: 163840.
+2024-07-22 22:35:47,548 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:47,562 - INFO - Number of nan values in latent: 983040.
+2024-07-22 22:35:48,084 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:48,089 - INFO - Number of nan values in samples: 184320.
+2024-07-22 22:35:48,095 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:48,117 - INFO - Number of nan values in latent: 1105920.
+2024-07-22 22:35:48,118 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:48,122 - INFO - Number of nan values in samples: 151552.
+2024-07-22 22:35:48,128 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:48,151 - INFO - Number of nan values in latent: 909312.
+2024-07-22 22:35:48,712 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:48,716 - INFO - Number of nan values in samples: 217088.
+2024-07-22 22:35:48,722 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:48,744 - INFO - Number of nan values in latent: 1204224.
+2024-07-22 22:35:48,745 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:48,749 - INFO - Number of nan values in samples: 172032.
+2024-07-22 22:35:48,754 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:48,790 - INFO - Number of nan values in latent: 1032192.
+2024-07-22 22:35:49,327 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:49,332 - INFO - Number of nan values in samples: 180224.
+2024-07-22 22:35:49,337 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:49,351 - INFO - Number of nan values in latent: 1081344.
+2024-07-22 22:35:49,389 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:49,393 - INFO - Number of nan values in samples: 184320.
+2024-07-22 22:35:49,398 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:49,417 - INFO - Number of nan values in latent: 1105920.
+2024-07-22 22:35:50,000 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:50,004 - INFO - Number of nan values in samples: 192512.
+2024-07-22 22:35:50,010 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:50,047 - INFO - Number of nan values in latent: 1155072.
+2024-07-22 22:35:50,048 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:50,053 - INFO - Number of nan values in samples: 167936.
+2024-07-22 22:35:50,059 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:50,072 - INFO - Number of nan values in latent: 1007616.
+2024-07-22 22:35:50,648 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:50,653 - INFO - Number of nan values in samples: 184320.
+2024-07-22 22:35:50,658 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:50,674 - INFO - Number of nan values in latent: 1105920.
+2024-07-22 22:35:50,675 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:50,679 - INFO - Number of nan values in samples: 188416.
+2024-07-22 22:35:50,684 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:50,709 - INFO - Number of nan values in latent: 1130496.
+2024-07-22 22:35:51,250 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:51,255 - INFO - Number of nan values in samples: 167936.
+2024-07-22 22:35:51,260 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:51,274 - INFO - Number of nan values in latent: 1007616.
+2024-07-22 22:35:51,298 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:51,303 - INFO - Number of nan values in samples: 135168.
+2024-07-22 22:35:51,309 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:51,343 - INFO - Number of nan values in latent: 811008.
+2024-07-22 22:35:51,857 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:51,862 - INFO - Number of nan values in samples: 184320.
+2024-07-22 22:35:51,867 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:51,881 - INFO - Number of nan values in latent: 1105920.
+2024-07-22 22:35:51,928 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:51,932 - INFO - Number of nan values in samples: 176128.
+2024-07-22 22:35:51,938 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:51,961 - INFO - Number of nan values in latent: 1056768.
+2024-07-22 22:35:52,490 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:52,494 - INFO - Number of nan values in samples: 151552.
+2024-07-22 22:35:52,500 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:52,514 - INFO - Number of nan values in latent: 909312.
+2024-07-22 22:35:52,528 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:52,532 - INFO - Number of nan values in samples: 180224.
+2024-07-22 22:35:52,571 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:52,576 - INFO - Number of nan values in latent: 1081344.
+2024-07-22 22:35:53,098 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:53,102 - INFO - Number of nan values in samples: 159744.
+2024-07-22 22:35:53,108 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:53,121 - INFO - Number of nan values in latent: 958464.
+2024-07-22 22:35:53,139 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:53,145 - INFO - Number of nan values in samples: 180224.
+2024-07-22 22:35:53,150 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:53,164 - INFO - Number of nan values in latent: 1081344.
+2024-07-22 22:35:53,720 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:53,725 - INFO - Number of nan values in samples: 180224.
+2024-07-22 22:35:53,731 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:53,745 - INFO - Number of nan values in latent: 1007616.
+2024-07-22 22:35:53,771 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:53,775 - INFO - Number of nan values in samples: 180224.
+2024-07-22 22:35:53,781 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:53,794 - INFO - Number of nan values in latent: 983040.
+2024-07-22 22:35:54,372 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:54,376 - INFO - Number of nan values in samples: 163840.
+2024-07-22 22:35:54,382 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:54,400 - INFO - Number of nan values in latent: 983040.
+2024-07-22 22:35:54,401 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:54,405 - INFO - Number of nan values in samples: 155648.
+2024-07-22 22:35:54,411 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:54,434 - INFO - Number of nan values in latent: 933888.
+2024-07-22 22:35:55,017 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:55,022 - INFO - Number of nan values in samples: 184320.
+2024-07-22 22:35:55,027 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:55,052 - INFO - Number of nan values in latent: 1081344.
+2024-07-22 22:35:55,053 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:55,057 - INFO - Number of nan values in samples: 163840.
+2024-07-22 22:35:55,063 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:55,076 - INFO - Number of nan values in latent: 983040.
+2024-07-22 22:35:55,656 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:55,660 - INFO - Number of nan values in samples: 176128.
+2024-07-22 22:35:55,666 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:55,686 - INFO - Number of nan values in latent: 1056768.
+2024-07-22 22:35:55,687 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:55,691 - INFO - Number of nan values in samples: 200704.
+2024-07-22 22:35:55,697 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:55,720 - INFO - Number of nan values in latent: 1105920.
+2024-07-22 22:35:56,327 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:56,331 - INFO - Number of nan values in samples: 196608.
+2024-07-22 22:35:56,337 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:56,358 - INFO - Number of nan values in latent: 1179648.
+2024-07-22 22:35:56,359 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:56,363 - INFO - Number of nan values in samples: 200704.
+2024-07-22 22:35:56,368 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:56,382 - INFO - Number of nan values in latent: 1130496.
+2024-07-22 22:35:56,870 - INFO - Shape of samples: torch.Size([64, 9, 64, 64]).
+2024-07-22 22:35:56,875 - INFO - Number of nan values in samples: 176128.
+2024-07-22 22:35:56,880 - INFO - Shape of latent: torch.Size([64, 64, 384]).
+2024-07-22 22:35:56,894 - INFO - Number of nan values in latent: 1056768.
+2024-07-22 22:35:56,895 - INFO - Shape of samples: torch.Size([48, 9, 64, 64]).
+2024-07-22 22:35:56,896 - INFO - Number of nan values in samples: 126976.
+2024-07-22 22:35:56,909 - INFO - Shape of latent: torch.Size([48, 64, 384]).
+2024-07-22 22:35:56,918 - INFO - Number of nan values in latent: 761856.

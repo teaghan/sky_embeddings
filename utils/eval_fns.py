@@ -1,13 +1,11 @@
-import os
-import sys
+import logging
 
 import numpy as np
 import torch
 
 from utils.dataloaders import get_augmentations
 
-cur_dir = os.path.dirname(__file__)
-sys.path.append(cur_dir)
+logger = logging.getLogger()
 
 
 def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
@@ -89,7 +87,7 @@ def mae_latent(
     if n_batches is None:
         n_batches = len(dataloader)
     if verbose > 0:
-        print(f'Encoding {min(len(dataloader), n_batches)} batches...')
+        logger.info(f'Encoding {min(len(dataloader), n_batches)} batches...')
     model.eval()
 
     latents = []
@@ -124,6 +122,9 @@ def mae_latent(
                 samples = torch.cat(augmented_samples, dim=0)
                 ra_decs = torch.cat(augmented_ra_decs, dim=0)  # Concatenate duplicated ra_decs
 
+            logger.info(f'Shape of samples: {samples.shape}.')
+            logger.info(f'Number of nan values in samples: {torch.isnan(samples).sum()}.')
+
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
             ra_decs = ra_decs.to(device, non_blocking=True)
@@ -131,6 +132,8 @@ def mae_latent(
             if 'jepa' in model_type:
                 # model is target_encoder in JEPA
                 latent = model(samples)
+                logger.info(f'Shape of latent: {latent.shape}.')
+                logger.info(f'Number of nan values in latent: {torch.isnan(latent).sum()}.')
             else:
                 if hasattr(model, 'module'):
                     latent, _, _ = model.module.forward_features(
