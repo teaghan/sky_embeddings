@@ -73,7 +73,7 @@ def main(args):
         device = torch.device('cuda')
         # Check available GPUs on this node
         n_gpus_per_node = torch.cuda.device_count()
-        logger.info(f'Using Torch version: {torch.__version__} with CUDA version {torch.version.cuda}.')
+        logger.info(f'Using Torch version: {torch.__version__} with CUDA version {torch.version.cuda}.')  # type: ignore
         logger.info(f'Using a {device} device with {n_gpus_per_node} GPU(s).')
         # Local rank is the GPU ID within the node
         local_rank = int(os.environ.get('SLURM_LOCALID'))  # type: ignore
@@ -170,7 +170,9 @@ def main(args):
     min_keep = int(config['MASK']['min_keep'])  # min number of patches in context block
     enc_mask_scale = ast.literal_eval(config['MASK']['enc_mask_scale'])  # scale of context blocks
     pred_mask_scale = ast.literal_eval(config['MASK']['pred_mask_scale'])  # scale of target blocks
-    aspect_ratio_targets = ast.literal_eval(config['MASK']['aspect_ratio_targets'])  # ar of target blocks
+    aspect_ratio_targets = ast.literal_eval(
+        config['MASK']['aspect_ratio_targets']
+    )  # ar of target blocks
 
     # Display model configuration
     logger.info(f'Creating model: {model_name}')
@@ -527,14 +529,14 @@ def train_network_jepa(
 
             (loss, _new_lr, _new_wd, grad_stats), etime = gpu_timer(train_step)
 
-            losses_cp['train_loss'].append(loss.cpu().detach().numpy())
-            loss = float(loss)
+            losses_cp['train_loss'].append(loss.cpu().detach().numpy())  # type: ignore
+            loss = float(loss)  # type: ignore
             loss_meter.update(loss)
             time_meter.update(etime)
 
             def log_stats(losses_cp):
                 csv_logger.log(cur_iter, loss, mask_enc_meter.val, mask_pred_meter.val, etime)
-                if (cur_iter % verbose_iters == 0) or np.isnan(loss) or np.isinf(loss):
+                if (cur_iter % verbose_iters == 0) or torch.isnan(loss) or torch.isinf(loss):  # type: ignore
                     logger.info(
                         '[iter: %5d] loss: %.3f '
                         'masks: %.1f %.1f '
@@ -592,7 +594,7 @@ def train_network_jepa(
                             masks_predictor,
                             use_bfloat16,
                         )
-                        losses_cp['val_loss'].append(loss.cpu().detach().numpy())
+                        losses_cp['val_loss'].append(loss.cpu().detach().numpy())  # type: ignore
 
                         if i >= 200:
                             break
@@ -644,7 +646,9 @@ def train_network_jepa(
                 or (cur_iter + 1 % cp_freq == 0)
                 or (cur_iter == total_batch_iters)
             ):
-                logger.info(f'Saving checkpoint at iteration {cur_iter} after {cp_time} minutes of training.')
+                logger.info(
+                    f'Saving checkpoint at iteration {cur_iter} after {cp_time} minutes of training.'
+                )
                 save_checkpoint(cur_iter)
                 cp_start_time = time.time()
 

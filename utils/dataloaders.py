@@ -877,16 +877,6 @@ class FitsDataset(torch.utils.data.Dataset):  # type: ignore
             return cutouts, masks
 
 
-class JepaDataLoader(torch.utils.data.DataLoader):
-    def __init__(self, dataset, *args, **kwargs):
-        super().__init__(dataset, *args, **kwargs)
-        self.dataset = dataset
-
-    def __del__(self):
-        if hasattr(self.dataset, 'cleanup'):
-            self.dataset.cleanup()
-
-
 class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
     """
     A PyTorch dataset class for loading astronomical image data from FITS files, designed to handle multi-band
@@ -963,7 +953,7 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
 
     def _create_shared_memory(self):
         total_size = self.cutout_size
-        self.shared_mem = shared_memory.SharedMemory(create=True, size=total_size)
+        self.shared_mem = shared_memory.SharedMemory(create=True, size=int(total_size))
 
     def _prepare_cutouts(self, tile_index, local_index):
         with self.shared_lock:
@@ -987,7 +977,9 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
             )
             radec = torch.from_numpy(radec.astype(np.float32))
         else:
-            cutouts = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, self.current_pix_to_radec)
+            cutouts = random_cutouts(
+                cutouts, self.img_size, self.cutouts_per_tile, self.current_pix_to_radec
+            )
             radec = None
 
         # Clip pixel values
