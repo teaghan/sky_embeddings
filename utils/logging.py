@@ -42,11 +42,14 @@ def gpu_timer(closure, log_timings=True):
 
 
 class CSVLogger(object):
-    def __init__(self, *argv, fname='./logs/default.log'):
+    def __init__(self, *argv, fname='./logs/default.log', mode='append'):
         self.fname = fname
         self.types = []
+        self.mode = mode
+        # Append to existing file or overwrite
+        file_mode = '+a' if mode == 'append' else 'w'
         # -- print headers
-        with open(self.fname, '+a') as f:
+        with open(self.fname, file_mode) as f:
             for i, v in enumerate(argv, 1):
                 self.types.append(v[0])
                 if i < len(argv):

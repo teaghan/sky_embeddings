@@ -1,8 +1,11 @@
+import atexit
 import glob
 import logging
 import os
 import random
 import time
+from multiprocessing import Manager, shared_memory
+from threading import Lock as ThreadLock
 
 import h5py
 import numpy as np
@@ -12,6 +15,8 @@ import torchvision
 from astropy.io import fits
 from astropy.wcs import WCS
 from torchvision.transforms import v2
+
+from utils.cleanup import SharedMemoryRegistry
 
 torchvision.disable_beta_transforms_warning()
 
@@ -468,6 +473,9 @@ class H5Dataset(torch.utils.data.Dataset):  # type: ignore
         if self.transform is not None:
             cutout = self.transform(cutout)
 
+        # Replace nan values with 0
+        cutout[torch.isnan(cutout)] = 0.0
+
         if self.mask_generator is not None:
             # Generate random mask
             mask = self.mask_generator()
@@ -575,6 +583,9 @@ class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
         if self.transform is not None:
             cutout = self.transform(cutout)
 
+        # Replace nan values with 0
+        cutout[torch.isnan(cutout)] = 0.0
+
         if self.label_keys is None:
             return cutout, ra_dec
         else:
@@ -630,7 +641,9 @@ def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True):
             filenames.append(current_patch_files)
 
     if verbose:
-        logger.info(f'Found {len(filenames)} patches with at least {min_bands} of the {bands} bands.')
+        logger.info(
+            f'Found {len(filenames)// len(bands)} patches with at least {min_bands} of the {bands} bands.'
+        )
 
     return filenames
 
@@ -865,6 +878,16 @@ class FitsDataset(torch.utils.data.Dataset):  # type: ignore
             return cutouts, masks
 
 
+class JepaDataLoader(torch.utils.data.DataLoader):
+    def __init__(self, dataset, *args, **kwargs):
+        super().__init__(dataset, *args, **kwargs)
+        self.dataset = dataset
+
+    def __del__(self):
+        if hasattr(self.dataset, 'cleanup'):
+            self.dataset.cleanup()
+
+
 class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
     """
     A PyTorch dataset class for loading astronomical image data from FITS files, designed to handle multi-band
@@ -917,68 +940,114 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
         self.pixel_min = pixel_min
         self.pixel_max = pixel_max
         self.use_calexp = use_calexp
-        self.current_tile_index = -1
-
+        self.num_bands = len(bands)
         # Find names of patch fits files
         self.band_filenames = find_HSC_bands(fits_paths, bands, min_bands, use_calexp=use_calexp)
+        self.num_tiles = len(self.band_filenames) // self.num_bands
+        self.current_tile_index = -1
+        # Initialize shared memory and locks
+        self.manager = Manager()
+        self.tiles_loaded = self.manager.dict()
+        self.shared_lock = self.manager.Lock()
+        self.thread_lock = ThreadLock()
+        self.shared_mem = None
+        self.cutout_shape = (cutouts_per_tile, len(bands), img_size, img_size)
+        self.cutout_size = np.prod(self.cutout_shape) * 4  # Assuming float32
+        SharedMemoryRegistry.register(self)
+
+        atexit.register(self.cleanup)
+        self._create_shared_memory()
 
     def __len__(self):
         # Calculate the total number of cutouts
-        return len(self.band_filenames) * self.cutouts_per_tile
+        return self.num_tiles * self.cutouts_per_tile
 
-    def _load_and_preprocess_tile(self, tile_index):
-        # This method handles loading a tile and processing it into cutouts
+    def _create_shared_memory(self):
+        total_size = self.cutout_size
+        self.shared_mem = shared_memory.SharedMemory(create=True, size=total_size)
+
+    def _prepare_cutouts(self, tile_index, local_index):
+        with self.shared_lock:
+            if tile_index in self.tiles_loaded:
+                # logger.info(
+                #     f'Worker {os.getpid()}: tile {tile_index} already loaded, getting cutout {local_index}.'
+                # )
+                return
+
+            logger.info(f'Worker {os.getpid()} loading tile {tile_index} for cutout {local_index}.')
+            load_start = time.time()
+            self._load_and_preprocess_data(tile_index)
+            load_end = time.time()
+            logger.info(
+                f'Worker {os.getpid()} prepared tile {tile_index} in {load_end - load_start:.2f} seconds.'
+            )
+
+    def _load_and_preprocess_data(self, tile_index):
         patch_filename = self.band_filenames[tile_index]
-        self.current_cutouts, self.current_pix_to_radec = load_fits_bands(
-            patch_filename, return_wc=self.ra_dec
-        )
+        cutouts, self.current_pix_to_radec = load_fits_bands(patch_filename, return_wc=self.ra_dec)
         if self.ra_dec:
-            self.current_cutouts, self.current_radec = random_cutouts(
-                self.current_cutouts, self.img_size, self.cutouts_per_tile, self.current_pix_to_radec
+            cutouts, radec = random_cutouts(
+                cutouts, self.img_size, self.cutouts_per_tile, self.current_pix_to_radec
             )
-            self.current_radec = torch.from_numpy(self.current_radec.astype(np.float32))
+            radec = torch.from_numpy(radec.astype(np.float32))
         else:
-            self.current_cutouts = random_cutouts(
-                self.current_cutouts, self.img_size, self.cutouts_per_tile, self.current_pix_to_radec
-            )
+            cutouts = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, self.current_pix_to_radec)
+            radec = None
 
         # Clip pixel values
         if self.pixel_min is not None:
-            self.current_cutouts[self.current_cutouts < self.pixel_min] = self.pixel_min  # type: ignore
+            cutouts[cutouts < self.pixel_min] = self.pixel_min  # type: ignore
         if self.pixel_max is not None:
-            self.current_cutouts[self.current_cutouts > self.pixel_max] = self.pixel_max  # type: ignore
+            cutouts[cutouts > self.pixel_max] = self.pixel_max  # type: ignore
 
         # Apply any augmentations
-        self.current_cutouts = torch.from_numpy(self.current_cutouts).to(torch.float32)
+        cutouts = torch.from_numpy(cutouts).to(torch.float32)
         if self.transform is not None:
-            self.current_cutouts = self.transform(self.current_cutouts)
+            cutouts = self.transform(cutouts)
 
+        cutouts[torch.isnan(cutouts)] = 0.0  # Replace NaNs with zeros
+
+        # Store in shared memory
+        shared_array = np.ndarray(self.cutout_shape, dtype=np.float32, buffer=self.shared_mem.buf)  # type: ignore
+        np.copyto(shared_array, cutouts.numpy())
+
+        # Store metadata in shared dictionary
+        self.tiles_loaded[tile_index] = (True, radec)
         self.current_tile_index = tile_index
 
     def __getitem__(self, idx):
         tile_index = idx // self.cutouts_per_tile
         local_index = idx % self.cutouts_per_tile
 
-        # Load the entire tile if it's not already loaded or if a new tile is needed
-        if tile_index != self.current_tile_index:
-            load_prep_start = time.time()
-            logger.info(f'Worker {os.getpid()} accessing tile {tile_index} for cutout {local_index}.')
-            self._load_and_preprocess_tile(tile_index)
-            load_prep_end = time.time()
-            logger.info(f'Prepared tile {tile_index} in {load_prep_end - load_prep_start:.2f} seconds.')
-            cutout = self.current_cutouts[local_index]
-        else:
-            # logger.info(f'Tile {tile_index} already loaded.')
-            cut_start = time.time()
-            cutout = self.current_cutouts[local_index]
-            cut_end = time.time()
-            logger.debug(f'Cutout {local_index} extracted in {cut_end - cut_start:.5f} seconds.')
+        self._prepare_cutouts(tile_index, local_index)
+
+        shared_array = np.ndarray(
+            self.cutout_shape,
+            dtype=np.float32,
+            buffer=self.shared_mem.buf,  # type: ignore
+        )
+        cutout = torch.from_numpy(shared_array[local_index])
 
         if self.ra_dec:
-            ra_dec = self.current_radec[local_index]
+            _, radec = self.tiles_loaded[tile_index]
+            ra_dec = radec[local_index] if radec is not None else None
             return cutout, ra_dec
         else:
             return cutout
+
+    def cleanup(self):
+        if self.shared_mem:
+            try:
+                self.shared_mem.close()
+                self.shared_mem.unlink()
+            except Exception as e:
+                print(f'Error during shared memory cleanup: {e}')
+            self.shared_mem = None
+        if hasattr(self, 'manager'):
+            self.manager.shutdown()
+
+    def __del__(self):
+        self.cleanup()
 
 
 class TileDistributedSampler(torch.utils.data.Sampler):  # type: ignore
@@ -999,7 +1068,7 @@ class TileDistributedSampler(torch.utils.data.Sampler):  # type: ignore
         self.num_replicas = num_replicas
         self.rank = rank
         self.shuffle = shuffle
-        self.num_tiles = len(dataset.band_filenames)
+        self.num_tiles = len(dataset) // dataset.cutouts_per_tile
         self.num_tiles_per_replica = (self.num_tiles + self.num_replicas - 1) // self.num_replicas
 
     def __iter__(self):
@@ -1026,7 +1095,7 @@ class TileDistributedSampler(torch.utils.data.Sampler):  # type: ignore
             cutout_indices.extend(
                 range(idx * self.dataset.cutouts_per_tile, (idx + 1) * self.dataset.cutouts_per_tile)
             )
-        logger.info(f'Worker {self.rank} handles indices from {start_idx} to {end_idx-1}')
+        logger.info(f'Rank {self.rank} handles indices from {start_idx} to {end_idx-1}')
         return iter(cutout_indices)
 
     def __len__(self):

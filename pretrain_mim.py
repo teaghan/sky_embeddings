@@ -1,4 +1,5 @@
 import ast
+import atexit
 import configparser
 import copy
 import logging
@@ -11,6 +12,13 @@ from utils.logging import setup_logging
 
 setup_logging(log_dir='./logs', script_name=__file__, logging_level=logging.INFO)
 logger = logging.getLogger()
+
+
+from utils.cleanup import SharedMemoryRegistry  # noqa: E402
+
+# Register shared memory cleanup
+atexit.register(SharedMemoryRegistry.cleanup_all)
+
 
 import numpy as np  # noqa: E402
 import torch  # noqa: E402
@@ -468,7 +476,7 @@ def train_network_jepa(
 
                 _new_lr = lr_scheduler.step()
                 _new_wd = wd_scheduler.step()
-                logger.info(f'Iter: {cur_iter}; learning rate: {_new_lr}')
+                logger.info(f'Iter: {cur_iter}; learning rate: {_new_lr:.5f}')
 
                 def forward_target():
                     with torch.no_grad():
@@ -495,7 +503,7 @@ def train_network_jepa(
                     h = forward_target()
                     z = forward_context()
                     loss = compute_loss(z, h)
-                    logger.info(f'loss is: {loss}, of datatype: {loss.dtype}')
+                    logger.info(f'loss is: {loss:.3f}, of datatype: {loss.dtype}')
 
                 # Backward pass + step
                 if use_bfloat16:
@@ -514,11 +522,13 @@ def train_network_jepa(
                     for param_q, param_k in zip(encoder.parameters(), target_encoder.parameters()):
                         param_k.data.mul_(m).add_((1.0 - m) * param_q.detach().data)
 
-                return float(loss), _new_lr, _new_wd, grad_stats  # type: ignore
+                return loss, _new_lr, _new_wd, grad_stats  # type: ignore
 
             (loss, _new_lr, _new_wd, grad_stats), etime = gpu_timer(train_step)
+
+            losses_cp['train_loss'].append(loss.cpu().detach().numpy())
+            loss = float(loss)
             loss_meter.update(loss)
-            losses_cp['train_loss'].append(loss)
             time_meter.update(etime)
 
             def log_stats(losses_cp):
@@ -581,7 +591,7 @@ def train_network_jepa(
                             masks_predictor,
                             use_bfloat16,
                         )
-                        losses_cp['val_loss'].append(loss)
+                        losses_cp['val_loss'].append(loss.cpu().detach().numpy())
 
                         if i >= 200:
                             break

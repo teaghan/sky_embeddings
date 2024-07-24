@@ -122,8 +122,8 @@ def mae_latent(
                 samples = torch.cat(augmented_samples, dim=0)
                 ra_decs = torch.cat(augmented_ra_decs, dim=0)  # Concatenate duplicated ra_decs
 
-            logger.info(f'Shape of samples: {samples.shape}.')
-            logger.info(f'Number of nan values in samples: {torch.isnan(samples).sum()}.')
+            logger.debug(f'Shape of samples: {samples.shape}.')
+            logger.debug(f'Number of nan values in samples: {torch.isnan(samples).sum()}.')
 
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
@@ -132,8 +132,8 @@ def mae_latent(
             if 'jepa' in model_type:
                 # model is target_encoder in JEPA
                 latent = model(samples)
-                logger.info(f'Shape of latent: {latent.shape}.')
-                logger.info(f'Number of nan values in latent: {torch.isnan(latent).sum()}.')
+                logger.debug(f'Shape of latent: {latent.shape}.')
+                logger.debug(f'Number of nan values in latent: {torch.isnan(latent).sum()}.')
             else:
                 if hasattr(model, 'module'):
                     latent, _, _ = model.module.forward_features(
