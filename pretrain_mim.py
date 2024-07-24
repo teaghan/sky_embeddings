@@ -125,6 +125,7 @@ def main(args):
         ('%.5f', 'mask-pred'),
         ('%d', 'time (ms)'),
         fname=os.path.join(log_dir, f'{args.model_name}_{rank}.csv'),
+        mode='overwrite',
     )
 
     # Data parameters
@@ -172,14 +173,14 @@ def main(args):
     aspect_ratio_targets = ast.literal_eval(config['MASK']['aspect_ratio_targets'])  # ar of target blocks
 
     # Display model configuration
-    logger.info('Creating model: %s' % model_name)
+    logger.info(f'Creating model: {model_name}')
     logger.info('Configuration:')
     for key_head in config.keys():
         if key_head == 'DEFAULT':
             continue
-        logger.info('%s' % key_head)
+        logger.info(f'{key_head}')
         for key in config[key_head].keys():
-            logger.info('  %s: %s' % (key, config[key_head][key]))
+            logger.info(f'  {key}: {config[key_head][key]}')
 
     # Construct the model and optimizer
     model_path = os.path.join(model_dir, model_name + '.pth.tar')
@@ -455,8 +456,9 @@ def train_network_jepa(
     logger.info('Starting training loop...')
     while cur_iter < (total_batch_iters):
         # Iterate through training dataset
+        if cur_iter % 100 == 0:
+            logger.info(f'From rank {rank}: iter: {cur_iter}')
         for data, metadata, masks_enc, masks_pred in dataloader_train:
-            logger.info(f'Current iteration: {cur_iter}')
 
             def to_device(data, metadata, masks_enc, masks_pred):
                 images = data.to(current_device, non_blocking=True)
@@ -476,7 +478,7 @@ def train_network_jepa(
 
                 _new_lr = lr_scheduler.step()
                 _new_wd = wd_scheduler.step()
-                logger.info(f'Iter: {cur_iter}; learning rate: {_new_lr:.5f}')
+                logger.debug(f'Iter: {cur_iter}; learning rate: {_new_lr:.5f}')
 
                 def forward_target():
                     with torch.no_grad():
@@ -503,7 +505,6 @@ def train_network_jepa(
                     h = forward_target()
                     z = forward_context()
                     loss = compute_loss(z, h)
-                    logger.info(f'loss is: {loss:.3f}, of datatype: {loss.dtype}')
 
                 # Backward pass + step
                 if use_bfloat16:

@@ -130,7 +130,6 @@ def get_augmentations(img_size=64, flip=True, crop=True, brightness=0.8, noise=0
 
 def worker_init_fn(worker_id):
     worker_seed = (torch.initial_seed() + worker_id) % 2**32
-    logger.info(f'Setting seed {worker_seed} for worker {worker_id}')
     np.random.seed(worker_seed)
     random.seed(worker_seed)
 
@@ -969,9 +968,6 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
     def _prepare_cutouts(self, tile_index, local_index):
         with self.shared_lock:
             if tile_index in self.tiles_loaded:
-                # logger.info(
-                #     f'Worker {os.getpid()}: tile {tile_index} already loaded, getting cutout {local_index}.'
-                # )
                 return
 
             logger.info(f'Worker {os.getpid()} loading tile {tile_index} for cutout {local_index}.')
