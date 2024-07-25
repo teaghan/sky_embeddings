@@ -6,6 +6,7 @@ import torch.nn as nn
 import timm.optim.optim_factory as optim_factory
 from timm.models.vision_transformer import PatchEmbed, Block
 from timm.layers import AttentionPoolLatent
+from copy import deepcopy
 
 import os
 import sys
@@ -15,9 +16,10 @@ from pos_embed import get_2d_sincos_pos_embed
 from misc import str2bool
 from location_encoder import LocationEncoder
 
+from pretrain_fns import consistency_loss
 
-def build_model(config, model_filename, device, build_optimizer=False):
 
+def build_model(config, model_filename, device, build_optimizer=False, resume=False):
     # Model architecture
     norm_pix_loss = str2bool(config['TRAINING']['norm_pix_loss'])
     img_size = int(config['ARCHITECTURE']['img_size'])
@@ -113,72 +115,70 @@ def build_model(config, model_filename, device, build_optimizer=False):
 
     model.to(device)
 
+    # Create teacher model as a copy of the student model
+    teacher_model = deepcopy(model)
+
     # Use multiple GPUs if available
-    model = nn.DataParallel(model)
+    student_model = nn.DataParallel(model)
+    teacher_model = nn.DataParallel(teacher_model)
 
     if build_optimizer:
-        total_batch_iters = int(float(config['TRAINING']['total_batch_iters']))
+        total_epochs = int(config['TRAINING']['total_epochs'])
         weight_decay = float(config['TRAINING']['weight_decay'])
         init_lr = float(config['TRAINING']['init_lr'])
         final_lr_factor = float(config['TRAINING']['final_lr_factor'])
         
         # Set weight decay to 0 for bias and norm layers
-        param_groups = optim_factory.param_groups_weight_decay(model, weight_decay)
+        param_groups = optim_factory.param_groups_weight_decay(student_model, weight_decay)
 
         # Optimizer
         optimizer = torch.optim.AdamW(param_groups, lr=init_lr, betas=(0.9, 0.95))
 
         # Learning rate scheduler
-        '''
-        lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, init_lr,
-                                                           total_steps=int(total_batch_iters), 
-                                                           pct_start=0.05, anneal_strategy='cos', 
-                                                           cycle_momentum=True, 
-                                                           base_momentum=0.85, 
-                                                           max_momentum=0.95, div_factor=25.0, 
-                                                           final_div_factor=final_lr_factor, 
-                                                           three_phase=False)
-        '''
-        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 
-                                                                  int(total_batch_iters), 
-                                                                  eta_min=init_lr/final_lr_factor)
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, total_epochs, eta_min=init_lr/final_lr_factor)
 
-        model, losses, cur_iter = load_model(model, model_filename, optimizer, lr_scheduler)
+        student_model, teacher_model, losses, cur_epoch = load_model(student_model, teacher_model, model_filename, optimizer, lr_scheduler, resume)
         
-        return model, losses, cur_iter, optimizer, lr_scheduler
+        return student_model, teacher_model, losses, cur_epoch, optimizer, lr_scheduler
     else:
-        model, losses, cur_iter = load_model(model, model_filename)
-        return model, losses, cur_iter
+        student_model, teacher_model, losses, cur_epoch = load_model(student_model, teacher_model, model_filename, resume=resume)
+        return student_model, teacher_model, losses, cur_epoch
 
 
-def load_model(model, model_filename, optimizer=None, lr_scheduler=None):
+
+def load_model(student_model, teacher_model, model_filename, optimizer=None, lr_scheduler=None, resume=False):
+    # Print the model filename to check its value
+    print(f'Checking if model file exists at: {model_filename}')
     
-    # Check for pre-trained weights
-    if os.path.exists(model_filename):
-        # Load saved model state
+    # Print the value of resume
+    print(f'Resume is set to: {resume}')
+    
+    # Print the result of os.path.exists(model_filename)
+    print(f'Checkpoint file exists: {os.path.exists(model_filename)}')
+    if resume and os.path.exists(model_filename):
+        # Print the model filename to check its value
         print('\nLoading saved model weights...')
         
         # Load model info
         checkpoint = torch.load(model_filename, 
                                 map_location=lambda storage, loc: storage)
         losses = defaultdict(list, dict(checkpoint['losses']))
-        cur_iter = checkpoint['batch_iters']+1
-
+        cur_epoch = checkpoint['epoch'] + 1
+        
         # Load optimizer states
         if optimizer is not None:
             optimizer.load_state_dict(checkpoint['optimizer'])
         if lr_scheduler is not None:
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
-        
+            
         # Load model weights
-        model.module.load_state_dict(checkpoint['model'])
-        
+        student_model.module.load_state_dict(checkpoint['model'])
+        teacher_model.module.load_state_dict(checkpoint['model'])
     else:
         print('\nStarting fresh model to train...')
         losses = defaultdict(list)
-        cur_iter = 1
-        
-    return model, losses, cur_iter
+        cur_epoch = 0
+    return student_model, teacher_model, losses, cur_epoch
 
 class MaskedAutoencoderViT(nn.Module):
     '''Masked Autoencoder with VisionTransformer backbone.'''
@@ -328,6 +328,10 @@ class MaskedAutoencoderViT(nn.Module):
         imgs: (N, C, H, W)
         x: (N, L, patch_size**2 *3)
         """
+        # Ensure imgs has the right dimensions
+        if len(imgs.shape) != 4:
+            raise ValueError(f'Expected imgs to have 4 dimensions, but got {imgs.shape}')
+        
         p = self.patch_embed.patch_size[0]
         assert imgs.shape[2] == imgs.shape[3] and imgs.shape[2] % p == 0
 
@@ -379,17 +383,22 @@ class MaskedAutoencoderViT(nn.Module):
         return x_masked, mask, ids_restore
             
     def forward_features(self, x, ra_dec=None, mask_ratio=0, mask=None, reshape_out=True):
+        
+        # print(f'Input shape: {x.shape}')
 
         B, C, H, W = x.shape
         # Normalize input images
         x = self.norm_inputs(x)
+        # print(f'Shape after norm_inputs: {x.shape}')
         
         # Expand the masking values to match the size of the batch of images
         patch_mask_values = self.patch_mask_values.repeat(1, self.tile_size, self.tile_size)
         patch_mask_values = patch_mask_values.expand(B, -1, -1, -1)
+        # print(f'patch_mask_values shape: {patch_mask_values.shape}')
         
         # Replace NaN values with patch_mask_values
         x = torch.where(torch.isnan(x), patch_mask_values, x)
+        # print(f'Shape after replacing NaN values: {x.shape}')
         
         if self.simmim:
             ids_restore = None
@@ -397,36 +406,46 @@ class MaskedAutoencoderViT(nn.Module):
             # Image is masked where mask==1 and replaced with the values in patch_mask_values
             if mask is not None:
                 x = x * (1 - mask) + patch_mask_values * mask
+                # print(f'Shape after applying mask: {x.shape}')
         
         # embed patches
         x = self.patch_embed(x)
+        # print(f'Shape after patch_embed: {x.shape}')
 
         x = x + self.pos_embed[:, self.num_extra_tokens:, :]
+        # print(f'Shape after adding pos_embed: {x.shape}')
 
         if not self.simmim:
             # masking: length -> length * mask_ratio
             x, mask, ids_restore = self.random_masking(x, mask_ratio)
+            # print(f'Shape after random_masking: {x.shape}, mask shape: {mask.shape}, ids_restore shape: {ids_restore.shape}')
 
         if self.ra_dec:
             # Map RA and Dec to embedding space and add positional embedding
             ra_dec = self.ra_dec_embed(ra_dec) + self.pos_embed[:, 1]
             # Append RA and Dec token
             x = torch.cat((ra_dec.unsqueeze(1), x), dim=1)
+            # print(f'Shape after adding ra_dec: {x.shape}')
         
         # Append cls token
         cls_token = self.cls_token + self.pos_embed[:, :1, :]
         cls_tokens = cls_token.expand(x.shape[0], -1, -1)
         x = torch.cat((cls_tokens, x), dim=1)
+        # print(f'Shape after adding cls_token: {x.shape}')
 
         # apply Transformer blocks
         for blk in self.blocks:
             x = blk(x)
+        # print(f'Shape after block : {x.shape}')
+            
 
         # Pool patches into a single embedding
         if self.attn_pool:
             x = self.attn_pool(x).unsqueeze(1)
+            # print(f'Shape after attn_pool: {x.shape}')
         
         x = self.norm(x)
+        # print(f'Shape after norm: {x.shape}')
         
         if self.simmim and reshape_out:
             if not self.attn_pool:
@@ -434,6 +453,7 @@ class MaskedAutoencoderViT(nn.Module):
             B, L, C = x.shape
             H = W = int(L ** 0.5)
             x = x.permute(0, 2, 1).reshape(B, C, H, W)
+            # print(f'Shape after reshape_out: {x.shape}')
 
         return x, mask, ids_restore
 
@@ -470,11 +490,13 @@ class MaskedAutoencoderViT(nn.Module):
 
         return x
 
-    def forward_loss(self, imgs, pred, mask):
+    def forward_loss(self, imgs, pred, student_latent, teacher_latent, mask):
         """
         imgs: [N, 3, H, W]
         pred: [N, L, p*p*3]
-        mask: [N, L], 0 is keep, 1 is remove, 
+        student_latent: [N, latent_dim]
+        teacher_latent: [N, latent_dim]
+        mask: [N, L], 0 is keep, 1 is remove
         """
         
         if self.simmim:
@@ -488,8 +510,6 @@ class MaskedAutoencoderViT(nn.Module):
                 imgs = self.patchify(imgs)
                 # Compute mean and variance of patches in target
                 mean, var = patch_mean_and_var(imgs)
-                #mean = imgs.mean(dim=-1, keepdim=True)
-                #var = imgs.var(dim=-1, keepdim=True)
                 imgs = (imgs - mean) / (var + 1.e-6)**.5
                 imgs = self.unpatchify(imgs)
         else:
@@ -499,34 +519,46 @@ class MaskedAutoencoderViT(nn.Module):
                 mean, var = patch_mean_and_var(imgs)
                 imgs = (imgs - mean) / (var + 1.e-6)**.5
     
-        if self.loss_fn=='mse':
-            loss = torch.nn.functional.mse_loss(imgs, pred, reduction='none')
+        if self.loss_fn == 'mse':
+            reconstruction_loss = torch.nn.functional.mse_loss(imgs, pred, reduction='none')
         else:
-            loss = torch.nn.functional.l1_loss(imgs, pred, reduction='none')
-
+            reconstruction_loss = torch.nn.functional.l1_loss(imgs, pred, reduction='none')
 
         # Adjust mask based on nan values for numerical stability
-        nan_mask = torch.where(torch.isnan(loss), 0, 1)
+        nan_mask = torch.where(torch.isnan(reconstruction_loss), 0, 1)
         if nan_mask.shape != mask.shape:
             mask = mask.unsqueeze(2)
-        mask = nan_mask*mask
+        mask = nan_mask * mask
         
         # Replace NaN values in loss with 0 since 0*nan is still nan
-        loss = torch.nan_to_num(loss, nan=0.0)
+        reconstruction_loss = torch.nan_to_num(reconstruction_loss, nan=0.0)
         
         # Only compute loss on masked patches
-        avg_scale_factor = mask.sum() / mask.numel() * loss.numel()
-        loss = (loss * mask).sum() / (avg_scale_factor + 1e-5)
+        avg_scale_factor = mask.sum() / mask.numel() * reconstruction_loss.numel()
+        reconstruction_loss = (reconstruction_loss * mask).sum() / (avg_scale_factor + 1e-5)
+
+        # Consistency loss
+        consistency_loss_val = consistency_loss(student_latent, teacher_latent)
+        
+        # Total loss
+        total_loss = reconstruction_loss + 100 * consistency_loss_val
             
-        return loss
+        return total_loss, reconstruction_loss, consistency_loss_val
 
     def norm_inputs(self, x):
         return (x - self.pixel_mean) / self.pixel_std
     
     def denorm_imgs(self, orig_imgs, x):
+        # import pdb; pdb.set_trace()  # Start debugging here
+        # print(f'orig_imgs shape: {orig_imgs.shape}')
+        # print(f'x shape before undo_pixel_norm: {x.shape}')
+        
+        
         if self.norm_pix_loss:
             # Undo pixel norm
             x = undo_pixel_norm(orig_imgs, x, self)
+            
+        # print(f'x shape after undo_pixel_norm: {x.shape}')
         return x * self.pixel_std + self.pixel_mean
 
     def normalize_ra_dec(self, ra_dec):
@@ -549,14 +581,32 @@ class MaskedAutoencoderViT(nn.Module):
         # Stack the normalized RA and Dec back into a tensor of the same shape
         return torch.stack((normalized_ra, normalized_dec), dim=1)
 
+    
     def forward(self, imgs, ra_dec=None, mask_ratio=0.75, mask=None, denorm_out=False):
-        latent, mask, ids_restore = self.forward_features(imgs, ra_dec=ra_dec,
-                                                         mask_ratio=mask_ratio, mask=mask)
-        pred = self.forward_decoder(latent, ids_restore)  # [N, L, p*p*3]
+        # Get student model features
+        student_latent, mask, ids_restore = self.forward_features(imgs, ra_dec=ra_dec,
+                                                                  mask_ratio=mask_ratio, mask=mask)
+        # import pdb; pdb.set_trace() 
+        # print(f'student_latent shape: {student_latent.shape}')
+        pred = self.forward_decoder(student_latent, ids_restore)  # [N, L, p*p*3]
+        # print(f'pred shape: {pred.shape}')
+
+        # Get teacher model features
+        with torch.no_grad():
+            teacher_latent, _, _ = self.forward_features(imgs, ra_dec=ra_dec, mask_ratio=mask_ratio, mask=mask)
+            # print(f'teacher_latent shape: {teacher_latent.shape}')
+        
         # Normalize inputs before computing loss
         imgs = self.norm_inputs(imgs)
-        loss = self.forward_loss(imgs.detach(), pred, mask)
-        return loss, pred, mask
+        # print(f'imgs shape after norm_inputs: {imgs.shape}')
+        
+        # Compute losses
+        total_loss, reconstruction_loss, consistency_loss_val = self.forward_loss(imgs.detach(), pred, student_latent, teacher_latent, mask)
+        # print(f'total_loss: {total_loss}, reconstruction_loss: {reconstruction_loss}, consistency_loss_val: {consistency_loss_val}')
+        
+        
+        return total_loss, reconstruction_loss, consistency_loss_val, pred, mask
+
 
 def mae_vit_base_with_simple_decoder(**kwargs):
     model = MaskedAutoencoderViT(
@@ -587,10 +637,6 @@ def mae_vit_huge(**kwargs):
     return model
 
 def simmim_vit(**kwargs):
-    #drop_rate = 0.0
-    #drop_path_rate = 0.1
-    #init_values = 0.1
-
     model = MaskedAutoencoderViT(
         depth=12, num_heads=12,
         decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
@@ -619,31 +665,30 @@ def patch_mean_and_var(imgs):
     mean = torch.where(non_nan_mask, imgs, torch.tensor(0.0, device=imgs.device)).sum(dim=-1, keepdim=True) / non_nan_mask.sum(dim=-1, keepdim=True)
     
     # Calculate the variance of non-NaN values
-    # Subtract the mean from only the non-NaN values and square the result.
     diff_squared = torch.where(non_nan_mask, imgs - mean, torch.tensor(0.0, device=imgs.device)) ** 2
-    # Sum the squared differences, divide by the count of non-NaN values to get the variance.
     var = diff_squared.sum(dim=-1, keepdim=True) / non_nan_mask.sum(dim=-1, keepdim=True)
 
     return mean, var
 
 def undo_pixel_norm(original_images, normalized_images, model):
-    """
-    Undo the normalization used in the pixel norm loss.
+    
+    # import pdb; pdb.set_trace()  # Start debugging here
+    # print(f'original_images shape: {original_images.shape}')
+    # print(f'normalized_images shape: {normalized_images.shape}')
 
-    Args:
-    normalized_images (torch.Tensor): The normalized images.
-
-    Returns:
-    torch.Tensor: The unnormalized images.
-    """
+    # Ensure normalized_images has the right dimensions
+    if normalized_images.dim() != 4:
+        raise ValueError(f'Expected normalized_images to have 4 dimensions, but got {normalized_images.shape}')
     
     original_images = model.patchify(original_images)
     normalized_images = model.patchify(normalized_images)
     
-    #mean = original_images.mean(dim=-1, keepdim=True)
-    #var = original_images.var(dim=-1, keepdim=True)
     mean, var = patch_mean_and_var(original_images)
 
     unnormalized = normalized_images * (var + 1.e-6)**.5 + mean
     
     return model.unpatchify(unnormalized)
+
+
+
+

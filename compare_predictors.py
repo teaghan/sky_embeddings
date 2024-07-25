@@ -13,11 +13,14 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.ticker import ScalarFormatter
 
-plt.rcParams.update({
-    "text.usetex": True,
-    "font.family": "serif",
-    "font.serif": ['Times'],
-    "font.size": 10})
+# plt.rcParams.update({
+#     "text.usetex": True,
+#     "font.family": "serif",
+#     "font.serif": ['Times'],
+#     "font.size": 10})
+
+plt.rcParams['font.family'] = 'DejaVu Serif'
+plt.rcParams['font.serif'] = ['DejaVu Serif']
 
 # Category names and model names in corresponding order
 categories = ['Fully Supervised', 'Fine-tuning', 'Attentive Probing']

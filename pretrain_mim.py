@@ -8,11 +8,14 @@ import warnings
 from tqdm import tqdm  # Import tqdm for progress tracking
 import logging  # Import logging for detailed logging
 
+import cProfile
+import pstats
+
 warnings.filterwarnings("ignore", category=UserWarning)
 
 from utils.misc import str2bool, parseArguments
 from utils.pretrain_fns import run_iter, linear_probe
-from utils.mim_vit import build_model
+from utils.mim_vit import build_model, consistency_loss
 from utils.dataloaders import build_h5_dataloader, build_fits_dataloader
 from utils.plotting_fns import plot_progress, plot_batch
 from utils.eval_fns import mae_predict
@@ -45,6 +48,10 @@ def main(args):
     model_name = args.model_name
     config = configparser.ConfigParser()
     config.read(config_dir + model_name + '.ini')
+    
+    
+    # Get the resume parameter from the config
+    resume = config['TRAINING'].getboolean('resume')
 
     # Display model configuration
     logger.info(f'\nCreating model: {model_name}')
@@ -56,10 +63,13 @@ def main(args):
         for key in config[key_head].keys():
             logger.info(f'    {key}: {config[key_head][key]}')
 
+    # Define total_epochs
+    total_epochs = int(config['TRAINING']['total_epochs'])  # Get total epochs from config
+
     # Construct the model, optimizer, etc.
     model_filename = os.path.join(model_dir, model_name + '.pth.tar')
-    model, losses, cur_iter, optimizer, lr_scheduler = build_model(config, model_filename, device, build_optimizer=True)
-
+    student_model, teacher_model, losses, cur_epoch, optimizer, lr_scheduler = build_model(config, model_filename, device, build_optimizer=True, resume=resume)
+    
     # Data loader stuff
     num_workers = min([os.cpu_count(), 12 * n_gpu])
     if num_workers > 1:
@@ -83,7 +93,7 @@ def main(args):
                                                num_channels=int(config['ARCHITECTURE']['num_channels']),
                                                max_mask_ratio=max_mask_ratio,
                                                img_size=int(config['ARCHITECTURE']['img_size']),
-                                               num_patches=model.module.patch_embed.num_patches,
+                                               num_patches=student_model.module.patch_embed.num_patches,
                                                shuffle=True)
         logger.info(f'The training set consists of {len(dataloader_train.dataset)} cutouts.')
         train_nested_batches = False
@@ -111,19 +121,18 @@ def main(args):
                                          num_channels=int(config['ARCHITECTURE']['num_channels']),
                                          max_mask_ratio=max_mask_ratio,
                                          img_size=int(config['ARCHITECTURE']['img_size']),
-                                         num_patches=model.module.patch_embed.num_patches,
+                                         num_patches=student_model.module.patch_embed.num_patches,
                                          shuffle=True)
 
     # Linear probing validation data files
     lp_class_data_file = os.path.join(data_dir, config['DATA']['lp_class_data_file']) if 'lp_class_data_file' in config['DATA'] else None
     lp_regress_data_file = os.path.join(data_dir, config['DATA']['lp_regress_data_file']) if 'lp_regress_data_file' in config['DATA'] else None
 
-    train_network(model, dataloader_train, dataloader_val, train_nested_batches,
+    train_network(student_model, teacher_model, dataloader_train, dataloader_val, train_nested_batches,
                   optimizer, lr_scheduler, device,
                   mask_ratio,
-                  losses, cur_iter,
-                  int(float(config['TRAINING']['total_batch_iters'])),
-                  args.verbose_iters, args.cp_time, model_filename, fig_dir,
+                  losses, cur_epoch,
+                  total_epochs, args.verbose_iters, args.cp_time, model_filename, fig_dir,
                   lp_class_data_file, lp_regress_data_file, config['DATA']['lp_combine'])
 
 def get_train_samples(dataloader, train_nested_batches):
@@ -137,125 +146,240 @@ def get_train_samples(dataloader, train_nested_batches):
     else:
         for samples, mask, ra_dec in dataloader:
             yield samples, mask, ra_dec
+            
+            
+import matplotlib.pyplot as plt   
+plt.rcParams['font.family'] = 'DejaVu Serif'
+plt.rcParams['font.serif'] = ['DejaVu Serif']        
+# Disable LaTeX rendering in Matplotlib
+plt.rcParams['text.usetex'] = False
 
-def train_network(model, dataloader_train, dataloader_val, train_nested_batches, optimizer, lr_scheduler, device, mask_ratio,
-                  losses, cur_iter, total_batch_iters, verbose_iters, cp_time, model_filename, fig_dir,
+def train_network(student_model, teacher_model, dataloader_train, dataloader_val, train_nested_batches, optimizer, lr_scheduler, device, mask_ratio,
+                  losses, cur_epoch, total_epochs, verbose_iters, cp_time, model_filename, fig_dir,
                   lp_class_data_file, lp_regress_data_file, lp_combine):
     logger.info(f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ...')
-    logger.info(f'Progress will be displayed every {verbose_iters} batch iterations and the model will be saved every {cp_time} minutes.')
+    logger.info(f'Progress will be displayed every {verbose_iters} batch iterations and the model will be saved every 10.0 minutes.')
 
-    # Train the neural networks
     losses_cp = defaultdict(list)
     cp_start_time = time.time()
-
+    num_batches_per_epoch = len(dataloader_train)
     # Debugging statement before the loop
     logger.info('Starting training loop...')
-    while cur_iter < (total_batch_iters):
-        # Iterate through training dataset with tqdm for progress tracking
-        for batch_idx, (samples, masks, ra_decs) in enumerate(tqdm(get_train_samples(dataloader_train, train_nested_batches), total=len(dataloader_train), desc="Training")):
-            # Switch to GPU if available
+
+    for epoch in tqdm(range(cur_epoch, total_epochs), desc="Epochs"):
+    # for epoch in tqdm(range(1), desc="Epochs"):
+        
+        epoch_loss_total = 0
+        epoch_reconstruction_loss = 0
+        epoch_consistency_loss = 0
+        epoch_batches = 0
+        
+        batch_progress = tqdm(get_train_samples(dataloader_train, train_nested_batches), total=num_batches_per_epoch, desc="Batches")
+        for batch_idx, (samples, masks, ra_decs) in enumerate(batch_progress):
+            # if batch_idx >= 1:
+            #     break
             samples = samples.to(device, non_blocking=True)
             masks = masks.to(device, non_blocking=True)
             ra_decs = ra_decs.to(device, non_blocking=True)
+            
+            logger.debug(f'Processing batch {batch_idx+1}/{num_batches_per_epoch}...')
+            try:
+                student_model, optimizer, lr_scheduler, losses_cp = run_iter(student_model, teacher_model, samples, ra_decs, masks,
+                                                                             mask_ratio, optimizer,
+                                                                             lr_scheduler,
+                                                                             losses_cp, mode='train')
+            except Exception as e:
+                logger.error(f'Error in run_iter for batch {batch_idx+1}: {e}')
+                raise
 
-            # Debugging statement for each batch
-            logger.info(f'Processing batch {batch_idx + 1}/{len(dataloader_train)}')
+            epoch_loss_total += losses_cp['train_total_loss'][-1]
+            epoch_reconstruction_loss += losses_cp['train_reconstruction_loss'][-1]
+            epoch_consistency_loss += losses_cp['train_consistency_loss'][-1]
+            epoch_batches += 1
+            
+            
+            
 
-            # Run an iteration of training
-            model, optimizer, lr_scheduler, losses_cp = run_iter(model, samples, ra_decs, masks,
-                                                                 mask_ratio, optimizer,
-                                                                 lr_scheduler,
-                                                                 losses_cp, mode='train')
 
-            # Evaluate validation set and display losses
-            if cur_iter % verbose_iters == 0:
+
+
+            if (epoch * num_batches_per_epoch + batch_idx) % verbose_iters == 0:
                 with torch.no_grad():
-                    # Calculate average loss on validation set
+                    val_loss_total = 0
+                    val_loss_recon = 0
+                    val_loss_cons = 0
+                    val_batches = 0
                     for i, (samples, masks, ra_decs) in enumerate(dataloader_val):
-                        # Switch to GPU if available
+                        if i >= 200:
+                            break
                         samples = samples.to(device, non_blocking=True)
                         masks = masks.to(device, non_blocking=True)
                         ra_decs = ra_decs.to(device, non_blocking=True)
 
-                        # Run an iteration
-                        model, optimizer, lr_scheduler, losses_cp = run_iter(model, samples, ra_decs, masks,
-                                                                             mask_ratio, optimizer,
-                                                                             lr_scheduler,
-                                                                             losses_cp, mode='val')
-                        # Don't bother with the whole dataset
-                        if i >= 200:
+                        try:
+                            student_model, optimizer, lr_scheduler, losses_cp = run_iter(student_model, teacher_model, samples, ra_decs, masks,
+                                                                                         mask_ratio, optimizer,
+                                                                                         lr_scheduler,
+                                                                                         losses_cp, mode='val')
+                        except Exception as e:
+                            logger.error(f'Error in validation run_iter for batch {i+1}: {e}')
+                            raise
+
+                        val_loss_total += losses_cp['val_total_loss'][-1]
+                        val_loss_recon += losses_cp['val_reconstruction_loss'][-1]
+                        val_loss_cons += losses_cp['val_consistency_loss'][-1]
+                        val_batches += 1
+                        if i >= 1:
                             break
 
+                    val_loss_total /= val_batches
+                    val_loss_recon /= val_batches
+                    val_loss_cons /= val_batches
+
                     if lp_class_data_file or lp_regress_data_file:
-                        # Run Linear Probing tests
-                        linear_probe(model, losses_cp, device, dataloader_val,
+                        linear_probe(student_model, losses_cp, device, dataloader_val,
                                      lp_class_data_file, lp_regress_data_file, combine=lp_combine)
 
                 # Calculate averages
                 for k in losses_cp.keys():
                     losses[k].append(np.mean(np.array(losses_cp[k]), axis=0))
-                losses['batch_iters'].append(cur_iter)
+                losses['batch_iters'].append(epoch * num_batches_per_epoch + batch_idx)
 
-                # Print current status
-                logger.info(f'\nBatch Iterations: {cur_iter}/{total_batch_iters} ')
+                logger.info(f'\nEpoch: {epoch}, Batch: {batch_idx}/{num_batches_per_epoch}')
                 logger.info('Losses:')
-                logger.info(f'\tTraining Dataset\n\t\tTotal Loss: {losses["train_loss"][-1]:0.3f}')
-                logger.info(f'\tValidation Dataset\n\t\tTotal Loss: {losses["val_loss"][-1]:0.3f}')
+                logger.info(f'\tTraining Dataset\n\t\tTotal Loss: {losses["train_total_loss"][-1]:0.3f}')
+                logger.info(f'\tValidation Dataset\n\t\tTotal Loss: {val_loss_total:0.3f}')
+                
                 if lp_class_data_file or lp_regress_data_file:
                     logger.info('Linear Probing Results:')
                     if lp_class_data_file:
                         logger.info(f'\tClassification Accuracy:\n\t\tTraining: {losses["train_lp_acc"][-1]:0.3f}, Validation: {losses["val_lp_acc"][-1]:0.3f}')
                     if lp_regress_data_file:
                         logger.info(f'\tRegression R2\n\t\tTraining: {losses["train_lp_r2"][-1]:0.3f}, Validation: {losses["val_lp_r2"][-1]:0.3f}')
-
-                # Reset checkpoint loss dictionary
+                
                 losses_cp = defaultdict(list)
 
                 if len(losses['batch_iters']) > 1:
                     # Plot progress
+                    
                     plot_progress(losses, y_lims=[(0, 0.7), (0.8, 1.), (0.6, 1.)],
                                   savename=os.path.join(fig_dir,
                                                         f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
                 # Plot 5 validation samples
-                pred_imgs, mask_imgs, orig_imgs = mae_predict(model, dataloader_val,
+                pred_imgs, mask_imgs, orig_imgs = mae_predict(student_model, dataloader_val,
                                                               device,
                                                               mask_ratio,
                                                               single_batch=True)
                 plot_batch(orig_imgs, mask_imgs, pred_imgs, n_samples=5, channel_index=0,
                            savename=os.path.join(fig_dir,
-                                                 f'{os.path.basename(model_filename).split(".")[0]}_{cur_iter}iters.png'))
+                                                 f'{os.path.basename(model_filename).split(".")[0]}_{epoch * num_batches_per_epoch + batch_idx}iters.png'))
 
-            # Increase the iteration
-            cur_iter += 1
+        average_epoch_loss_total = epoch_loss_total / epoch_batches
+        average_epoch_reconstruction_loss = epoch_reconstruction_loss / epoch_batches
+        average_epoch_consistency_loss = epoch_consistency_loss / epoch_batches
 
-            if (time.time() - cp_start_time) >= cp_time * 60:
-                # Save periodically
-                logger.info('Saving network...')
-                torch.save({'batch_iters': cur_iter,
-                            'losses': losses,
-                            'optimizer': optimizer.state_dict(),
-                            'lr_scheduler': lr_scheduler.state_dict(),
-                            'model': model.module.state_dict()},
-                           model_filename)
+        # Log the average losses
+        logger.info(f'Epoch: {epoch}, Average Total Loss: {average_epoch_loss_total:.4f}')
+        logger.info(f'Average Reconstruction Loss: {average_epoch_reconstruction_loss:.4f}')
+        logger.info(f'Average Consistency Loss: {average_epoch_consistency_loss:.4f}')
 
-                cp_start_time = time.time()
+        # Validation loss calculation
+        with torch.no_grad():
+            val_loss_total = 0
+            val_loss_recon = 0
+            val_loss_cons = 0
+            val_batches = 0
+            for i, (samples, masks, ra_decs) in enumerate(dataloader_val):
+                samples = samples.to(device, non_blocking=True)
+                masks = masks.to(device, non_blocking=True)
+                ra_decs = ra_decs.to(device, non_blocking=True)
 
-            if cur_iter > total_batch_iters:
-                # Save after training
-                logger.info('Saving network...')
-                torch.save({'batch_iters': cur_iter,
-                            'losses': losses,
-                            'optimizer': optimizer.state_dict(),
-                            'lr_scheduler': lr_scheduler.state_dict(),
-                            'model': model.module.state_dict()},
-                           model_filename)
-                # Finish training
-                break
+                try:
+                    student_model, optimizer, lr_scheduler, losses_cp = run_iter(student_model, teacher_model, samples, ra_decs, masks,
+                                                                                 mask_ratio, optimizer,
+                                                                                 lr_scheduler,
+                                                                                 losses_cp, mode='val')
+                except Exception as e:
+                    logger.error(f'Error in validation run_iter for batch {i+1}: {e}')
+                    raise
 
+                val_loss_total += losses_cp['val_total_loss'][-1]
+                val_loss_recon += losses_cp['val_reconstruction_loss'][-1]
+                val_loss_cons += losses_cp['val_consistency_loss'][-1]
+                val_batches += 1
+                if i >= 200:
+                    break
+
+            val_loss_total /= val_batches
+            val_loss_recon /= val_batches
+            val_loss_cons /= val_batches
+
+        logger.info(f'Epoch {epoch} completed. Average Training Total Loss: {epoch_loss_total:.6f}, Average Training Reconstruction Loss: {epoch_reconstruction_loss:.6f}, Average Training Consistency Loss: {epoch_consistency_loss:.6f}')
+        logger.info(f'Average Validation Total Loss: {val_loss_total:.6f}, Average Validation Reconstruction Loss: {val_loss_recon:.6f}, Average Validation Consistency Loss: {val_loss_cons:.6f}')
+        
+        # Plot progress
+        if len(losses['batch_iters']) > 1:
+            plot_progress(losses, y_lims=[(0, 0.7), (0.8, 1.), (0.6, 1.)],
+                          savename=os.path.join(fig_dir,
+                                                f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
+
+        # # Save model after each epoch
+        # logger.info('Saving network...')
+        # try:
+        #     torch.save({'epoch': epoch,
+        #                 'batch_iters': (epoch + 1) * num_batches_per_epoch,
+        #                 'losses': losses,
+        #                 'optimizer': optimizer.state_dict(),
+        #                 'lr_scheduler': lr_scheduler.state_dict(),
+        #                 'model': student_model.module.state_dict()},
+        #                model_filename)
+        # except Exception as e:
+        #     logger.error(f'Error saving network: {e}')
+        #     raise
+        
+
+    logger.info('Training complete.')
+    
 # Run the training
 if __name__ == "__main__":
-    args = parseArguments()
-    args = args.parse_args()
-    main(args)
+    # args = parseArguments()
+    # args = args.parse_args()
+    args = {"model_name":'mim_subset', "verbose_iters":5000, "cp_time":10.0, "data_dir":None}
+    class khers:
+        def __init__(self, **entries):
+            self.__dict__.update(entries)
 
-    logger.info('\nTraining complete.')
+    def __str__(self):
+        return str(self.__dict__)
+    args = khers(**args)
+    print(args)
+    main(args)
+    # import trace; import sys;
+    # #     # Set up the tracer
+    # # tracer = trace.Trace(
+    # #     ignoredirs=[sys.prefix, sys.exec_prefix],
+    # #     trace=True,
+    # #     count=False,
+    # #     outfile='trace_output.txt'
+    # # )
+
+    # # # Run the main function with the tracer
+    # # tracer.run('main(args)')
+    
+    
+    #     # Initialize tracer
+    # tracer = trace.Trace(
+    #     ignoredirs=[sys.prefix, sys.exec_prefix],
+    #     trace=True,
+    #     count=False,
+    #     outfile='trace_output.txt'  # Specify the output file
+    # )
+    
+    # try:
+    #     # Run the main function with the tracer
+    #     tracer.run('main(args)')
+    # except Exception as e:
+    #     print(f"An error occurred: {e}")
+    #     raise
+
+    # # logger.info('\nTraining complete.')

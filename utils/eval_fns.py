@@ -5,11 +5,12 @@ import sys
 cur_dir = os.path.dirname(__file__)
 sys.path.append(cur_dir)
 from dataloaders import get_augmentations
+from tqdm import tqdm
 
-def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
+def mae_predict(student_model, dataloader, device, mask_ratio, single_batch=True):
     if not single_batch:
         print('Predicting on %i batches...' % (len(dataloader)))
-    model.eval()
+    student_model.eval()
 
     pred_imgs = []
     mask_imgs = []
@@ -17,29 +18,48 @@ def mae_predict(model, dataloader, device, mask_ratio, single_batch=True):
     latents = []
     with torch.no_grad():
         # Loop through spectra in dataset
-        for samples, mask, ra_decs in dataloader:
+        for samples, mask, ra_decs in tqdm(dataloader, desc="Predicting"):
+            # import pdb; pdb.set_trace()  # Start debugging here
             
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
             mask = mask.to(device, non_blocking=True)
             ra_decs = ra_decs.to(device, non_blocking=True)
-
-            loss, pred, mask = model(samples, ra_dec=ra_decs, mask_ratio=mask_ratio, mask=mask)
             
-            if hasattr(model, 'module'):
-                model = model.module
+            # import pdb; pdb.set_trace()
 
-            if not model.simmim:
+            # loss, pred, mask = student_model(samples, ra_dec=ra_decs, mask_ratio=mask_ratio, mask=mask)
+            total_loss, reconstruction_loss, consistency_loss_val, pred, mask = student_model(samples, ra_dec=ra_decs,
+                                                                                              mask_ratio=mask_ratio, mask=mask)
+            # Conditional print statements
+            # print(f'pred shape after model forward: {pred.shape}')
+            # pdb.set_trace()
+            
+            
+            
+            
+            
+            if hasattr(student_model, 'module'):
+                student_model = student_model.module
+
+            if not student_model.simmim:
                 # Put patches back in order
-                pred = model.unpatchify(pred)
+                pred = student_model.unpatchify(pred)
+                
+                # print(f'pred shape after unpatchify: {pred.shape}')
 
                 # Unpatchify the mask
                 mask = mask.detach()
-                mask = mask.unsqueeze(-1).repeat(1, 1, model.patch_embed.patch_size[0]**2 * model.in_chans)  # (N, H*W, p*p*3)
-                mask = model.unpatchify(mask)  # 1 is removing, 0 is keeping
+                mask = mask.unsqueeze(-1).repeat(1, 1, student_model.patch_embed.patch_size[0]**2 * student_model.in_chans)  # (N, H*W, p*p*3)
+                mask = student_model.unpatchify(mask)  # 1 is removing, 0 is keeping
 
             # Return back to original scale
-            pred = model.denorm_imgs(samples, pred)
+            
+            
+            # print(f'pred shape after original scale: {pred.shape}')
+            pred = student_model.denorm_imgs(samples, pred)
+            
+            # pdb.set_trace()
             
             pred = torch.einsum('nchw->nhwc', pred).detach()
             mask = torch.einsum('nchw->nhwc', mask).detach()
@@ -86,8 +106,8 @@ def mae_latent(model, dataloader, device, n_batches=None, return_images=False, v
 
     with torch.no_grad():
         # Loop through spectra in dataset
-        for batch_idx, (samples, masks, ra_decs) in enumerate(dataloader):
-
+        for batch_idx, (samples, masks, ra_decs) in enumerate(tqdm(dataloader, desc="Encoding Batches")):
+            
             # Apply augmentations if enabled
             augmented_samples = []
             augmented_ra_decs = []  # Prepare to hold duplicated ra_decs

@@ -8,46 +8,70 @@ sys.path.append(cur_dir)
 from dataloaders import build_h5_dataloader
 from eval_fns import mae_latent
 from misc import select_centre
+import logging
+from tqdm import tqdm
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression, ElasticNet
-from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
+from sklearn.metrics import accuracy_score, r2_score
 from sklearn.preprocessing import StandardScaler
 
-def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler,
-             losses_cp, mode='train'):
+def run_iter(student_model, teacher_model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler,
+             losses_cp, mode='train',  ema_decay=0.99):
         
     if mode=='train':
-        model.train(True)
+        student_model.train(True)
     else:
-        model.train(False)
+        student_model.train(False)
         
-    # Run predictions and calculate loss
-    loss, _, _ = model(samples, ra_dec=ra_decs, mask_ratio=mask_ratio, mask=masks)
-    if loss.numel()>1:
+    # Run predictions and calculate reconstruction loss
+    total_loss, reconstruction_loss, consistency_loss_val, pred, mask = student_model(samples, ra_dec=ra_decs, mask_ratio=mask_ratio, mask=masks)
+    if reconstruction_loss.numel() > 1:
         # In case of multiple GPUs
-        loss = loss.unsqueeze(0).mean()
+        reconstruction_loss = reconstruction_loss.unsqueeze(0).mean()
     
+    # Get teacher model outputs
+    with torch.no_grad():
+        teacher_latent, _, _ = teacher_model.module.forward_features(samples, ra_dec=ra_decs, mask_ratio=mask_ratio, mask=masks)
+
+    # Get student model latent outputs
+    student_latent, _, _ = student_model.module.forward_features(samples, ra_dec=ra_decs, mask_ratio=mask_ratio, mask=masks)
+
+    # Calculate consistency loss
+    consistency_loss_val = consistency_loss(student_latent, teacher_latent)
+
+    # Total loss is a sum of reconstruction loss and consistency loss
+    total_loss = reconstruction_loss +  100 * consistency_loss_val
+
     if 'train' in mode:
         
         # Update the gradients
-        loss.backward()
+        total_loss.backward()
         # Adjust network weights
         optimizer.step()
         # Reset gradients
         optimizer.zero_grad(set_to_none=True)
         
+        # Update the teacher model
+        update_teacher_model(student_model, teacher_model, ema_decay)
+        
         # Adjust learning rate
         lr_scheduler.step()
         
         # Save loss and metrics
-        losses_cp['train_loss'].append(float(loss))
+        losses_cp['train_total_loss'].append(float(total_loss))
+        losses_cp['train_reconstruction_loss'].append(float(reconstruction_loss))
+        losses_cp['train_consistency_loss'].append(float(consistency_loss_val))
 
     else:
         # Save loss and metrics
-        losses_cp['val_loss'].append(float(loss))
+        losses_cp['val_total_loss'].append(float(total_loss))
+        losses_cp['val_reconstruction_loss'].append(float(reconstruction_loss))
+        losses_cp['val_consistency_loss'].append(float(consistency_loss_val))
                 
-    return model, optimizer, lr_scheduler, losses_cp
+
+                
+    return student_model, optimizer, lr_scheduler, losses_cp
 
 def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=None,
                  regress_data_path=None, combine='central', remove_cls=True):
@@ -67,7 +91,8 @@ def linear_probe(model, losses_cp, device, dataloader_template, class_data_path=
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         
         # Creating and training a classifier
-        clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, C=0.01, random_state=42)
+        # clf = LogisticRegression(solver='lbfgs', multi_class='multinomial', max_iter=10000, C=0.01, random_state=42)
+        clf = LogisticRegression(solver='lbfgs', max_iter=10000, C=0.01, random_state=42)
         clf.fit(X_train, y_train)
         
         # Predicting the class label
@@ -157,3 +182,23 @@ def get_embeddings(data_path, model, device,
         x = scaler.fit_transform(x)
 
     return x, y
+
+
+def consistency_loss(student_outputs, teacher_outputs):
+    """
+    Calculate the consistency loss between student and teacher model outputs.
+
+    Args:
+        student_outputs (torch.Tensor): Latent representations from the student model.
+        teacher_outputs (torch.Tensor): Latent representations from the teacher model.
+        mask (torch.Tensor): Mask tensor used in the model.
+
+    Returns:
+        torch.Tensor: The consistency loss value.
+    """
+    return torch.nn.functional.mse_loss(student_outputs, teacher_outputs)
+
+def update_teacher_model(student_model, teacher_model, ema_decay=0.99):
+    for teacher_param, student_param in zip(teacher_model.parameters(), student_model.parameters()):
+        teacher_param.data.mul_(ema_decay).add_(1 - ema_decay, student_param.data)
+
