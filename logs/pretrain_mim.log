@@ -1,339 +1,181 @@
-2024-07-24 00:15:00,969 - INFO - Note: NumExpr detected 64 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
-2024-07-24 00:15:00,969 - INFO - NumExpr defaulting to 8 threads.
-2024-07-24 00:15:03,372 - INFO - Using Torch version: 2.3.0 with CUDA version 12.2.
-2024-07-24 00:15:03,372 - INFO - Using a cuda device with 1 GPU(s).
-2024-07-24 00:15:03,376 - INFO - From rank 0/0: initializing process group..
-2024-07-24 00:15:03,380 - INFO - From rank 0/0: distributed training available: True and initialized: True
-2024-07-24 00:15:03,380 - INFO - From rank 0/0: World size: 1; Rank: 0
-2024-07-24 00:15:03,383 - INFO - Creating model: jepa_test
-2024-07-24 00:15:03,383 - INFO - Configuration:
-2024-07-24 00:15:03,383 - INFO - DATA
-2024-07-24 00:15:03,383 - INFO -   train_data_paths: ['/project/rrg-kyi/astro/hsc/pdr3_dud/']
-2024-07-24 00:15:03,383 - INFO -   bands: ['G', 'I', 'R', 'Y', 'Z', 'NB0387', 'NB0816', 'NB0921', 'NB1010']
-2024-07-24 00:15:03,383 - INFO -   min_bands: 9
-2024-07-24 00:15:03,383 - INFO -   cutouts_per_tile: 1024
-2024-07-24 00:15:03,383 - INFO -   img_size: 64
-2024-07-24 00:15:03,383 - INFO -   val_data_file: HSC_dud_galaxy_GIRYZ7610_64_new.h5
-2024-07-24 00:15:03,383 - INFO -   pos_channel: False
-2024-07-24 00:15:03,383 - INFO -   lp_class_data_file: HSC_dud_simple_classifier_data_GIRYZ7610_64.h5
-2024-07-24 00:15:03,383 - INFO -   lp_regress_data_file: HSC_dud_simple_regressor_data_GIRYZ7610_64.h5
-2024-07-24 00:15:03,384 - INFO -   use_calexp: False
-2024-07-24 00:15:03,384 - INFO -   pixel_mean: 0.0
-2024-07-24 00:15:03,384 - INFO -   pixel_std: 1.0
-2024-07-24 00:15:03,384 - INFO -   lp_combine: central
-2024-07-24 00:15:03,384 - INFO - TRAINING
-2024-07-24 00:15:03,384 - INFO -   batch_size: 64
-2024-07-24 00:15:03,384 - INFO -   ema: [0.996, 1.0]
-2024-07-24 00:15:03,384 - INFO -   total_batch_iters: 1000000.0
-2024-07-24 00:15:03,384 - INFO -   warmup_ratio: 1.0e-5
-2024-07-24 00:15:03,384 - INFO -   weight_decay: 0.04
-2024-07-24 00:15:03,384 - INFO -   final_weight_decay: 0.4
-2024-07-24 00:15:03,384 - INFO -   loss_fn: smooth_l1_loss
-2024-07-24 00:15:03,384 - INFO -   start_lr: 0.0002
-2024-07-24 00:15:03,384 - INFO -   ref_lr: 0.001
-2024-07-24 00:15:03,384 - INFO -   final_lr: 1.0e-06
-2024-07-24 00:15:03,384 - INFO -   final_lr_factor: 10000000.0
-2024-07-24 00:15:03,384 - INFO -   norm_pix_loss: False
-2024-07-24 00:15:03,384 - INFO -   use_bfloat16: True
-2024-07-24 00:15:03,384 - INFO - MASK
-2024-07-24 00:15:03,384 - INFO -   allow_overlap: False
-2024-07-24 00:15:03,384 - INFO -   aspect_ratio_targets: [0.75, 1.5]
-2024-07-24 00:15:03,384 - INFO -   min_keep: 5
-2024-07-24 00:15:03,384 - INFO -   num_enc_masks: 1
-2024-07-24 00:15:03,384 - INFO -   num_pred_masks: 4
-2024-07-24 00:15:03,384 - INFO -   enc_mask_scale: [0.85, 1.0]
-2024-07-24 00:15:03,384 - INFO -   pred_mask_scale: [0.15, 0.2]
-2024-07-24 00:15:03,384 - INFO -   max_mask_ratio: 0.9
-2024-07-24 00:15:03,384 - INFO -   mask_ratio: 0.75
-2024-07-24 00:15:03,384 - INFO - ARCHITECTURE
-2024-07-24 00:15:03,384 - INFO -   num_channels: 9
-2024-07-24 00:15:03,384 - INFO -   patch_size: 8
-2024-07-24 00:15:03,384 - INFO -   model_type: jepa_vit_small
-2024-07-24 00:15:03,385 - INFO -   pred_depth: 4
-2024-07-24 00:15:03,385 - INFO -   pred_emb_dim: 192
-2024-07-24 00:15:03,385 - INFO -   attn_pool: False
-2024-07-24 00:15:03,385 - INFO -   ra_dec: True
-2024-07-24 00:15:03,385 - INFO -   embed_dim: 1024
-2024-07-24 00:15:03,385 - INFO - LOGGING
-2024-07-24 00:15:03,385 - INFO -   level: DEBUG
-2024-07-24 00:15:03,385 - INFO - Notes
-2024-07-24 00:15:03,385 - INFO -   comment: Initial I-JEPA training.
-2024-07-24 00:15:05,696 - INFO - Using AdamW
-2024-07-24 00:15:05,699 - INFO - Starting fresh model to train...
-2024-07-24 00:15:05,721 - INFO - From rank 0/0: initializing models..
-2024-07-24 00:15:06,101 - INFO - From rank 0/0: models initialized.
-2024-07-24 00:15:06,143 - INFO - Found 18 patches with at least 9 of the ['G', 'I', 'R', 'Y', 'Z', 'NB0387', 'NB0816', 'NB0921', 'NB1010'] bands.
-2024-07-24 00:15:06,166 - INFO - Training the network with a batch size of 64 per GPU ...
-2024-07-24 00:15:06,166 - INFO - Progress will be displayed every 10 batch iterations and the model will be saved every 10.0 minutes.
-2024-07-24 00:15:06,166 - INFO - Starting training loop...
-2024-07-24 00:15:07,168 - INFO - Rank 0 handles indices from 0 to 17
-2024-07-24 00:15:08,602 - INFO - Setting seed 3035179996 for worker 0
-2024-07-24 00:15:08,606 - INFO - Worker 720282 loading tile 11 for cutout 0.
-2024-07-24 00:15:08,696 - INFO - Setting seed 3035179998 for worker 1
-2024-07-24 00:15:15,741 - INFO - Worker 720282 prepared tile 11 in 7.14 seconds.
-2024-07-24 00:15:15,941 - INFO - Current iteration: 1
-2024-07-24 00:15:15,944 - INFO - Iter: 1; learning rate: 0.00028
-2024-07-24 00:15:16,552 - INFO - loss is: 0.450, of datatype: torch.float32
-2024-07-24 00:15:16,704 - INFO - avg. loss 0.450
-2024-07-24 00:15:16,704 - INFO - Current iteration: 2
-2024-07-24 00:15:16,706 - INFO - Iter: 2; learning rate: 0.00036
-2024-07-24 00:15:16,825 - INFO - loss is: 0.379, of datatype: torch.float32
-2024-07-24 00:15:16,857 - INFO - avg. loss 0.414
-2024-07-24 00:15:16,857 - INFO - Current iteration: 3
-2024-07-24 00:15:16,859 - INFO - Iter: 3; learning rate: 0.00044
-2024-07-24 00:15:16,958 - INFO - loss is: 0.330, of datatype: torch.float32
-2024-07-24 00:15:17,006 - INFO - avg. loss 0.386
-2024-07-24 00:15:17,007 - INFO - Current iteration: 4
-2024-07-24 00:15:17,009 - INFO - Iter: 4; learning rate: 0.00052
-2024-07-24 00:15:17,098 - INFO - loss is: 0.297, of datatype: torch.float32
-2024-07-24 00:15:17,174 - INFO - avg. loss 0.364
-2024-07-24 00:15:17,175 - INFO - Current iteration: 5
-2024-07-24 00:15:17,178 - INFO - Iter: 5; learning rate: 0.00060
-2024-07-24 00:15:17,273 - INFO - loss is: 0.269, of datatype: torch.float32
-2024-07-24 00:15:17,354 - INFO - avg. loss 0.345
-2024-07-24 00:15:17,355 - INFO - Current iteration: 6
-2024-07-24 00:15:17,357 - INFO - Iter: 6; learning rate: 0.00068
-2024-07-24 00:15:17,471 - INFO - loss is: 0.241, of datatype: torch.float32
-2024-07-24 00:15:17,514 - INFO - avg. loss 0.328
-2024-07-24 00:15:17,514 - INFO - Current iteration: 7
-2024-07-24 00:15:17,516 - INFO - Iter: 7; learning rate: 0.00076
-2024-07-24 00:15:17,579 - INFO - loss is: 0.207, of datatype: torch.float32
-2024-07-24 00:15:17,629 - INFO - avg. loss 0.310
-2024-07-24 00:15:17,629 - INFO - Current iteration: 8
-2024-07-24 00:15:17,630 - INFO - Iter: 8; learning rate: 0.00084
-2024-07-24 00:15:17,689 - INFO - loss is: 0.182, of datatype: torch.float32
-2024-07-24 00:15:17,741 - INFO - avg. loss 0.294
-2024-07-24 00:15:17,741 - INFO - Current iteration: 9
-2024-07-24 00:15:17,742 - INFO - Iter: 9; learning rate: 0.00092
-2024-07-24 00:15:17,801 - INFO - loss is: 0.158, of datatype: torch.float32
-2024-07-24 00:15:17,846 - INFO - avg. loss 0.279
-2024-07-24 00:15:17,846 - INFO - Current iteration: 10
-2024-07-24 00:15:17,847 - INFO - Iter: 10; learning rate: 0.00100
-2024-07-24 00:15:17,915 - INFO - loss is: 0.143, of datatype: torch.float32
-2024-07-24 00:15:17,950 - INFO - Performing validation at iteration 10
-2024-07-24 00:16:45,740 - INFO - Validation done at iteration 10. Continuing training.
-2024-07-24 00:16:45,758 - INFO - [iter:    10] loss: 0.266 masks: 11.5 11.7 [wd: 4.00e-02] [lr: 1.00e-03] [mem: 1.07e+03] (195.9 ms)
-2024-07-24 00:16:45,758 - INFO - Batch Iterations: 10/1000000
-2024-07-24 00:16:45,758 - INFO - Losses:
-2024-07-24 00:16:45,758 - INFO - Training Dataset
-2024-07-24 00:16:45,758 - INFO -   Total Loss: 0.266
-2024-07-24 00:16:45,758 - INFO -   Validation Dataset
-2024-07-24 00:16:45,758 - INFO -   Total Loss: 0.163
-2024-07-24 00:16:45,758 - INFO - Linear Probing Results:
-2024-07-24 00:16:45,758 - INFO - Classification Accuracy:
-2024-07-24 00:16:45,758 - INFO -   Training: 0.873, Validation: 0.852
-2024-07-24 00:16:45,758 - INFO - Regression R2
-2024-07-24 00:16:45,758 - INFO -  Training: 0.796, Validation: 0.680
-2024-07-24 00:16:45,758 - INFO - iter: [   10] grad_stats: [5.42e-04 1.34e-04] (5.08e-05, 1.06e-03)
-2024-07-24 00:16:45,758 - INFO - avg. loss 0.266
-2024-07-24 00:16:45,759 - INFO - Current iteration: 11
-2024-07-24 00:16:45,760 - INFO - Iter: 11; learning rate: 0.00100
-2024-07-24 00:16:45,849 - INFO - loss is: 0.128, of datatype: torch.float32
-2024-07-24 00:16:45,886 - INFO - avg. loss 0.253
-2024-07-24 00:16:45,887 - INFO - Current iteration: 12
-2024-07-24 00:16:45,888 - INFO - Iter: 12; learning rate: 0.00100
-2024-07-24 00:16:45,954 - INFO - loss is: 0.117, of datatype: torch.float32
-2024-07-24 00:16:45,997 - INFO - avg. loss 0.242
-2024-07-24 00:16:45,998 - INFO - Current iteration: 13
-2024-07-24 00:16:45,999 - INFO - Iter: 13; learning rate: 0.00100
-2024-07-24 00:16:46,009 - INFO - Worker 720282 loading tile 9 for cutout 0.
-2024-07-24 00:16:46,018 - INFO - loss is: 0.106, of datatype: torch.float32
-2024-07-24 00:16:46,047 - INFO - avg. loss 0.231
-2024-07-24 00:16:46,047 - INFO - Current iteration: 14
-2024-07-24 00:16:46,048 - INFO - Iter: 14; learning rate: 0.00100
-2024-07-24 00:16:46,066 - INFO - loss is: 0.095, of datatype: torch.float32
-2024-07-24 00:16:46,097 - INFO - avg. loss 0.222
-2024-07-24 00:16:46,097 - INFO - Current iteration: 15
-2024-07-24 00:16:46,098 - INFO - Iter: 15; learning rate: 0.00100
-2024-07-24 00:16:46,116 - INFO - loss is: 0.078, of datatype: torch.float32
-2024-07-24 00:16:46,199 - INFO - avg. loss 0.212
-2024-07-24 00:16:46,199 - INFO - Current iteration: 16
-2024-07-24 00:16:46,200 - INFO - Iter: 16; learning rate: 0.00100
-2024-07-24 00:16:46,220 - INFO - loss is: 0.071, of datatype: torch.float32
-2024-07-24 00:16:46,257 - INFO - avg. loss 0.203
-2024-07-24 00:16:55,010 - INFO - Worker 720282 prepared tile 9 in 9.00 seconds.
-2024-07-24 00:16:55,185 - INFO - Current iteration: 17
-2024-07-24 00:16:55,187 - INFO - Iter: 17; learning rate: 0.00100
-2024-07-24 00:16:55,212 - INFO - loss is: 0.069, of datatype: torch.float32
-2024-07-24 00:16:55,340 - INFO - avg. loss 0.195
-2024-07-24 00:16:55,340 - INFO - Current iteration: 18
-2024-07-24 00:16:55,342 - INFO - Iter: 18; learning rate: 0.00100
-2024-07-24 00:16:55,423 - INFO - loss is: 0.071, of datatype: torch.float32
-2024-07-24 00:16:55,532 - INFO - avg. loss 0.188
-2024-07-24 00:16:55,533 - INFO - Current iteration: 19
-2024-07-24 00:16:55,534 - INFO - Iter: 19; learning rate: 0.00100
-2024-07-24 00:16:55,577 - INFO - loss is: 0.060, of datatype: torch.float32
-2024-07-24 00:16:55,651 - INFO - avg. loss 0.182
-2024-07-24 00:16:55,651 - INFO - Current iteration: 20
-2024-07-24 00:16:55,652 - INFO - Iter: 20; learning rate: 0.00100
-2024-07-24 00:16:55,697 - INFO - loss is: 0.048, of datatype: torch.float32
-2024-07-24 00:16:55,751 - INFO - Performing validation at iteration 20
-2024-07-24 00:18:14,961 - INFO - Validation done at iteration 20. Continuing training.
-2024-07-24 00:18:14,963 - INFO - [iter:    20] loss: 0.175 masks: 13.0 10.9 [wd: 4.00e-02] [lr: 1.00e-03] [mem: 1.09e+03] (142.5 ms)
-2024-07-24 00:18:14,963 - INFO - Batch Iterations: 20/1000000
-2024-07-24 00:18:14,963 - INFO - Losses:
-2024-07-24 00:18:14,963 - INFO - Training Dataset
-2024-07-24 00:18:14,963 - INFO -   Total Loss: 0.175
-2024-07-24 00:18:14,963 - INFO -   Validation Dataset
-2024-07-24 00:18:14,963 - INFO -   Total Loss: 0.119
-2024-07-24 00:18:14,963 - INFO - Linear Probing Results:
-2024-07-24 00:18:14,963 - INFO - Classification Accuracy:
-2024-07-24 00:18:14,963 - INFO -   Training: 0.869, Validation: 0.849
-2024-07-24 00:18:14,963 - INFO - Regression R2
-2024-07-24 00:18:14,963 - INFO -  Training: 0.785, Validation: 0.673
-2024-07-24 00:18:14,963 - INFO - iter: [   20] grad_stats: [1.56e-04 1.77e-04] (2.20e-05, 4.60e-04)
-2024-07-24 00:18:14,963 - INFO - avg. loss 0.175
-2024-07-24 00:18:14,964 - INFO - Current iteration: 21
-2024-07-24 00:18:14,965 - INFO - Iter: 21; learning rate: 0.00100
-2024-07-24 00:18:15,030 - INFO - loss is: 0.039, of datatype: torch.float32
-2024-07-24 00:18:15,078 - INFO - avg. loss 0.168
-2024-07-24 00:18:15,079 - INFO - Current iteration: 22
-2024-07-24 00:18:15,080 - INFO - Iter: 22; learning rate: 0.00100
-2024-07-24 00:18:15,097 - INFO - loss is: 0.042, of datatype: torch.float32
-2024-07-24 00:18:15,179 - INFO - avg. loss 0.163
-2024-07-24 00:18:15,179 - INFO - Current iteration: 23
-2024-07-24 00:18:15,180 - INFO - Iter: 23; learning rate: 0.00100
-2024-07-24 00:18:15,228 - INFO - loss is: 0.030, of datatype: torch.float32
-2024-07-24 00:18:15,289 - INFO - avg. loss 0.157
-2024-07-24 00:18:15,289 - INFO - Current iteration: 24
-2024-07-24 00:18:15,290 - INFO - Iter: 24; learning rate: 0.00100
-2024-07-24 00:18:15,353 - INFO - loss is: 0.033, of datatype: torch.float32
-2024-07-24 00:18:15,396 - INFO - avg. loss 0.152
-2024-07-24 00:18:15,397 - INFO - Current iteration: 25
-2024-07-24 00:18:15,398 - INFO - Iter: 25; learning rate: 0.00100
-2024-07-24 00:18:15,452 - INFO - loss is: 0.025, of datatype: torch.float32
-2024-07-24 00:18:15,505 - INFO - avg. loss 0.147
-2024-07-24 00:18:15,505 - INFO - Current iteration: 26
-2024-07-24 00:18:15,507 - INFO - Iter: 26; learning rate: 0.00100
-2024-07-24 00:18:15,567 - INFO - loss is: 0.025, of datatype: torch.float32
-2024-07-24 00:18:15,613 - INFO - avg. loss 0.142
-2024-07-24 00:18:15,613 - INFO - Current iteration: 27
-2024-07-24 00:18:15,614 - INFO - Iter: 27; learning rate: 0.00100
-2024-07-24 00:18:15,678 - INFO - loss is: 0.024, of datatype: torch.float32
-2024-07-24 00:18:15,719 - INFO - avg. loss 0.138
-2024-07-24 00:18:15,719 - INFO - Current iteration: 28
-2024-07-24 00:18:15,720 - INFO - Iter: 28; learning rate: 0.00100
-2024-07-24 00:18:15,777 - INFO - loss is: 0.021, of datatype: torch.float32
-2024-07-24 00:18:15,823 - INFO - avg. loss 0.133
-2024-07-24 00:18:15,824 - INFO - Current iteration: 29
-2024-07-24 00:18:15,825 - INFO - Iter: 29; learning rate: 0.00100
-2024-07-24 00:18:15,834 - INFO - Worker 720282 loading tile 7 for cutout 0.
-2024-07-24 00:18:15,843 - INFO - loss is: 0.022, of datatype: torch.float32
-2024-07-24 00:18:15,871 - INFO - avg. loss 0.130
-2024-07-24 00:18:15,871 - INFO - Current iteration: 30
-2024-07-24 00:18:15,872 - INFO - Iter: 30; learning rate: 0.00100
-2024-07-24 00:18:15,889 - INFO - loss is: 0.018, of datatype: torch.float32
-2024-07-24 00:18:15,917 - INFO - Performing validation at iteration 30
-2024-07-24 00:18:44,217 - INFO - Worker 720282 prepared tile 7 in 28.38 seconds.
-2024-07-24 00:19:45,057 - INFO - Validation done at iteration 30. Continuing training.
-2024-07-24 00:19:45,060 - INFO - [iter:    30] loss: 0.126 masks: 12.9 10.9 [wd: 4.00e-02] [lr: 1.00e-03] [mem: 1.09e+03] (123.8 ms)
-2024-07-24 00:19:45,060 - INFO - Batch Iterations: 30/1000000
-2024-07-24 00:19:45,060 - INFO - Losses:
-2024-07-24 00:19:45,060 - INFO - Training Dataset
-2024-07-24 00:19:45,060 - INFO -   Total Loss: 0.126
-2024-07-24 00:19:45,060 - INFO -   Validation Dataset
-2024-07-24 00:19:45,060 - INFO -   Total Loss: 0.095
-2024-07-24 00:19:45,060 - INFO - Linear Probing Results:
-2024-07-24 00:19:45,060 - INFO - Classification Accuracy:
-2024-07-24 00:19:45,060 - INFO -   Training: 0.865, Validation: 0.847
-2024-07-24 00:19:45,060 - INFO - Regression R2
-2024-07-24 00:19:45,060 - INFO -  Training: 0.774, Validation: 0.665
-2024-07-24 00:19:45,061 - INFO - iter: [   30] grad_stats: [3.04e-05 3.73e-05] (4.80e-06, 1.16e-04)
-2024-07-24 00:19:45,061 - INFO - avg. loss 0.126
-2024-07-24 00:19:45,061 - INFO - Current iteration: 31
-2024-07-24 00:19:45,062 - INFO - Iter: 31; learning rate: 0.00100
-2024-07-24 00:19:45,122 - INFO - loss is: 0.021, of datatype: torch.float32
-2024-07-24 00:19:45,175 - INFO - avg. loss 0.123
-2024-07-24 00:19:45,175 - INFO - Current iteration: 32
-2024-07-24 00:19:45,176 - INFO - Iter: 32; learning rate: 0.00100
-2024-07-24 00:19:45,253 - INFO - loss is: 0.012, of datatype: torch.float32
-2024-07-24 00:19:45,282 - INFO - avg. loss 0.119
-2024-07-24 00:19:45,282 - INFO - Current iteration: 33
-2024-07-24 00:19:45,283 - INFO - Iter: 33; learning rate: 0.00100
-2024-07-24 00:19:45,345 - INFO - loss is: 0.012, of datatype: torch.float32
-2024-07-24 00:19:45,386 - INFO - avg. loss 0.116
-2024-07-24 00:19:45,387 - INFO - Current iteration: 34
-2024-07-24 00:19:45,388 - INFO - Iter: 34; learning rate: 0.00100
-2024-07-24 00:19:45,451 - INFO - loss is: 0.014, of datatype: torch.float32
-2024-07-24 00:19:45,493 - INFO - avg. loss 0.113
-2024-07-24 00:19:45,493 - INFO - Current iteration: 35
-2024-07-24 00:19:45,494 - INFO - Iter: 35; learning rate: 0.00100
-2024-07-24 00:19:45,553 - INFO - loss is: 0.008, of datatype: torch.float32
-2024-07-24 00:19:45,598 - INFO - avg. loss 0.110
-2024-07-24 00:19:45,599 - INFO - Current iteration: 36
-2024-07-24 00:19:45,600 - INFO - Iter: 36; learning rate: 0.00100
-2024-07-24 00:19:45,676 - INFO - loss is: 0.012, of datatype: torch.float32
-2024-07-24 00:19:45,705 - INFO - avg. loss 0.107
-2024-07-24 00:19:45,706 - INFO - Current iteration: 37
-2024-07-24 00:19:45,706 - INFO - Iter: 37; learning rate: 0.00100
-2024-07-24 00:19:45,761 - INFO - loss is: 0.007, of datatype: torch.float32
-2024-07-24 00:19:45,810 - INFO - avg. loss 0.104
-2024-07-24 00:19:45,811 - INFO - Current iteration: 38
-2024-07-24 00:19:45,812 - INFO - Iter: 38; learning rate: 0.00100
-2024-07-24 00:19:45,829 - INFO - loss is: 0.007, of datatype: torch.float32
-2024-07-24 00:19:45,911 - INFO - avg. loss 0.102
-2024-07-24 00:19:45,911 - INFO - Current iteration: 39
-2024-07-24 00:19:45,913 - INFO - Iter: 39; learning rate: 0.00100
-2024-07-24 00:19:45,954 - INFO - loss is: 0.009, of datatype: torch.float32
-2024-07-24 00:19:46,021 - INFO - avg. loss 0.100
-2024-07-24 00:19:46,021 - INFO - Current iteration: 40
-2024-07-24 00:19:46,022 - INFO - Iter: 40; learning rate: 0.00100
-2024-07-24 00:19:46,040 - INFO - loss is: 0.005, of datatype: torch.float32
-2024-07-24 00:19:46,108 - INFO - Performing validation at iteration 40
-2024-07-24 00:21:03,706 - INFO - Validation done at iteration 40. Continuing training.
-2024-07-24 00:21:03,708 - INFO - [iter:    40] loss: 0.097 masks: 13.4 10.7 [wd: 4.00e-02] [lr: 1.00e-03] [mem: 1.09e+03] (116.6 ms)
-2024-07-24 00:21:03,709 - INFO - Batch Iterations: 40/1000000
-2024-07-24 00:21:03,709 - INFO - Losses:
-2024-07-24 00:21:03,709 - INFO - Training Dataset
-2024-07-24 00:21:03,709 - INFO -   Total Loss: 0.097
-2024-07-24 00:21:03,709 - INFO -   Validation Dataset
-2024-07-24 00:21:03,709 - INFO -   Total Loss: 0.079
-2024-07-24 00:21:03,709 - INFO - Linear Probing Results:
-2024-07-24 00:21:03,709 - INFO - Classification Accuracy:
-2024-07-24 00:21:03,709 - INFO -   Training: 0.862, Validation: 0.847
-2024-07-24 00:21:03,709 - INFO - Regression R2
-2024-07-24 00:21:03,709 - INFO -  Training: 0.764, Validation: 0.657
-2024-07-24 00:21:03,709 - INFO - iter: [   40] grad_stats: [6.92e-06 9.63e-06] (1.77e-06, 2.77e-05)
-2024-07-24 00:21:03,709 - INFO - avg. loss 0.097
-2024-07-24 00:21:03,709 - INFO - Current iteration: 41
-2024-07-24 00:21:03,712 - INFO - Iter: 41; learning rate: 0.00100
-2024-07-24 00:21:03,797 - INFO - loss is: 0.009, of datatype: torch.float32
-2024-07-24 00:21:03,845 - INFO - avg. loss 0.095
-2024-07-24 00:21:03,846 - INFO - Current iteration: 42
-2024-07-24 00:21:03,847 - INFO - Iter: 42; learning rate: 0.00100
-2024-07-24 00:21:03,912 - INFO - loss is: 0.008, of datatype: torch.float32
-2024-07-24 00:21:03,988 - INFO - avg. loss 0.093
-2024-07-24 00:21:03,988 - INFO - Current iteration: 43
-2024-07-24 00:21:03,990 - INFO - Iter: 43; learning rate: 0.00100
-2024-07-24 00:21:04,010 - INFO - loss is: 0.011, of datatype: torch.float32
-2024-07-24 00:21:04,095 - INFO - avg. loss 0.091
-2024-07-24 00:21:04,095 - INFO - Current iteration: 44
-2024-07-24 00:21:04,096 - INFO - Iter: 44; learning rate: 0.00100
-2024-07-24 00:21:04,146 - INFO - loss is: 0.005, of datatype: torch.float32
-2024-07-24 00:21:04,210 - INFO - avg. loss 0.089
-2024-07-24 00:21:04,210 - INFO - Current iteration: 45
-2024-07-24 00:21:04,211 - INFO - Iter: 45; learning rate: 0.00100
-2024-07-24 00:21:04,228 - INFO - loss is: 0.004, of datatype: torch.float32
-2024-07-24 00:21:04,229 - INFO - Worker 720282 loading tile 10 for cutout 0.
-2024-07-24 00:21:04,257 - INFO - avg. loss 0.087
-2024-07-24 00:21:04,257 - INFO - Current iteration: 46
-2024-07-24 00:21:04,258 - INFO - Iter: 46; learning rate: 0.00100
-2024-07-24 00:21:04,276 - INFO - loss is: 0.003, of datatype: torch.float32
-2024-07-24 00:21:04,305 - INFO - avg. loss 0.085
-2024-07-24 00:21:04,305 - INFO - Current iteration: 47
-2024-07-24 00:21:04,306 - INFO - Iter: 47; learning rate: 0.00100
-2024-07-24 00:21:04,324 - INFO - loss is: 0.005, of datatype: torch.float32
-2024-07-24 00:21:04,405 - INFO - avg. loss 0.084
-2024-07-24 00:21:04,405 - INFO - Current iteration: 48
-2024-07-24 00:21:04,406 - INFO - Iter: 48; learning rate: 0.00100
-2024-07-24 00:21:04,424 - INFO - loss is: 0.006, of datatype: torch.float32
-2024-07-24 00:21:04,452 - INFO - avg. loss 0.082
-2024-07-24 00:21:13,034 - INFO - Worker 720282 prepared tile 10 in 8.80 seconds.
-2024-07-24 00:21:13,187 - INFO - Current iteration: 49
-2024-07-24 00:21:13,188 - INFO - Iter: 49; learning rate: 0.00100
-2024-07-24 00:21:13,213 - INFO - loss is: 0.003, of datatype: torch.float32
-2024-07-24 00:21:13,314 - INFO - avg. loss 0.080
-2024-07-24 00:21:13,314 - INFO - Current iteration: 50
-2024-07-24 00:21:13,315 - INFO - Iter: 50; learning rate: 0.00100
-2024-07-24 00:21:13,369 - INFO - loss is: 0.005, of datatype: torch.float32
-2024-07-24 00:21:13,427 - INFO - Performing validation at iteration 50
+2024-07-27 04:47:40,586 - INFO - Note: NumExpr detected 48 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+2024-07-27 04:47:40,586 - INFO - NumExpr defaulting to 8 threads.
+2024-07-27 04:48:31,877 - INFO - From rank 0/1: initializing process group..
+2024-07-27 04:48:32,450 - INFO - From rank 1/1: distributed training available: True and initialized: True
+2024-07-27 04:48:32,450 - INFO - From rank 1/1: world size: 2; rank: 1; local rank: 1
+2024-07-27 04:48:32,450 - INFO - Rank 1: CUDA_VISIBLE_DEVICES: 1
+2024-07-27 04:48:32,450 - INFO - Rank 1: number of GPUs visible: 1
+2024-07-27 04:48:32,450 - INFO - Rank 1: local rank: 1: world size: 2
+2024-07-27 04:48:34,441 - INFO - Using AdamW
+2024-07-27 04:48:34,443 - INFO - Starting fresh model to train...
+2024-07-27 04:48:34,468 - INFO - From rank 1/1: initializing models..
+2024-07-27 04:48:35,067 - INFO - From rank 1/1: models initialized.
+2024-07-27 04:48:35,070 - INFO - Rank 1/1 passed the synchronization barrier.
+2024-07-27 04:48:36,426 - INFO - Rank 1 handles indices from 9 to 17
+2024-07-27 04:48:36,427 - INFO - Rank 1: worker 2855575 loading tile 6 for cutout 0.
+2024-07-27 04:48:45,546 - INFO - Rank 1: worker 2855575 prepared tile 6 in 9.12 seconds.
+2024-07-27 04:48:49,330 - INFO - Rank 1: worker 2855575 loading tile 10 for cutout 0.
+2024-07-27 04:48:58,071 - INFO - Rank 1: worker 2855575 prepared tile 10 in 8.74 seconds.
+2024-07-27 04:49:00,120 - INFO - Rank 1: worker 2855575 loading tile 3 for cutout 0.
+2024-07-27 04:49:08,338 - INFO - Rank 1: worker 2855575 prepared tile 3 in 8.22 seconds.
+2024-07-27 04:49:10,814 - INFO - Rank 1: worker 2855575 loading tile 9 for cutout 0.
+2024-07-27 04:49:19,421 - INFO - Rank 1: worker 2855575 prepared tile 9 in 8.61 seconds.
+2024-07-27 04:49:19,861 - INFO - Rank 1: About to enter barrier before validation.
+2024-07-27 04:49:19,861 - INFO - Rank 1: Passed barrier before validation.
+2024-07-27 04:49:19,861 - INFO - Rank 1: About to enter second barrier
+2024-07-27 04:49:20,063 - INFO - Rank 1/1 passed the synchronization barrier after validation.
+8:32,239 - INFO -   weight_decay: 0.04
+2024-07-27 04:48:32,239 - INFO -   final_weight_decay: 0.4
+2024-07-27 04:48:32,239 - INFO -   loss_fn: smooth_l1_loss
+2024-07-27 04:48:32,239 - INFO -   start_lr: 0.0002
+2024-07-27 04:48:32,239 - INFO -   ref_lr: 0.001
+2024-07-27 04:48:32,239 - INFO -   final_lr: 1.0e-06
+2024-07-27 04:48:32,239 - INFO -   final_lr_factor: 10000000.0
+2024-07-27 04:48:32,239 - INFO -   norm_pix_loss: False
+2024-07-27 04:48:32,239 - INFO -   use_bfloat16: True
+2024-07-27 04:48:32,239 - INFO - MASK
+2024-07-27 04:48:32,239 - INFO -   allow_overlap: False
+2024-07-27 04:48:32,239 - INFO -   aspect_ratio_targets: [0.75, 1.5]
+2024-07-27 04:48:32,239 - INFO -   min_keep: 5
+2024-07-27 04:48:32,239 - INFO -   num_enc_masks: 1
+2024-07-27 04:48:32,239 - INFO -   num_pred_masks: 4
+2024-07-27 04:48:32,239 - INFO -   enc_mask_scale: [0.85, 1.0]
+2024-07-27 04:48:32,239 - INFO -   pred_mask_scale: [0.15, 0.2]
+2024-07-27 04:48:32,239 - INFO -   max_mask_ratio: 0.9
+2024-07-27 04:48:32,239 - INFO -   mask_ratio: 0.75
+2024-07-27 04:48:32,239 - INFO - ARCHITECTURE
+2024-07-27 04:48:32,239 - INFO -   num_channels: 9
+2024-07-27 04:48:32,239 - INFO -   patch_size: 8
+2024-07-27 04:48:32,239 - INFO -   model_type: jepa_vit_small
+2024-07-27 04:48:32,239 - INFO -   pred_depth: 4
+2024-07-27 04:48:32,240 - INFO -   pred_emb_dim: 192
+2024-07-27 04:48:32,240 - INFO -   attn_pool: False
+2024-07-27 04:48:32,240 - INFO -   ra_dec: True
+2024-07-27 04:48:32,240 - INFO -   embed_dim: 1024
+2024-07-27 04:48:32,240 - INFO - LOGGING
+2024-07-27 04:48:32,240 - INFO -   level: DEBUG
+2024-07-27 04:48:32,240 - INFO - Notes
+2024-07-27 04:48:32,240 - INFO -   comment: Initial I-JEPA training.
+2024-07-27 04:48:33,931 - INFO - Using AdamW
+2024-07-27 04:48:33,934 - INFO - Starting fresh model to train...
+2024-07-27 04:48:33,953 - INFO - From rank 0/1: initializing models..
+2024-07-27 04:48:35,067 - INFO - From rank 0/1: models initialized.
+2024-07-27 04:48:35,070 - INFO - Rank 0/1 passed the synchronization barrier.
+2024-07-27 04:48:35,151 - INFO - Found 18 patches with at least 9 of the ['G', 'I', 'R', 'Y', 'Z', 'NB0387', 'NB0816', 'NB0921', 'NB1010'] bands.
+2024-07-27 04:48:35,178 - INFO - Training the network with a batch size of 64 per GPU ...
+2024-07-27 04:48:35,179 - INFO - Progress will be displayed every 100 batch iterations and the model will be saved every 10.0 minutes.
+2024-07-27 04:48:35,179 - INFO - Starting training loop...
+2024-07-27 04:48:36,426 - INFO - Rank 0 handles indices from 0 to 8
+2024-07-27 04:48:36,428 - INFO - Rank 0: worker 2855576 loading tile 15 for cutout 0.
+2024-07-27 04:48:45,489 - INFO - Rank 0: worker 2855576 prepared tile 15 in 9.06 seconds.
+2024-07-27 04:48:47,593 - INFO - Iter: 2: avg. loss 0.442425
+2024-07-27 04:48:47,675 - INFO - Iter: 3: avg. loss 0.406954
+2024-07-27 04:48:47,749 - INFO - Iter: 4: avg. loss 0.380635
+2024-07-27 04:48:47,809 - INFO - Iter: 5: avg. loss 0.359068
+2024-07-27 04:48:47,870 - INFO - Iter: 6: avg. loss 0.340671
+2024-07-27 04:48:47,937 - INFO - Iter: 7: avg. loss 0.323031
+2024-07-27 04:48:48,005 - INFO - Iter: 8: avg. loss 0.306057
+2024-07-27 04:48:48,063 - INFO - Iter: 9: avg. loss 0.289978
+2024-07-27 04:48:48,135 - INFO - Iter: 10: avg. loss 0.274660
+2024-07-27 04:48:48,208 - INFO - Iter: 11: avg. loss 0.261196
+2024-07-27 04:48:48,269 - INFO - Iter: 12: avg. loss 0.248532
+2024-07-27 04:48:48,331 - INFO - Iter: 13: avg. loss 0.236803
+2024-07-27 04:48:48,392 - INFO - Iter: 14: avg. loss 0.226303
+2024-07-27 04:48:48,465 - INFO - Iter: 15: avg. loss 0.216583
+2024-07-27 04:48:48,529 - INFO - Iter: 16: avg. loss 0.207648
+2024-07-27 04:48:48,582 - INFO - Iter: 17: avg. loss 0.199561
+2024-07-27 04:48:48,641 - INFO - Iter: 18: avg. loss 0.192131
+2024-07-27 04:48:48,701 - INFO - Iter: 19: avg. loss 0.185356
+2024-07-27 04:48:48,767 - INFO - Iter: 20: avg. loss 0.178679
+2024-07-27 04:48:48,825 - INFO - Iter: 21: avg. loss 0.172460
+2024-07-27 04:48:48,891 - INFO - Iter: 22: avg. loss 0.166700
+2024-07-27 04:48:48,952 - INFO - Iter: 23: avg. loss 0.162558
+2024-07-27 04:48:49,013 - INFO - Iter: 24: avg. loss 0.158650
+2024-07-27 04:48:49,084 - INFO - Iter: 25: avg. loss 0.156080
+2024-07-27 04:48:49,144 - INFO - Iter: 26: avg. loss 0.152533
+2024-07-27 04:48:49,203 - INFO - Iter: 27: avg. loss 0.148240
+2024-07-27 04:48:49,272 - INFO - Iter: 28: avg. loss 0.144292
+2024-07-27 04:48:49,327 - INFO - Iter: 29: avg. loss 0.140932
+2024-07-27 04:48:49,342 - INFO - Rank 0: worker 2855576 loading tile 1 for cutout 0.
+2024-07-27 04:48:49,387 - INFO - Iter: 30: avg. loss 0.137279
+2024-07-27 04:48:49,444 - INFO - Iter: 31: avg. loss 0.133473
+2024-07-27 04:48:49,506 - INFO - Iter: 32: avg. loss 0.130016
+2024-07-27 04:48:49,578 - INFO - Iter: 33: avg. loss 0.126925
+2024-07-27 04:48:58,243 - INFO - Rank 0: worker 2855576 prepared tile 1 in 8.90 seconds.
+2024-07-27 04:48:58,391 - INFO - Iter: 34: avg. loss 0.123878
+2024-07-27 04:48:58,462 - INFO - Iter: 35: avg. loss 0.120956
+2024-07-27 04:48:58,521 - INFO - Iter: 36: avg. loss 0.117989
+2024-07-27 04:48:58,581 - INFO - Iter: 37: avg. loss 0.115133
+2024-07-27 04:48:58,644 - INFO - Iter: 38: avg. loss 0.112450
+2024-07-27 04:48:58,712 - INFO - Iter: 39: avg. loss 0.109900
+2024-07-27 04:48:58,771 - INFO - Iter: 40: avg. loss 0.107493
+2024-07-27 04:48:58,850 - INFO - Iter: 41: avg. loss 0.105130
+2024-07-27 04:48:58,917 - INFO - Iter: 42: avg. loss 0.102797
+2024-07-27 04:48:58,986 - INFO - Iter: 43: avg. loss 0.100559
+2024-07-27 04:48:59,035 - INFO - Iter: 44: avg. loss 0.098439
+2024-07-27 04:48:59,095 - INFO - Iter: 45: avg. loss 0.096421
+2024-07-27 04:48:59,157 - INFO - Iter: 46: avg. loss 0.094524
+2024-07-27 04:48:59,220 - INFO - Iter: 47: avg. loss 0.092622
+2024-07-27 04:48:59,281 - INFO - Iter: 48: avg. loss 0.090823
+2024-07-27 04:48:59,349 - INFO - Iter: 49: avg. loss 0.089046
+2024-07-27 04:48:59,409 - INFO - Iter: 50: avg. loss 0.087363
+2024-07-27 04:48:59,487 - INFO - Iter: 51: avg. loss 0.085759
+2024-07-27 04:48:59,550 - INFO - Iter: 52: avg. loss 0.084194
+2024-07-27 04:48:59,607 - INFO - Iter: 53: avg. loss 0.082647
+2024-07-27 04:48:59,668 - INFO - Iter: 54: avg. loss 0.081175
+2024-07-27 04:48:59,730 - INFO - Iter: 55: avg. loss 0.079752
+2024-07-27 04:48:59,797 - INFO - Iter: 56: avg. loss 0.078370
+2024-07-27 04:48:59,857 - INFO - Iter: 57: avg. loss 0.077033
+2024-07-27 04:48:59,927 - INFO - Iter: 58: avg. loss 0.075764
+2024-07-27 04:48:59,991 - INFO - Iter: 59: avg. loss 0.074497
+2024-07-27 04:49:00,052 - INFO - Iter: 60: avg. loss 0.073285
+2024-07-27 04:49:00,112 - INFO - Iter: 61: avg. loss 0.072097
+2024-07-27 04:49:00,113 - INFO - Rank 0: worker 2855576 loading tile 16 for cutout 0.
+2024-07-27 04:49:00,169 - INFO - Iter: 62: avg. loss 0.070958
+2024-07-27 04:49:00,239 - INFO - Iter: 63: avg. loss 0.069840
+2024-07-27 04:49:00,303 - INFO - Iter: 64: avg. loss 0.068780
+2024-07-27 04:49:08,434 - INFO - Iter: 65: avg. loss 0.067766
+2024-07-27 04:49:08,966 - INFO - Rank 0: worker 2855576 prepared tile 16 in 8.85 seconds.
+2024-07-27 04:49:09,091 - INFO - Iter: 66: avg. loss 0.066749
+2024-07-27 04:49:09,164 - INFO - Iter: 67: avg. loss 0.065788
+2024-07-27 04:49:09,229 - INFO - Iter: 68: avg. loss 0.064845
+2024-07-27 04:49:09,284 - INFO - Iter: 69: avg. loss 0.063923
+2024-07-27 04:49:09,354 - INFO - Iter: 70: avg. loss 0.063024
+2024-07-27 04:49:09,417 - INFO - Iter: 71: avg. loss 0.062146
+2024-07-27 04:49:09,468 - INFO - Iter: 72: avg. loss 0.061305
+2024-07-27 04:49:09,528 - INFO - Iter: 73: avg. loss 0.060473
+2024-07-27 04:49:09,587 - INFO - Iter: 74: avg. loss 0.059670
+2024-07-27 04:49:09,656 - INFO - Iter: 75: avg. loss 0.058879
+2024-07-27 04:49:09,715 - INFO - Iter: 76: avg. loss 0.058112
+2024-07-27 04:49:09,773 - INFO - Iter: 77: avg. loss 0.057386
+2024-07-27 04:49:09,831 - INFO - Iter: 78: avg. loss 0.056659
+2024-07-27 04:49:09,891 - INFO - Iter: 79: avg. loss 0.055958
+2024-07-27 04:49:09,953 - INFO - Iter: 80: avg. loss 0.055318
+2024-07-27 04:49:10,019 - INFO - Iter: 81: avg. loss 0.054669
+2024-07-27 04:49:10,093 - INFO - Iter: 82: avg. loss 0.054027
+2024-07-27 04:49:10,161 - INFO - Iter: 83: avg. loss 0.053387
+2024-07-27 04:49:10,220 - INFO - Iter: 84: avg. loss 0.052780
+2024-07-27 04:49:10,279 - INFO - Iter: 85: avg. loss 0.052165
+2024-07-27 04:49:10,342 - INFO - Iter: 86: avg. loss 0.051566
+2024-07-27 04:49:10,404 - INFO - Iter: 87: avg. loss 0.050975
+2024-07-27 04:49:10,484 - INFO - Iter: 88: avg. loss 0.050405
+2024-07-27 04:49:10,558 - INFO - Iter: 89: avg. loss 0.049858
+2024-07-27 04:49:10,615 - INFO - Iter: 90: avg. loss 0.049314
+2024-07-27 04:49:10,674 - INFO - Iter: 91: avg. loss 0.048782
+2024-07-27 04:49:10,733 - INFO - Iter: 92: avg. loss 0.048265
+2024-07-27 04:49:10,798 - INFO - Iter: 93: avg. loss 0.047785
+2024-07-27 04:49:10,809 - INFO - Rank 0: worker 2855576 loading tile 2 for cutout 0.
+2024-07-27 04:49:10,857 - INFO - Iter: 94: avg. loss 0.047280
+2024-07-27 04:49:10,928 - INFO - Iter: 95: avg. loss 0.046811
+2024-07-27 04:49:10,986 - INFO - Iter: 96: avg. loss 0.046328
+2024-07-27 04:49:11,058 - INFO - Iter: 97: avg. loss 0.045866
+2024-07-27 04:49:19,486 - INFO - Rank 0: worker 2855576 prepared tile 2 in 8.68 seconds.
+2024-07-27 04:49:19,634 - INFO - Iter: 98: avg. loss 0.045411
+2024-07-27 04:49:19,709 - INFO - Iter: 99: avg. loss 0.045003
+2024-07-27 04:49:19,790 - INFO - Iter: 100: avg. loss 0.044555
+2024-07-27 04:49:19,859 - INFO - Rank 0: About to enter barrier before validation.
+2024-07-27 04:49:19,869 - INFO - Rank 0: Passed barrier before validation.
+2024-07-27 04:49:19,869 - INFO - Rank 0: performing validation at iteration 100
+2024-07-27 04:49:20,033 - INFO - Rank 0: validating at iteration 100 on batch 0
+2024-07-27 04:59:22,170 - ERROR - Rank 0: Validation failed at iteration 100: [Rank 0] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=814, OpType=ALLREDUCE, NumelIn=1, NumelOut=1, Timeout(ms)=600000) ran for 600009 milliseconds before timing out.
+2024-07-27 04:59:22,171 - INFO - Rank 0: About to enter second barrier

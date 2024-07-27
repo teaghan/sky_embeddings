@@ -129,7 +129,12 @@ def get_augmentations(img_size=64, flip=True, crop=True, brightness=0.8, noise=0
 
 
 def worker_init_fn(worker_id):
-    worker_seed = (torch.initial_seed() + worker_id) % 2**32
+    try:
+        rank = int(os.environ['SLURM_PROCID'])
+    except KeyError:
+        raise EnvironmentError('SLURM_PROCID is not set. Are you running in a SLURM environment?')
+
+    worker_seed = (torch.initial_seed() + worker_id + rank * 1000) % 2**32
     np.random.seed(worker_seed)
     random.seed(worker_seed)
 
@@ -156,6 +161,7 @@ def build_fits_dataloader(
     collator=None,
     world_size=1,
     rank=0,
+    current_device=0,
 ):
     """Return a dataloader to be used during training."""
 
@@ -182,8 +188,11 @@ def build_fits_dataloader(
             pixel_min=-3.0,
             pixel_max=None,
             use_calexp=use_calexp,
+            rank=rank,
         )
-        dist_sampler = TileDistributedSampler(dataset=dataset, num_replicas=world_size, rank=rank)
+        dist_sampler = TileDistributedSampler(
+            dataset=dataset, num_replicas=world_size, rank=rank, current_device=current_device
+        )
         dataloader = torch.utils.data.DataLoader(  # type: ignore
             dataset,
             collate_fn=collator,
@@ -639,7 +648,7 @@ def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True):
         if len([f for f in current_patch_files if f != 'None']) >= min_bands:
             filenames.append(current_patch_files)
 
-    if verbose:
+    if verbose and dist.get_rank() == 0:
         logger.info(
             f'Found {len(filenames)// len(bands)} patches with at least {min_bands} of the {bands} bands.'
         )
@@ -919,6 +928,7 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
         pixel_min=-3.0,
         pixel_max=None,
         use_calexp=True,
+        rank=0,
     ):
         self.fits_paths = fits_paths
         self.img_size = img_size
@@ -942,6 +952,7 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
         self.shared_mem = None
         self.cutout_shape = (cutouts_per_tile, len(bands), img_size, img_size)
         self.cutout_size = np.prod(self.cutout_shape) * 4  # Assuming float32
+        self.rank = rank
         SharedMemoryRegistry.register(self)
 
         atexit.register(self.cleanup)
@@ -958,14 +969,20 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
     def _prepare_cutouts(self, tile_index, local_index):
         with self.shared_lock:
             if tile_index in self.tiles_loaded:
+                # if local_index % self.batch_size == 0:
+                #     logger.info(
+                #         f'Rank {self.rank}: processing cutout {local_index} for pre-loaded tile {tile_index}.'
+                #     )
                 return
 
-            logger.info(f'Worker {os.getpid()} loading tile {tile_index} for cutout {local_index}.')
+            logger.info(
+                f'Rank {self.rank}: worker {os.getpid()} loading tile {tile_index} for cutout {local_index}.'
+            )
             load_start = time.time()
             self._load_and_preprocess_data(tile_index)
             load_end = time.time()
             logger.info(
-                f'Worker {os.getpid()} prepared tile {tile_index} in {load_end - load_start:.2f} seconds.'
+                f'Rank {self.rank}: worker {os.getpid()} prepared tile {tile_index} in {load_end - load_start:.2f} seconds.'
             )
 
     def _load_and_preprocess_data(self, tile_index):
@@ -977,9 +994,7 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
             )
             radec = torch.from_numpy(radec.astype(np.float32))
         else:
-            cutouts = random_cutouts(
-                cutouts, self.img_size, self.cutouts_per_tile, self.current_pix_to_radec
-            )
+            cutouts = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, self.current_pix_to_radec)
             radec = None
 
         # Clip pixel values
@@ -1051,13 +1066,20 @@ class TileDistributedSampler(torch.utils.data.Sampler):  # type: ignore
         shuffle (bool): Whether to shuffle the tiles before distributing.
     """
 
-    def __init__(self, dataset, num_replicas=1, rank=0, shuffle=True):
+    def __init__(self, dataset, num_replicas=1, rank=0, current_device=0, shuffle=True):
         self.dataset = dataset
         self.num_replicas = num_replicas
         self.rank = rank
+        self.current_device = current_device
         self.shuffle = shuffle
         self.num_tiles = len(dataset) // dataset.cutouts_per_tile
         self.num_tiles_per_replica = (self.num_tiles + self.num_replicas - 1) // self.num_replicas
+
+        if self.num_tiles == 0:
+            raise ValueError("Dataset doesn't contain any tiles")
+        logger.debug(
+            f'Rank {self.rank} has {self.num_tiles_per_replica}/{self.num_tiles} tiles. World size: {self.num_replicas}'
+        )
 
     def __iter__(self):
         # Generate a tensor of tile indices
@@ -1068,7 +1090,7 @@ class TileDistributedSampler(torch.utils.data.Sampler):  # type: ignore
                 # Shuffling indices on the root rank
                 indices = indices[torch.randperm(indices.numel())]
             # Ensure the indices tensor is on the correct device before broadcasting
-            indices = indices.to(torch.device('cuda', self.rank))
+            indices = indices.to(self.current_device)
             # Broadcast the shuffled or unshuffled indices tensor
             dist.broadcast(indices, src=0)
 

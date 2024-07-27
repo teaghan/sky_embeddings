@@ -6,3 +6,4 @@ slurm-*.out
 __pycache__/
 notebooks/
 data/
+ng*.out

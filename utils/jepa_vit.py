@@ -136,6 +136,17 @@ class Block(nn.Module):
         return x
 
 
+def get_num_patches(model):
+    if isinstance(model, torch.nn.DataParallel):
+        num_patches = model.module.patch_embed.num_patches  # type: ignore
+    # model is (encoder, predictor) for jepa
+    elif isinstance(model, tuple):
+        num_patches = model[0].patch_embed.num_patches
+    else:
+        num_patches = model.patch_embed.num_patches
+    return num_patches
+
+
 class VisionTransformer(nn.Module):
     """Vision Transformer"""
 

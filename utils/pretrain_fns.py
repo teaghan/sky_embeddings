@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from sklearn.linear_model import ElasticNet, LogisticRegression
-from sklearn.metrics import accuracy_score, r2_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, r2_score, recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
@@ -133,10 +133,25 @@ def linear_probe(
 
         # Evaluating the classifier
         test_accuracy = accuracy_score(y_test, y_pred_test)
+        test_precision = precision_score(y_test, y_pred_test, average='weighted')
+        test_recall = recall_score(y_test, y_pred_test, average='weighted')
+        test_f1 = f1_score(y_test, y_pred_test, average='weighted')
+
         train_accuracy = accuracy_score(y_train, y_pred_train)
+        train_precision = precision_score(y_train, y_pred_train, average='weighted')
+        train_recall = recall_score(y_train, y_pred_train, average='weighted')
+        train_f1 = f1_score(y_train, y_pred_train, average='weighted')
 
         losses_cp['train_lp_acc'].append(float(train_accuracy))
+        losses_cp['train_lp_precision'].append(float(train_precision))
+        losses_cp['train_lp_recall'].append(float(train_recall))
+        losses_cp['train_lp_f1'].append(float(train_f1))
+
         losses_cp['val_lp_acc'].append(float(test_accuracy))
+        losses_cp['val_lp_precision'].append(float(test_precision))
+        losses_cp['val_lp_recall'].append(float(test_recall))
+        losses_cp['val_lp_f1'].append(float(test_f1))
+
     if regress_data_path:
         # Regression task
         x, y = get_embeddings(
@@ -249,6 +264,18 @@ def log_current_status(
             logger.info('Classification Accuracy:')
             logger.info(
                 f'  Training: {losses["train_lp_acc"][-1]:.3f}, Validation: {losses["val_lp_acc"][-1]:.3f}'
+            )
+            logger.info('Classification Precision:')
+            logger.info(
+                f'  Training: {losses["train_lp_precision"][-1]:.3f}, Validation: {losses["val_lp_precision"][-1]:.3f}'
+            )
+            logger.info('Classification Recall:')
+            logger.info(
+                f'  Training: {losses["train_lp_recall"][-1]:.3f}, Validation: {losses["val_lp_recall"][-1]:.3f}'
+            )
+            logger.info('Classification F1:')
+            logger.info(
+                f'  Training: {losses["train_lp_f1"][-1]:.3f}, Validation: {losses["val_lp_f1"][-1]:.3f}'
             )
         if lp_regress_data_file:
             logger.info('Regression R2')
