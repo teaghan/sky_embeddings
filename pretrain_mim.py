@@ -125,6 +125,7 @@ def main(args):
         )
         use_calexp = ast.literal_eval(config['DATA']['use_calexp'])
         lp_combine = config['DATA']['lp_combine']
+        val_batches = int(config['DATA']['val_batches'])
 
         # Training parameters
         verbose_iters = args.verbose_iters
@@ -143,13 +144,17 @@ def main(args):
         # Masking parameters
         max_mask_ratio = float(config['MASK']['max_mask_ratio'])
         mask_ratio = float(config['MASK']['mask_ratio'])
-        allow_overlap = ast.literal_eval(config['MASK']['allow_overlap'])  # overlap context/target blocks
+        allow_overlap = ast.literal_eval(
+            config['MASK']['allow_overlap']
+        )  # overlap context/target blocks
         num_enc_masks = int(config['MASK']['num_enc_masks'])  # number of context blocks
         num_pred_masks = int(config['MASK']['num_pred_masks'])  # number of target blocks
         min_keep = int(config['MASK']['min_keep'])  # min number of patches in context block
         enc_mask_scale = ast.literal_eval(config['MASK']['enc_mask_scale'])  # scale of context blocks
         pred_mask_scale = ast.literal_eval(config['MASK']['pred_mask_scale'])  # scale of target blocks
-        aspect_ratio_targets = ast.literal_eval(config['MASK']['aspect_ratio_targets'])  # ar of target blocks
+        aspect_ratio_targets = ast.literal_eval(
+            config['MASK']['aspect_ratio_targets']
+        )  # ar of target blocks
 
         # Display model configuration
         if rank == 0:
@@ -251,12 +256,16 @@ def main(args):
                 collator=collator,
                 world_size=world_size,
                 rank=rank,
-                current_device=current_device,
+                current_device=current_device,  # type: ignore
                 ra_dec=True,
                 augment=False,
                 shuffle=True,
             )
             train_nested_batches = True
+
+            logger.info(
+                f'Rank {rank}: initialized train dataloader with {len(dataloader_train.dataset)} cutouts.'
+            )
 
         dataloader_val = build_h5_dataloader(
             val_data_file,
@@ -269,7 +278,15 @@ def main(args):
             num_patches=get_num_patches(model),
             shuffle=True,
             collator=mask_generator,
+            num_batches=val_batches // world_size,
             model_type=model_type,
+            seed=_GLOBAL_SEED,
+            world_size=world_size,
+            rank=rank,
+        )
+
+        logger.info(
+            f'Rank {rank}: initialized validation dataloader with {len(dataloader_val.dataset)} cutouts.'
         )
 
         # Training loop
@@ -375,7 +392,9 @@ def train_network_jepa(
     lp_combine,
 ):
     if rank == 0:
-        logger.info(f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ...')
+        logger.info(
+            f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ...'
+        )
         logger.info(
             f'Progress will be displayed every {verbose_iters} batch iterations and the model will be saved every {cp_time} minutes.'
         )
@@ -527,6 +546,9 @@ def train_network_jepa(
                         )
 
             def validate():
+                encoder.eval()
+                predictor.eval()
+                target_encoder.eval()
                 with torch.no_grad():
                     for i, (data, metadata, masks_enc, masks_pred) in enumerate(dataloader_val):
                         images, meta, masks_encoder, masks_predictor = to_device(
@@ -543,10 +565,18 @@ def train_network_jepa(
                             masks_predictor,
                             use_bfloat16,
                         )
-                        losses_cp['val_loss'].append(loss.cpu().detach().numpy())  # type: ignore
+                        losses_cp['val_loss'].append(loss.item())  # type: ignore
 
-                        if i >= 200:
-                            break
+                    logger.info(
+                        f'Rank {rank}: Validation done at iteration {cur_iter}. Continuing with classifier and regressor.'
+                    )
+
+                    dist.barrier()
+                    logger.info(f'Rank {rank}: passed barrier after initial validation.')
+                    logger.info(f'Rank {rank}: distributed still initialized: {dist.is_initialized()}')
+
+                    # if i >= 200:
+                    #     break
                     if lp_class_data_file or lp_regress_data_file:
                         # Run Linear Probing tests
                         linear_probe(
@@ -619,7 +649,9 @@ def train_network_jepa(
                 or (cur_iter + 1 % cp_freq == 0)
                 or (cur_iter == total_batch_iters)
             ):
-                logger.info(f'Saving checkpoint at iteration {cur_iter} after {cp_time} minutes of training.')
+                logger.info(
+                    f'Saving checkpoint at iteration {cur_iter} after {cp_time} minutes of training.'
+                )
                 save_checkpoint(cur_iter)
                 cp_start_time = time.time()
 

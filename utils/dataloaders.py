@@ -248,7 +248,11 @@ def build_h5_dataloader(
     indices=None,
     transforms=None,
     collator=None,
+    num_batches=None,
     model_type='simmim',
+    seed=42,
+    world_size=1,
+    rank=0,
 ):
     if (transforms is None) and augment:
         transforms = get_augmentations(
@@ -264,18 +268,28 @@ def build_h5_dataloader(
         dataset = H5Dataset_jepa(
             filename,
             img_size=img_size,
-            num_patches=num_patches,
+            batch_size=batch_size,
             label_keys=label_keys,
             transform=transforms,
             pixel_min=-3.0,
             pixel_max=None,
             indices=indices,
+            seed=seed,
+            num_batches=num_batches,
+        )
+        sampler = torch.utils.data.distributed.DistributedSampler(  # type: ignore
+            dataset,
+            num_replicas=world_size,
+            rank=rank,
+            shuffle=False,
         )
         dataloader = torch.utils.data.DataLoader(  # type: ignore
             dataset,
+            sampler=sampler,
             collate_fn=collator,
             batch_size=batch_size,
-            shuffle=shuffle,
+            worker_init_fn=worker_init_fn,
+            shuffle=False,
             num_workers=num_workers,
             pin_memory=True,
         )
@@ -499,27 +513,26 @@ class H5Dataset(torch.utils.data.Dataset):  # type: ignore
 class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
     """
     A PyTorch dataset class for loading and transforming data from H5 files, specifically designed for astronomical
-    cutouts or similar types of image datasets. This dataset loader supports dynamic masking, pixel value clipping,
+    cutouts or similar types of image datasets. This dataset loader supports pixel value clipping,
     optional positional channels, and custom transformations.
 
     The class can handle datasets where each sample consists of an image (cutout) and optionally additional labels,
-    such as RA (Right Ascension) and Dec (Declination) or other specified metadata. It also supports generating masks
-    for images dynamically using a `MaskGenerator` instance based on specified criteria like image size, patch size,
-    and maximum mask ratio.
+    such as RA (Right Ascension) and Dec (Declination) or other specified metadata.
 
     Parameters:
         data_file (str): Path to the H5 file containing the dataset.
         img_size (int): The size to which images will be resized or cropped.
+        batch_size (int): The number of cutouts per batch.
         patch_size (int): The size of each patch for the purpose of mask generation.
         num_channels (int): The number of channels in the images.
-        max_mask_ratio (float, optional): The maximum ratio of the image that can be masked by the `MaskGenerator`.
-        num_patches (int, optional): The number of patches into which the positional channel is divided.
         label_keys (list of str, optional): Keys to retrieve additional labels from the H5 file.
         transform (callable, optional): A function/transform that takes in an image and returns a transformed version.
         pixel_min (float, optional): The minimum pixel value for clipping.
         pixel_max (float, optional): The maximum pixel value for clipping.
         indices (list of int, optional): A list of indices specifying which samples to include in the dataset.
                                          If None, all samples in the file are included.
+        num_batches (int, optional): The number of batches to process. If None, all batches are processed.
+        seed (int, optional): The seed for the random number generator.
 
     Methods:
         __len__(): Returns the number of samples in the dataset.
@@ -532,59 +545,79 @@ class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
         self,
         data_file,
         img_size,
-        num_patches=None,
+        batch_size,
         label_keys=None,
         transform=None,
         pixel_min=-3.0,
         pixel_max=None,
         indices=None,
+        num_batches=None,
+        seed=42,
     ):
         self.data_file = data_file
         self.transform = transform
         self.img_size = img_size
-        self.num_patches = num_patches
+        self.batch_size = batch_size
         self.label_keys = label_keys
         self.pixel_min = pixel_min
         self.pixel_max = pixel_max
         self.indices = indices
+        self.num_batches = num_batches
+
+        try:
+            self.h5_file = h5py.File(self.data_file, 'r', libver='latest')
+        except IOError as e:
+            logger.error(f'Rank {dist.get_rank()}: error opening file {self.data_file}: {e}')
+            raise
+
+        total_samples = len(self.h5_file['cutouts'])  # type: ignore
+        if num_batches:
+            self.num_samples = min(num_batches * self.batch_size, total_samples)
+        else:
+            self.num_samples = total_samples
+
+        # Use a seeded random number generator
+        rng = np.random.default_rng(seed)
+        self.idxs = rng.choice(total_samples, self.num_samples, replace=False)
+
+        # Sort indices to ensure consistent ordering across ranks
+        self.idxs.sort()
 
     def __len__(self):
         if self.indices is not None:
             # Custom set of indices
             return len(self.indices)
         else:
-            with h5py.File(self.data_file, 'r') as f:
-                num_samples = len(f['cutouts'])  # type: ignore
-            return num_samples
+            return self.num_samples
 
     def __getitem__(self, idx):
         if self.indices is not None:
             # Use custom set of indices
             idx = self.indices[idx]
-        with h5py.File(self.data_file, 'r') as f:
-            # Load cutout
-            cutout = f['cutouts'][idx]  # type: ignore
 
-            # Clip pixel values
-            if self.pixel_min is not None:
-                cutout[cutout < self.pixel_min] = self.pixel_min  # type: ignore
-            if self.pixel_max is not None:
-                cutout[cutout > self.pixel_max] = self.pixel_max  # type: ignore
+        idx = self.idxs[idx]
+        # Load cutout
+        cutout = self.h5_file['cutouts'][idx]  # type: ignore
+        ra_dec = torch.tensor([self.h5_file['ra'][idx], self.h5_file['dec'][idx]], dtype=torch.float32)  # type: ignore
 
-            if (np.array(cutout.shape[1:]) > self.img_size).any():  # type: ignore
-                # Select central cutout
-                cutout = extract_center(cutout, self.img_size)
+        # Process cutout
+        cutout, labels = self._process_cutout(idx, cutout)
 
-            # Load RA and Dec
-            ra_dec = torch.from_numpy(np.asarray([f['ra'][idx], f['dec'][idx]]).astype(np.float32))  # type: ignore
+        if self.label_keys is None:
+            return cutout, ra_dec
+        else:
+            return cutout, ra_dec, labels
 
-            # Load labels
-            if self.label_keys is not None:
-                labels = [f[k][idx] for k in self.label_keys]  # type: ignore
-                if 'class' in self.label_keys:
-                    labels = torch.from_numpy(np.asarray(labels).astype(np.int64)).long()
-                else:
-                    labels = torch.from_numpy(np.asarray(labels).astype(np.float32))
+    def _process_cutout(self, idx, cutout):
+        # Clip pixel values
+        if self.pixel_min is not None:
+            cutout[cutout < self.pixel_min] = self.pixel_min  # type: ignore
+        if self.pixel_max is not None:
+            cutout[cutout > self.pixel_max] = self.pixel_max  # type: ignore
+
+        if (np.array(cutout.shape[1:]) > self.img_size).any():  # type: ignore
+            # Select central cutout
+            cutout = extract_center(cutout, self.img_size)
 
         cutout = torch.from_numpy(cutout).to(torch.float32)
         # Apply any augmentations, etc.
@@ -594,10 +627,20 @@ class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
         # Replace nan values with 0
         cutout[torch.isnan(cutout)] = 0.0
 
-        if self.label_keys is None:
-            return cutout, ra_dec
+        # Load labels
+        if self.label_keys is not None:
+            labels = [self.h5_file[k][idx] for k in self.label_keys]  # type: ignore
+            if 'class' in self.label_keys:
+                labels = torch.from_numpy(np.asarray(labels).astype(np.int64)).long()
+            else:
+                labels = torch.from_numpy(np.asarray(labels).astype(np.float32))
+            return cutout, labels
         else:
-            return cutout, ra_dec, labels
+            return cutout, None
+
+    def __del__(self):
+        # Ensure the file is closed when the dataset object is destroyed
+        self.h5_file.close()
 
 
 def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True):
@@ -994,7 +1037,9 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
             )
             radec = torch.from_numpy(radec.astype(np.float32))
         else:
-            cutouts = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, self.current_pix_to_radec)
+            cutouts = random_cutouts(
+                cutouts, self.img_size, self.cutouts_per_tile, self.current_pix_to_radec
+            )
             radec = None
 
         # Clip pixel values

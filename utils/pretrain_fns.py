@@ -21,7 +21,9 @@ from utils.misc import select_centre
 logger = logging.getLogger()
 
 
-def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler, losses_cp, mode='train'):
+def run_iter(
+    model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler, losses_cp, mode='train'
+):
     if mode == 'train':
         model.train(True)
     else:
@@ -55,19 +57,14 @@ def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler
 
 
 def val_iter(encoder, predictor, target_encoder, images, masks_enc, masks_pred, use_bfloat16):
-    encoder.eval()
-    predictor.eval()
-    target_encoder.eval()
-
     def forward_target():
-        with torch.no_grad():
-            h = target_encoder(images)
-            h = F.layer_norm(h, (h.size(-1),))  # normalize over feature dimension
-            B = len(h)
-            # create target representations
-            h = apply_masks(h, masks_pred)
-            h = repeat_interleave_batch(h, B, repeat=len(masks_enc))  # type: ignore
-            return h
+        h = target_encoder(images)
+        h = F.layer_norm(h, (h.size(-1),))  # normalize over feature dimension
+        B = len(h)
+        # create target representations
+        h = apply_masks(h, masks_pred)
+        h = repeat_interleave_batch(h, B, repeat=len(masks_enc))  # type: ignore
+        return h
 
     def forward_context():
         z = encoder(images, masks_enc)
