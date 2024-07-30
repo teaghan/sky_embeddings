@@ -4,7 +4,7 @@ ruff.toml
 slurm-*.out
 .vscode/
 __pycache__/
-notebooks/
+notebooks/data
 data/
 ng*.out
 .ipynb_checkpoints/
