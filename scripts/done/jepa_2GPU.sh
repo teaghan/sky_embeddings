@@ -34,4 +34,4 @@ cp /project/rrg-kyi/astro/hsc/HSC_dud_simple_regressor_data_GIRYZ7610_64.h5 $SLU
 echo "$SLURM_NODEID: Launching python script"
 
 # Execute the training script (tasks-per-node * nodes) times
-srun python /home/heesters/projects/def-sfabbro/heesters/github/sky_embeddings/pretrain_mim.py jepa_test --dist_backend nccl --init_method tcp://$MASTER_ADDR:$MASTER_PORT --world_size $SLURM_NTASKS  --batch_size 64 --verbose_iters 100 --cp_time 10.00 --cp_freq 500 -dd $SLURM_TMPDIR/
+srun python /home/heesters/projects/def-sfabbro/heesters/github/sky_embeddings/pretrain_mim.py jepa_2GPU --dist_backend nccl --init_method tcp://$MASTER_ADDR:$MASTER_PORT --world_size $SLURM_NTASKS  --batch_size 64 --verbose_iters 100 --cp_time 10.00 --cp_freq 500 -dd $SLURM_TMPDIR/

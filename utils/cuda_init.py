@@ -16,7 +16,6 @@ def cuda_setup(rank, local_rank, world_size):
 
         logger.info(f"Rank {rank}: CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES')}")
         logger.info(f'Rank {rank}: number of GPUs visible: {torch.cuda.device_count()}')
-        logger.info(f'Rank {rank}: local rank: {local_rank}: world size: {world_size}')
 
         current_device_id = torch.cuda.current_device()
         current_device = torch.device(f'cuda:{current_device_id}')

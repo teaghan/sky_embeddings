@@ -30,14 +30,30 @@ class WarmupCosineSchedule(object):
             progress = float(self._step - self.warmup_steps) / float(max(1, self.T_max))
             new_lr = max(
                 self.final_lr,
-                self.final_lr
-                + (self.ref_lr - self.final_lr) * 0.5 * (1.0 + math.cos(math.pi * progress)),
+                self.final_lr + (self.ref_lr - self.final_lr) * 0.5 * (1.0 + math.cos(math.pi * progress)),
             )
 
         for group in self.optimizer.param_groups:
             group['lr'] = new_lr
 
         return new_lr
+
+    def state_dict(self):
+        """Returns the state of the scheduler as a :class:`dict`.
+
+        It contains an entry for every variable in self.__dict__ which
+        is not the optimizer.
+        """
+        return {key: value for key, value in self.__dict__.items() if key != 'optimizer'}
+
+    def load_state_dict(self, state_dict):
+        """Loads the schedulers state.
+
+        Arguments:
+            state_dict (dict): scheduler state. Should be an object returned
+                from a call to :meth:`state_dict`.
+        """
+        self.__dict__.update(state_dict)
 
 
 class CosineWDSchedule(object):
@@ -51,9 +67,7 @@ class CosineWDSchedule(object):
     def step(self):
         self._step += 1
         progress = self._step / self.T_max
-        new_wd = self.final_wd + (self.ref_wd - self.final_wd) * 0.5 * (
-            1.0 + math.cos(math.pi * progress)
-        )
+        new_wd = self.final_wd + (self.ref_wd - self.final_wd) * 0.5 * (1.0 + math.cos(math.pi * progress))
 
         if self.final_wd <= self.ref_wd:
             new_wd = max(self.final_wd, new_wd)
@@ -64,6 +78,23 @@ class CosineWDSchedule(object):
             if ('WD_exclude' not in group) or not group['WD_exclude']:
                 group['weight_decay'] = new_wd
         return new_wd
+
+    def state_dict(self):
+        """Returns the state of the scheduler as a :class:`dict`.
+
+        It contains an entry for every variable in self.__dict__ which
+        is not the optimizer.
+        """
+        return {key: value for key, value in self.__dict__.items() if key != 'optimizer'}
+
+    def load_state_dict(self, state_dict):
+        """Loads the schedulers state.
+
+        Arguments:
+            state_dict (dict): scheduler state. Should be an object returned
+                from a call to :meth:`state_dict`.
+        """
+        self.__dict__.update(state_dict)
 
 
 def build_momentum_scheduler(start_m, end_m, total_iters):

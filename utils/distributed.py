@@ -30,17 +30,17 @@ def init_distributed(backend='nccl', init_method='env://', world_size=1, rank=0,
         bool: True if distributed training is available, False otherwise
     """
     try:
-        logger.info(f'From rank {rank}/{world_size-1}: initializing process group..')
+        logger.info(f'Rank {rank}/{world_size-1}: initializing process group..')
         dist.init_process_group(backend=backend, init_method=init_method, world_size=world_size, rank=rank)
     except Exception as e:
         world_size, rank = 1, 0
         logger.info(f'Distributed training not available {e}')
 
     logger.info(
-        f'From rank {rank}/{world_size-1}: distributed training available: {dist.is_available()} and initialized: {dist.is_initialized()}'
+        f'Rank {rank}/{world_size-1}: distributed training available: {dist.is_available()} and initialized: {dist.is_initialized()}'
     )
     logger.info(
-        f'From rank {rank}/{world_size-1}: world size: {dist.get_world_size()}; rank: {dist.get_rank()}; local rank: {local_rank}'
+        f'Rank {rank}/{world_size-1}: world size: {dist.get_world_size()}; rank: {dist.get_rank()}; local rank: {local_rank}'
     )
 
     return True
@@ -48,6 +48,7 @@ def init_distributed(backend='nccl', init_method='env://', world_size=1, rank=0,
 
 def cleanup():
     if dist.is_initialized():
+        logger.info('Cleaning up distributed training..')
         dist.destroy_process_group()
 
 

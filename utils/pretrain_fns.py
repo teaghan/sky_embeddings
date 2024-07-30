@@ -3,6 +3,7 @@ import logging
 import h5py
 import numpy as np
 import torch
+import torch.distributed as dist
 import torch.nn.functional as F
 from sklearn.linear_model import ElasticNet, LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, precision_score, r2_score, recall_score
@@ -21,9 +22,7 @@ from utils.misc import select_centre
 logger = logging.getLogger()
 
 
-def run_iter(
-    model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler, losses_cp, mode='train'
-):
+def run_iter(model, samples, ra_decs, masks, mask_ratio, optimizer, lr_scheduler, losses_cp, mode='train'):
     if mode == 'train':
         model.train(True)
     else:
@@ -95,6 +94,8 @@ def linear_probe(
     regress_data_path=None,
     combine='central',
     remove_cls=True,
+    world_size=1,
+    rank=0,
 ):
     """Train a quick linear probing model to evaluate the quality of the embeddings."""
 
@@ -113,6 +114,8 @@ def linear_probe(
             y_label='class',
             combine=combine,
             remove_cls=remove_cls,
+            world_size=world_size,
+            rank=rank,
         )
 
         # Splitting the dataset into training and testing sets
@@ -160,6 +163,8 @@ def linear_probe(
             y_label='zspec',
             combine=combine,
             remove_cls=remove_cls,
+            world_size=world_size,
+            rank=rank,
         )
 
         # Splitting the dataset into training and testing sets
@@ -192,11 +197,14 @@ def get_embeddings(
     y_label='class',
     combine='central',
     remove_cls=True,
+    world_size=1,
+    rank=0,
 ):
     # Data loader
     dataloader = build_h5_dataloader(
         data_path,
         batch_size=64,
+        bands=dataloader_template.dataset.bands,
         num_workers=dataloader_template.num_workers,
         img_size=dataloader_template.dataset.img_size,
         num_patches=dataloader_template.dataset.num_patches,
@@ -204,6 +212,8 @@ def get_embeddings(
         num_channels=model.module.in_chans,
         max_mask_ratio=None,
         shuffle=False,
+        world_size=world_size,
+        rank=rank,
     )
 
     # Map target samples to latent-space
@@ -243,6 +253,173 @@ def get_embeddings(
         x = scaler.fit_transform(x)
 
     return x, y
+
+
+def distributed_linear_probe(
+    model,
+    losses_cp,
+    device,
+    dataloader_template,
+    model_type,
+    class_data_path=None,
+    regress_data_path=None,
+    combine='central',
+    remove_cls=True,
+    world_size=1,
+    rank=0,
+):
+    model.eval()
+
+    def process_data(data_path, y_label):
+        dataloader = build_h5_dataloader(
+            data_path,
+            batch_size=64,
+            bands=dataloader_template.dataset.bands,
+            num_workers=dataloader_template.num_workers,
+            img_size=dataloader_template.dataset.img_size,
+            patch_size=model.module.patch_embed.patch_size,
+            num_channels=model.module.in_chans,
+            max_mask_ratio=None,
+            shuffle=False,
+            model_type=model_type,
+            world_size=world_size,
+            rank=rank,
+        )
+        try:
+            # Generate embeddings (this is distributed across all ranks)
+            latent_features = mae_latent(
+                model,
+                dataloader,
+                device=device,
+                model_type=model_type,
+                verbose=1,
+                remove_cls=remove_cls,
+                world_size=world_size,
+                rank=rank,
+            )
+        except Exception as e:
+            logger.error(f'Error in generating embeddings: {e}')
+
+        # Gather embeddings from all ranks
+        gathered_features = [torch.zeros_like(latent_features) for _ in range(world_size)]
+        try:
+            dist.all_gather(gathered_features, latent_features)
+        except Exception as e:
+            logger.error(f'Error in gathering embeddings: {e}')
+
+        if rank == 0:
+            # Combine gathered features
+            latent_features = torch.cat(gathered_features, dim=0).cpu().numpy()
+
+            # Load labels (assuming they're stored in the same order as the data)
+            with h5py.File(data_path, 'r') as f:
+                y = f[y_label][:]
+
+            # Process features
+            x = process_features(model, model_type, latent_features, combine)
+
+            return x, y
+        else:
+            return None, None
+
+    if class_data_path:
+        x, y = process_data(class_data_path, 'class')
+
+        if rank == 0:
+            logger.info(f'Performing classification task on rank {rank}...')
+            # Perform classification on rank 0
+            X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+            clf = LogisticRegression(
+                solver='lbfgs', multi_class='multinomial', max_iter=10000, C=0.01, random_state=42
+            )
+            clf.fit(X_train, y_train)
+
+            # Compute metrics
+            y_pred_test = clf.predict(X_test)
+            y_pred_train = clf.predict(X_train)
+
+            # Evaluating the classifier
+            test_accuracy = accuracy_score(y_test, y_pred_test)
+            test_precision = precision_score(y_test, y_pred_test, average='weighted')
+            test_recall = recall_score(y_test, y_pred_test, average='weighted')
+            test_f1 = f1_score(y_test, y_pred_test, average='weighted')
+
+            train_accuracy = accuracy_score(y_train, y_pred_train)
+            train_precision = precision_score(y_train, y_pred_train, average='weighted')
+            train_recall = recall_score(y_train, y_pred_train, average='weighted')
+            train_f1 = f1_score(y_train, y_pred_train, average='weighted')
+
+            logger.info(f'Training Accuracy: {train_accuracy:.3f}, Validation Accuracy: {test_accuracy:.3f}')
+            logger.info(
+                f'Training Precision: {train_precision:.3f}, Validation Precision: {test_precision:.3f}'
+            )
+            logger.info(f'Training Recall: {train_recall:.3f}, Validation Recall: {test_recall:.3f}')
+            logger.info(f'Training F1: {train_f1:.3f}, Validation F1: {test_f1:.3f}')
+
+            # Update losses_cp
+            losses_cp['train_lp_acc'].append(float(train_accuracy))
+            losses_cp['train_lp_precision'].append(float(train_precision))
+            losses_cp['train_lp_recall'].append(float(train_recall))
+            losses_cp['train_lp_f1'].append(float(train_f1))
+
+            losses_cp['val_lp_acc'].append(float(test_accuracy))
+            losses_cp['val_lp_precision'].append(float(test_precision))
+            losses_cp['val_lp_recall'].append(float(test_recall))
+            losses_cp['val_lp_f1'].append(float(test_f1))
+
+    if regress_data_path:
+        x, y = process_data(regress_data_path, 'zspec')
+
+        if rank == 0:
+            logger.info(f'Performing regression task on rank {rank}..')
+            # Perform regression on rank 0
+            X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+            regressor = ElasticNet(alpha=0.0001, l1_ratio=0.9, max_iter=10000, random_state=42)
+            regressor.fit(X_train, y_train)
+
+            # Compute metrics
+            y_pred_test = regressor.predict(X_test)
+            y_pred_train = regressor.predict(X_train)
+            r2_test = r2_score(y_test, y_pred_test)
+            r2_train = r2_score(y_train, y_pred_train)
+
+            logger.info(f'Training R2: {r2_train:.3f}, Validation R2: {r2_test:.3f}')
+
+            # Update losses_cp
+            losses_cp['val_lp_r2'].append(float(r2_test))
+            losses_cp['train_lp_r2'].append(float(r2_train))
+
+
+def process_features(model, model_type, latent_features, combine):
+    if 'jepa' not in model_type:
+        if hasattr(model, 'module'):
+            if model.module.attn_pool:
+                combine = 'flatten'
+        elif model.attn_pool:
+            combine = 'flatten'
+
+    if combine == 'token':
+        x = latent_features[:, :1].reshape(latent_features.shape[0], -1)
+    elif combine == 'flatten':
+        x = latent_features.reshape(latent_features.shape[0], -1)
+    elif combine == 'pool':
+        x = np.max(latent_features, axis=1)
+    elif combine == 'centralpool':
+        x = select_centre(latent_features, n_patches=16)
+        x = np.max(x, axis=1)
+    elif combine == 'central':
+        x = select_centre(latent_features, n_patches=4)
+        x = x.reshape(x.shape[0], -1)
+    elif combine == 'mean':
+        x = np.mean(latent_features, axis=1)
+    else:
+        x = latent_features
+        x = (x - np.nanmean(x)) / np.nanstd(x)
+        return x
+
+    scaler = StandardScaler()
+    x = scaler.fit_transform(x)
+    return x
 
 
 def log_current_status(

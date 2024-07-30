@@ -83,11 +83,14 @@ def mae_latent(
     apply_augmentations=False,
     num_augmentations=16,
     remove_cls=True,
+    world_size=1,
+    rank=0,
 ):
     if n_batches is None:
         n_batches = len(dataloader)
     if verbose > 0:
-        logger.info(f'Encoding {min(len(dataloader), n_batches)} batches...')
+        logger.info(f'Rank {rank}: encoding {min(len(dataloader), n_batches)} batches...')
+
     model.eval()
 
     latents = []
@@ -98,7 +101,7 @@ def mae_latent(
 
     with torch.no_grad():
         # Loop through spectra in dataset
-        for batch_idx, (samples, masks, ra_decs) in enumerate(dataloader):
+        for batch_idx, (samples, ra_decs) in enumerate(dataloader):
             # Apply augmentations if enabled
             augmented_samples = []
             augmented_ra_decs = []  # Prepare to hold duplicated ra_decs
@@ -123,7 +126,6 @@ def mae_latent(
                 ra_decs = torch.cat(augmented_ra_decs, dim=0)  # Concatenate duplicated ra_decs
 
             logger.debug(f'Shape of samples: {samples.shape}.')
-            logger.debug(f'Number of nan values in samples: {torch.isnan(samples).sum()}.')
 
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
@@ -131,9 +133,11 @@ def mae_latent(
 
             if 'jepa' in model_type:
                 # model is target_encoder in JEPA
-                latent = model(samples)
+                try:
+                    latent = model(samples)
+                except Exception as e:
+                    logger.error(f'Rank {rank}: error in producing latent representation from model: {e}')
                 logger.debug(f'Shape of latent: {latent.shape}.')
-                logger.debug(f'Number of nan values in latent: {torch.isnan(latent).sum()}.')
             else:
                 if hasattr(model, 'module'):
                     latent, _, _ = model.module.forward_features(
@@ -153,10 +157,13 @@ def mae_latent(
                 if remove_cls:
                     # Remove cls token
                     latent = latent[:, num_extra_tokens:]
-
-            latents.append(latent.detach().cpu())
+            try:
+                # Keep on GPU
+                latents.append(latent)
+            except Exception as e:
+                logger.error(f'Rank {rank}: error appending latent representation to list: {e}')
             if return_images:
-                images.append(samples.detach().cpu())
+                images.append(samples)
             if len(latents) >= n_batches:
                 break
     if return_images:

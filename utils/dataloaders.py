@@ -1,4 +1,3 @@
-import atexit
 import glob
 import logging
 import os
@@ -16,7 +15,7 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from torchvision.transforms import v2
 
-from utils.cleanup import SharedMemoryRegistry
+from utils.cleanup import H5FileRegistry, SharedMemoryRegistry
 
 torchvision.disable_beta_transforms_warning()
 
@@ -233,6 +232,7 @@ def build_fits_dataloader(
 def build_h5_dataloader(
     filename,
     batch_size,
+    bands,
     num_workers,
     patch_size=8,
     num_channels=5,
@@ -264,11 +264,12 @@ def build_h5_dataloader(
             nan_channels=nan_channels,
         )
 
-    if 'jepa' in model_type and collator is not None:
+    if 'jepa' in model_type:
         dataset = H5Dataset_jepa(
             filename,
             img_size=img_size,
             batch_size=batch_size,
+            bands=bands,
             label_keys=label_keys,
             transform=transforms,
             pixel_min=-3.0,
@@ -546,6 +547,7 @@ class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
         data_file,
         img_size,
         batch_size,
+        bands,
         label_keys=None,
         transform=None,
         pixel_min=-3.0,
@@ -558,6 +560,7 @@ class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
         self.transform = transform
         self.img_size = img_size
         self.batch_size = batch_size
+        self.bands = bands
         self.label_keys = label_keys
         self.pixel_min = pixel_min
         self.pixel_max = pixel_max
@@ -566,6 +569,7 @@ class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
 
         try:
             self.h5_file = h5py.File(self.data_file, 'r', libver='latest')
+            H5FileRegistry.register(self.h5_file)
         except IOError as e:
             logger.error(f'Rank {dist.get_rank()}: error opening file {self.data_file}: {e}')
             raise
@@ -597,7 +601,7 @@ class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
 
         idx = self.idxs[idx]
         # Load cutout
-        cutout = self.h5_file['cutouts'][idx]  # type: ignore
+        cutout = self.h5_file['cutouts'][idx, get_band_indices(self.bands)[0], :, :]  # type: ignore
         ra_dec = torch.tensor([self.h5_file['ra'][idx], self.h5_file['dec'][idx]], dtype=torch.float32)  # type: ignore
 
         # Process cutout
@@ -639,8 +643,9 @@ class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
             return cutout, None
 
     def __del__(self):
-        # Ensure the file is closed when the dataset object is destroyed
-        self.h5_file.close()
+        if hasattr(self, 'h5_file') and self.h5_file:
+            H5FileRegistry.unregister(self.h5_file)
+            self.h5_file.close()
 
 
 def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True):
@@ -998,7 +1003,7 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
         self.rank = rank
         SharedMemoryRegistry.register(self)
 
-        atexit.register(self.cleanup)
+        # atexit.register(self.cleanup)
         self._create_shared_memory()
 
     def __len__(self):
@@ -1018,13 +1023,13 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
                 #     )
                 return
 
-            logger.info(
+            logger.debug(
                 f'Rank {self.rank}: worker {os.getpid()} loading tile {tile_index} for cutout {local_index}.'
             )
             load_start = time.time()
             self._load_and_preprocess_data(tile_index)
             load_end = time.time()
-            logger.info(
+            logger.debug(
                 f'Rank {self.rank}: worker {os.getpid()} prepared tile {tile_index} in {load_end - load_start:.2f} seconds.'
             )
 
@@ -1037,9 +1042,7 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
             )
             radec = torch.from_numpy(radec.astype(np.float32))
         else:
-            cutouts = random_cutouts(
-                cutouts, self.img_size, self.cutouts_per_tile, self.current_pix_to_radec
-            )
+            cutouts = random_cutouts(cutouts, self.img_size, self.cutouts_per_tile, self.current_pix_to_radec)
             radec = None
 
         # Clip pixel values
@@ -1174,3 +1177,12 @@ def extract_center(array, n):
 
     # Extract and return the nxn center
     return array[:, start_row : start_row + n, start_col : start_col + n]
+
+
+def get_band_indices(bands, bands_rgb):
+    bands_full = ['G', 'I', 'R', 'Y', 'Z', 'NB0387', 'NB0816', 'NB0921', 'NB1010']
+    band_idx = sorted([bands_full.index(band) for band in bands])
+    band_idx_rgb = sorted([bands.index(band) for band in bands_rgb])
+    if len(band_idx) == 0:
+        logger.error('Band index list is empty.')
+    return band_idx, band_idx_rgb

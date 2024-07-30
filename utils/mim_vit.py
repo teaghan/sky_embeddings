@@ -6,6 +6,7 @@ from functools import partial
 
 import timm.optim.optim_factory as optim_factory
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 from timm.layers import AttentionPoolLatent
 from timm.models.vision_transformer import Block, PatchEmbed
@@ -176,34 +177,6 @@ def build_model(config, model_filename, device, build_optimizer=False):
 
     if build_optimizer:
         if 'jepa' in model_type:
-            # param_groups = [
-            #     {
-            #         'params': (
-            #             p for n, p in encoder.named_parameters() if ('bias' not in n) and (len(p.shape) != 1)
-            #         )
-            #     },
-            #     {
-            #         'params': (
-            #             p
-            #             for n, p in predictor.named_parameters()
-            #             if ('bias' not in n) and (len(p.shape) != 1)
-            #         )
-            #     },
-            #     {
-            #         'params': (
-            #             p for n, p in encoder.named_parameters() if ('bias' in n) or (len(p.shape) == 1)
-            #         ),
-            #         'WD_exclude': True,
-            #         'weight_decay': 0,
-            #     },
-            #     {
-            #         'params': (
-            #             p for n, p in predictor.named_parameters() if ('bias' in n) or (len(p.shape) == 1)
-            #         ),
-            #         'WD_exclude': True,
-            #         'weight_decay': 0,
-            #     },
-            # ]
             optimizer, scaler, lr_scheduler, wd_scheduler = init_optim_jepa(
                 encoder=encoder,
                 predictor=predictor,
@@ -279,7 +252,8 @@ def load_model(model, model_filename, optimizer=None, lr_scheduler=None, wd_sche
             )
 
     else:
-        logger.info('Starting fresh model to train...')
+        if dist.get_rank() == 0:
+            logger.info('Starting fresh model to train...')
         losses = defaultdict(list)
         cur_iter = 1
 
@@ -312,8 +286,8 @@ def init_optim_jepa(
             'weight_decay': 0,
         },
     ]
-
-    logger.info('Using AdamW')
+    if dist.get_rank() == 0:
+        logger.info('Using AdamW')
     optimizer = torch.optim.AdamW(param_groups)
     scheduler = WarmupCosineSchedule(
         optimizer,
