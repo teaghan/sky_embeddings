@@ -152,13 +152,17 @@ def main(args):
         # Masking parameters
         max_mask_ratio = float(config['MASK']['max_mask_ratio'])
         mask_ratio = float(config['MASK']['mask_ratio'])
-        allow_overlap = ast.literal_eval(config['MASK']['allow_overlap'])  # overlap context/target blocks
+        allow_overlap = ast.literal_eval(
+            config['MASK']['allow_overlap']
+        )  # overlap context/target blocks
         num_enc_masks = int(config['MASK']['num_enc_masks'])  # number of context blocks
         num_pred_masks = int(config['MASK']['num_pred_masks'])  # number of target blocks
         min_keep = int(config['MASK']['min_keep'])  # min number of patches in context block
         enc_mask_scale = ast.literal_eval(config['MASK']['enc_mask_scale'])  # scale of context blocks
         pred_mask_scale = ast.literal_eval(config['MASK']['pred_mask_scale'])  # scale of target blocks
-        aspect_ratio_targets = ast.literal_eval(config['MASK']['aspect_ratio_targets'])  # ar of target blocks
+        aspect_ratio_targets = ast.literal_eval(
+            config['MASK']['aspect_ratio_targets']
+        )  # ar of target blocks
 
         # Display model configuration
         if rank == 0:
@@ -402,7 +406,9 @@ def train_network_jepa(
     bands,
 ):
     if rank == 0:
-        logger.info(f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ...')
+        logger.info(
+            f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ...'
+        )
         logger.info(
             f'Progress will be displayed every {verbose_iters} batch iterations and the model will be saved every {cp_time} minutes.'
         )
@@ -617,7 +623,6 @@ def train_network_jepa(
                                 savename=os.path.join(fig_dir, f'{model_name}_progress.png'),
                             )
                             # Plot 5 sample masks
-                            images_plot = images_plot[0].de
                             visualize_masks(
                                 images=images_plot,
                                 masks_enc=masks_enc_plot,
@@ -667,7 +672,11 @@ def train_network_jepa(
             # after every checkpoint_freq iterations or
             # at the end of training
             cur_time = time.time() - cp_start_time
-            if (cur_time >= cp_time * 60) or (cur_iter % cp_freq == 0) or (cur_iter == total_batch_iters):
+            if (
+                (cur_time >= cp_time * 60)
+                or (cur_iter % cp_freq == 0)
+                or (cur_iter == total_batch_iters)
+            ):
                 logger.info(
                     f'Saving checkpoint at iteration {cur_iter} after {cur_time} minutes of training.'
                 )

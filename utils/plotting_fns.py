@@ -15,7 +15,9 @@ from sklearn.metrics import confusion_matrix
 
 from utils.dataloaders import get_band_indices
 
-plt.rcParams.update({'text.usetex': True, 'font.family': 'serif', 'font.serif': ['Times'], 'font.size': 10})
+plt.rcParams.update(
+    {'text.usetex': True, 'font.family': 'serif', 'font.serif': ['Times'], 'font.size': 10}
+)
 
 
 def plot_progress(losses, y_lims=[(0, 1)], x_lim=None, lp=False, fontsize=18, savename=None):
@@ -573,7 +575,9 @@ def evaluate_z(
     savename=None,
 ):
     # Calculate metrics on entire dataset
-    full_resid, full_bias, full_mad, full_frac_out = photoz_prediction_metrics(z_pred, z_true, threshold=0.15)
+    full_resid, full_bias, full_mad, full_frac_out = photoz_prediction_metrics(
+        z_pred, z_true, threshold=0.15
+    )
 
     # Split z into bins and calculate metrics
     bins = np.linspace(z_range[0], z_range[1], n_bins + 1)
@@ -586,7 +590,9 @@ def evaluate_z(
     # Each bin should have the same number of samples
     n_samples = min([len(b) for b in bin_indices])
     print(f'Using {n_samples} from each bin')
-    sample_indices = [np.random.choice(np.arange(len(b)), size=n_samples, replace=False) for b in bin_indices]  # noqa: F841
+    sample_indices = [
+        np.random.choice(np.arange(len(b)), size=n_samples, replace=False) for b in bin_indices
+    ]  # noqa: F841
     # bin_indices = [b[b_i] for b, b_i in zip(bin_indices,sample_indices)]
 
     # Calculate metrics for each bin
@@ -676,7 +682,9 @@ def snr_plots(
     # Each bin should have the same number of samples
     n_samples = min([len(b) for b in bin_indices])
     print(f'Using {n_samples} from each bin')
-    sample_indices = [np.random.choice(np.arange(len(b)), size=n_samples, replace=False) for b in bin_indices]  # noqa: F841
+    sample_indices = [
+        np.random.choice(np.arange(len(b)), size=n_samples, replace=False) for b in bin_indices
+    ]  # noqa: F841
     # bin_indices = [b[b_i] for b, b_i in zip(bin_indices,sample_indices)]
 
     # Calculate metrics for each bin
@@ -854,7 +862,9 @@ def visualize_masks(
                     y, color='black', linestyle='--', lw=0.2, alpha=alpha_grid
                 )  # Adjust color and line style if needed
 
-        full_mask = torch.zeros(img.shape[0] // patch_size, img.shape[1] // patch_size, dtype=torch.float32)
+        full_mask = torch.zeros(
+            img.shape[0] // patch_size, img.shape[1] // patch_size, dtype=torch.float32
+        )
         for idx in mask_indices_enc:
             row = idx // (img.shape[1] // patch_size)
             col = idx % (img.shape[1] // patch_size)
@@ -887,7 +897,9 @@ def visualize_masks(
             axs[i, 1].imshow(masked_img)
         else:
             axs[i, 1].imshow(masked_img)
-        axs[i, 1].imshow(np.ma.masked_where(full_mask == 1, full_mask), cmap='cool', vmin=-1, alpha=alpha)
+        axs[i, 1].imshow(
+            np.ma.masked_where(full_mask == 1, full_mask), cmap='cool', vmin=-1, alpha=alpha
+        )
         axs[i, 1].set_title('Final context mask')
         axs[i, 1].axis('off')
 
@@ -942,7 +954,7 @@ def cutout_rgb(cutout, bands, bands_rgb):
     Returns:
         PIL image: image cutout
     """
-    band_idx = get_band_indices(bands, bands_rgb)
+    band_idx = get_band_indices(bands, bands_rgb)[1]
     cutout_rgb = cutout[band_idx]
     # Currently assumes wrong band order [G, I, R, Y, Z]
     cutout_red = cutout_rgb[1]  # R
@@ -966,13 +978,17 @@ def cutout_rgb(cutout, bands, bands_rgb):
         np.array([percentile_red, percentile_green, percentile_blue]) > saturation_percentile_threshold
     ):
         # If any band is highly saturated choose a lower percentile target to bring out more lsb features
-        if np.any(np.array([percentile_red, percentile_green, percentile_blue]) > high_saturation_threshold):
+        if np.any(
+            np.array([percentile_red, percentile_green, percentile_blue]) > high_saturation_threshold
+        ):
             percentile_target = 200.0
         else:
             percentile_target = 1000.0
 
         # Find individual saturation percentiles for each band
-        percentiles = find_percentile_from_target([cutout_red, cutout_green, cutout_blue], percentile_target)
+        percentiles = find_percentile_from_target(
+            [cutout_red, cutout_green, cutout_blue], percentile_target
+        )
         cutout_red_desat, _ = desaturate(
             cutout_red,
             saturation_percentile=percentiles['R'],  # type: ignore
