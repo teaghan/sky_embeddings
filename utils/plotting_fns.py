@@ -802,27 +802,22 @@ def visualize_masks(
     masks_pred,
     patch_size,
     bands,
-    alpha_grid=0.5,
-    n_samples=5,
+    alpha_grid,
+    num_samples,
     patch_grid=False,
     savename=None,
     show_plot=False,
 ):
-    images = images.detach().cpu().numpy()
-    images = images[:n_samples]
-
-    masks_enc = masks_enc.detach().cpu().numpy()
-    masks_enc = masks_enc[:n_samples]
-
-    masks_pred = masks_pred.detach().cpu().numpy()
+    height, width = images.shape[2] // patch_size, images.shape[3] // patch_size
+    images = images[:num_samples]
+    masks_enc = masks_enc[0][:num_samples]
     masks_pred = torch.stack(masks_pred)
-    masks_pred = torch.unbind(masks_pred, dim=1)
-    masks_pred = masks_pred[:n_samples]
+    masks_pred = torch.unbind(masks_pred, dim=1)[:num_samples]
 
     fig, axs = plt.subplots(nrows=len(images), ncols=3, figsize=(10, len(images) * 4))
-    for i, (img, mask_indices_enc, mask_indices_pred) in enumerate(zip(images, masks_enc, masks_pred)):
-        if images.shape[1] >= 3:
-            img = cutout_rgb(cutout=img, bands=bands, bands_rgb=['I', 'R', 'G'])
+    for i, (img, mask_indices, mask_indices_p) in enumerate(zip(images, masks_enc, masks_pred)):
+        if images.shape[1] > 3:
+            img = cutout_rgb(cutout=img.detach().cpu().numpy(), bands=bands, bands_rgb=['I', 'R', 'G'])
             img = np.asarray(img, dtype=np.int32)
             axs[i, 0].imshow(img)
         else:
@@ -862,24 +857,17 @@ def visualize_masks(
                     y, color='black', linestyle='--', lw=0.2, alpha=alpha_grid
                 )  # Adjust color and line style if needed
 
-        full_mask = torch.zeros(
-            img.shape[0] // patch_size, img.shape[1] // patch_size, dtype=torch.float32
-        )
-        for idx in mask_indices_enc:
-            row = idx // (img.shape[1] // patch_size)
-            col = idx % (img.shape[1] // patch_size)
+        full_mask = torch.zeros(height, width, dtype=torch.float32)
+        for idx in mask_indices:
+            row = idx // height
+            col = idx % width
             full_mask[row, col] = 1
 
-        part_masks_p = torch.zeros(
-            mask_indices_pred.shape[0],
-            img.shape[0] // patch_size,
-            img.shape[1] // patch_size,
-            dtype=torch.float32,
-        )
-        for j, part_mask in enumerate(mask_indices_pred):
+        part_masks_p = torch.zeros(mask_indices_p.shape[0], height, width, dtype=torch.float32)
+        for j, part_mask in enumerate(mask_indices_p):
             for idx in part_mask:
-                row = idx // img.shape[1] // patch_size
-                col = idx % img.shape[1] // patch_size
+                row = idx // height
+                col = idx % width
                 part_masks_p[j, row, col] = 1
 
         # Upscale mask to match image resolution
@@ -890,13 +878,10 @@ def visualize_masks(
 
         # Apply semi-transparent mask
         masked_img = img.copy()
-        full_mask = full_mask
+        full_mask = full_mask.detach().cpu().numpy()
         alpha = 0.6  # transparency level
 
-        if images.shape[1] == 5:
-            axs[i, 1].imshow(masked_img)
-        else:
-            axs[i, 1].imshow(masked_img)
+        axs[i, 1].imshow(masked_img)
         axs[i, 1].imshow(
             np.ma.masked_where(full_mask == 1, full_mask), cmap='cool', vmin=-1, alpha=alpha
         )
@@ -904,11 +889,9 @@ def visualize_masks(
         axs[i, 1].axis('off')
 
         masked_img_p = img.copy()
-        full_mask_p = full_mask_p
-        if images.shape[1] == 5:
-            axs[i, 2].imshow(masked_img_p)
-        else:
-            axs[i, 2].imshow(masked_img_p)
+        full_mask_p = full_mask_p.detach().cpu().numpy()
+
+        axs[i, 2].imshow(masked_img_p)
         axs[i, 2].imshow(
             np.ma.masked_where(full_mask_p == 0, full_mask_p),
             cmap='cool',
@@ -918,7 +901,7 @@ def visualize_masks(
         )
         all_mask_boundaries = np.zeros(full_mask_p.shape, dtype='bool')
         for k in range(part_masks_p.shape[0]):
-            mask_boundaries = find_boundaries(part_masks_p[k].detach().cpu().numpy(), mode='thin')
+            mask_boundaries = find_boundaries(part_masks_p[k].detach().cpu().numpy(), mode='inner')
             all_mask_boundaries |= mask_boundaries
         axs[i, 2].imshow(
             np.ma.masked_where(all_mask_boundaries == 0, all_mask_boundaries),

@@ -629,6 +629,8 @@ def train_network_jepa(
                                 masks_pred=masks_pred_plot,
                                 patch_size=patch_size,
                                 bands=bands,
+                                alpha_grid=0.5,
+                                num_samples=5,
                                 savename=os.path.join(fig_dir, f'{model_name}_mask_examples.png'),
                             )
 
