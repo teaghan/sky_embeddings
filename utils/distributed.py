@@ -3,17 +3,33 @@ from logging import getLogger
 
 import torch
 import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
 
 logger = getLogger()
 
 
 @contextmanager
 def distributed_env(backend, init_method, world_size, rank, local_rank, args=None):
-    try:
-        init_distributed(backend, init_method, world_size, rank, local_rank)
+    """
+    Initialize distributed training environment
+
+    Args:
+        backend (str): backend to use
+        init_method (str): initialization method
+        world_size (int): number of available GPUs across all nodes
+        rank (int): process ID across all nodes
+        local_rank (int): process ID within a node
+        args (any, optional): any additional arguments, not implemented. Defaults to None.
+    """
+    if world_size > 1:
+        try:
+            init_distributed(backend, init_method, world_size, rank, local_rank)
+            yield
+        finally:
+            cleanup()
+    else:
+        logger.info('Distributed training not available, running on single GPU.')
         yield
-    finally:
-        cleanup()
 
 
 def init_distributed(backend='nccl', init_method='env://', world_size=1, rank=0, local_rank=0):
@@ -47,9 +63,30 @@ def init_distributed(backend='nccl', init_method='env://', world_size=1, rank=0,
 
 
 def cleanup():
+    """
+    Clean up distributed training
+    """
     if dist.is_initialized():
         logger.info('Cleaning up distributed training..')
         dist.destroy_process_group()
+
+
+def sync_barrier():
+    """
+    Synchronize all processes to wait for each other
+    """
+    if dist.is_initialized():
+        dist.barrier()
+
+
+def model_to_ddp(encoder, predictor, target_encoder, world_size, rank, current_device):
+    # Distributed training
+    logger.info(f'Rank {rank}/{world_size-1}: initializing models..')
+    encoder = DDP(encoder, static_graph=False, device_ids=[current_device])
+    predictor = DDP(predictor, static_graph=False, device_ids=[current_device])
+    target_encoder = DDP(target_encoder, device_ids=[current_device])
+    logger.info(f'Rank {rank}/{world_size-1}: models initialized.')
+    return encoder, predictor, target_encoder
 
 
 class AllGather(torch.autograd.Function):

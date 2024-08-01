@@ -166,6 +166,7 @@ def mae_latent(
                 images.append(samples)
             if len(latents) >= n_batches:
                 break
+
     if return_images:
         return torch.cat(latents), torch.cat(images)
     else:

@@ -6,7 +6,6 @@ from functools import partial
 
 import timm.optim.optim_factory as optim_factory
 import torch
-import torch.distributed as dist
 import torch.nn as nn
 from timm.layers import AttentionPoolLatent
 from timm.models.vision_transformer import Block, PatchEmbed
@@ -21,7 +20,7 @@ from utils.pos_embed import get_2d_sincos_pos_embed
 logger = logging.getLogger()
 
 
-def build_model(config, model_filename, device, build_optimizer=False):
+def build_model(config, model_filename, device, rank, build_optimizer=False):
     # Model architecture
     norm_pix_loss = str2bool(config['TRAINING']['norm_pix_loss'])
     img_size = int(config['DATA']['img_size'])
@@ -188,6 +187,7 @@ def build_model(config, model_filename, device, build_optimizer=False):
                 final_weight_decay=final_weight_decay,
                 final_lr=final_lr,
                 use_bfloat16=use_bfloat16,
+                rank=rank,
             )
             model = encoder, predictor
         else:
@@ -204,16 +204,18 @@ def build_model(config, model_filename, device, build_optimizer=False):
             wd_scheduler, scaler = None, None
 
         model, losses, cur_iter = load_model(
-            model, model_filename, optimizer, lr_scheduler, wd_scheduler, scaler
+            model, model_filename, optimizer, lr_scheduler, wd_scheduler, scaler, rank=rank
         )
 
         return model, losses, cur_iter, optimizer, lr_scheduler, wd_scheduler, scaler
     else:
-        model, losses, cur_iter = load_model(model, model_filename)
+        model, losses, cur_iter = load_model(model, model_filename, rank=rank)
         return model, losses, cur_iter
 
 
-def load_model(model, model_filename, optimizer=None, lr_scheduler=None, wd_scheduler=None, scaler=None):
+def load_model(
+    model, model_filename, optimizer=None, lr_scheduler=None, wd_scheduler=None, scaler=None, rank=0
+):
     # Check for pre-trained weights
     if os.path.exists(model_filename):
         # Load saved model state
@@ -252,7 +254,7 @@ def load_model(model, model_filename, optimizer=None, lr_scheduler=None, wd_sche
             )
 
     else:
-        if dist.get_rank() == 0:
+        if rank == 0:
             logger.info('Starting fresh model to train...')
         losses = defaultdict(list)
         cur_iter = 1
@@ -271,6 +273,7 @@ def init_optim_jepa(
     final_weight_decay=1e-6,
     final_lr=0.0,
     use_bfloat16=False,
+    rank=0,
 ):
     param_groups = [
         {'params': (p for n, p in encoder.named_parameters() if ('bias' not in n) and (len(p.shape) != 1))},
@@ -286,7 +289,7 @@ def init_optim_jepa(
             'weight_decay': 0,
         },
     ]
-    if dist.get_rank() == 0:
+    if rank == 0:
         logger.info('Using AdamW')
     optimizer = torch.optim.AdamW(param_groups)
     scheduler = WarmupCosineSchedule(

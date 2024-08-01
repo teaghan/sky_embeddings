@@ -4,8 +4,8 @@
 #SBATCH --account=rrg-kyi     # Priority account
 #SBATCH --tasks-per-node=1    # 1 process per GPU.
 #SBATCH --cpus-per-task=2     # 2 CPUs per GPU for dataloading.
-#SBATCH --mem-per-cpu=16G      # 16GB of memory per CPU.
-#SBATCH --time=0-01:00        # x hours # DD-HH:MM
+#SBATCH --mem-per-cpu=16G     # 16GB of memory per CPU.
+#SBATCH --time=0-03:00        # x hours # DD-HH:MM
 #SBATCH --output=%N-%j.out    # Output file
 
 module load StdEnv/2023
@@ -34,4 +34,4 @@ cp /project/rrg-kyi/astro/hsc/HSC_dud_simple_regressor_data_GIRYZ7610_64.h5 $SLU
 echo "$SLURM_NODEID: Launching python script"
 
 # Execute the training script (tasks-per-node * nodes) times
-srun python /home/heesters/projects/def-sfabbro/heesters/github/sky_embeddings/pretrain_mim.py jepa_1GPU --dist_backend nccl --init_method tcp://$MASTER_ADDR:$MASTER_PORT --world_size $SLURM_NTASKS  --batch_size 64 --verbose_iters 100 --cp_time 10.00 --cp_freq 500 -dd $SLURM_TMPDIR/
+srun python /home/heesters/projects/def-sfabbro/heesters/github/sky_embeddings/pretrain_mim.py jepa_1GPU --dist_backend nccl --init_method tcp://$MASTER_ADDR:$MASTER_PORT --world_size $SLURM_NTASKS  --batch_size 64 --verbose_iters 2000 --cp_time 10.00 --cp_freq 2500 -dd $SLURM_TMPDIR/

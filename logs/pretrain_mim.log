@@ -1,1846 +1,223 @@
-2024-07-30 16:43:04,447 - INFO - Note: NumExpr detected 48 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
-2024-07-30 16:43:04,448 - INFO - NumExpr defaulting to 8 threads.
-2024-07-30 16:45:04,516 - INFO - Rank 0/0: initializing process group..
-2024-07-30 16:45:04,875 - INFO - Rank 0/0: distributed training available: True and initialized: True
-2024-07-30 16:45:04,875 - INFO - Rank 0/0: world size: 1; rank: 0; local rank: 0
-2024-07-30 16:45:04,875 - INFO - Using Torch version: 2.3.0 with CUDA version 12.2.
-2024-07-30 16:45:04,875 - INFO - Rank 0: CUDA_VISIBLE_DEVICES: 0
-2024-07-30 16:45:04,875 - INFO - Rank 0: number of GPUs visible: 1
-2024-07-30 16:45:04,885 - INFO - Creating model: jepa_test
-2024-07-30 16:45:04,885 - INFO - Configuration:
-2024-07-30 16:45:04,885 - INFO - DATA
-2024-07-30 16:45:04,885 - INFO -   train_data_paths: ['/project/rrg-kyi/astro/hsc/pdr3_dud/']
-2024-07-30 16:45:04,885 - INFO -   bands: ['G', 'I', 'R', 'Y', 'Z']
-2024-07-30 16:45:04,885 - INFO -   min_bands: 5
-2024-07-30 16:45:04,885 - INFO -   cutouts_per_tile: 1024
-2024-07-30 16:45:04,885 - INFO -   img_size: 64
-2024-07-30 16:45:04,885 - INFO -   val_data_file: HSC_dud_galaxy_GIRYZ7610_64_new.h5
-2024-07-30 16:45:04,886 - INFO -   pos_channel: False
-2024-07-30 16:45:04,886 - INFO -   lp_class_data_file: HSC_dud_simple_classifier_data_GIRYZ7610_64.h5
-2024-07-30 16:45:04,886 - INFO -   lp_regress_data_file: HSC_dud_simple_regressor_data_GIRYZ7610_64.h5
-2024-07-30 16:45:04,886 - INFO -   use_calexp: False
-2024-07-30 16:45:04,886 - INFO -   pixel_mean: 0.0
-2024-07-30 16:45:04,886 - INFO -   pixel_std: 1.0
-2024-07-30 16:45:04,886 - INFO -   lp_combine: central
-2024-07-30 16:45:04,886 - INFO -   val_batches: 200
-2024-07-30 16:45:04,886 - INFO - TRAINING
-2024-07-30 16:45:04,886 - INFO -   batch_size: 64
-2024-07-30 16:45:04,886 - INFO -   ema: [0.996, 1.0]
-2024-07-30 16:45:04,886 - INFO -   total_batch_iters: 1000000.0
-2024-07-30 16:45:04,886 - INFO -   warmup_ratio: 1.0e-3
-2024-07-30 16:45:04,886 - INFO -   weight_decay: 0.04
-2024-07-30 16:45:04,886 - INFO -   final_weight_decay: 0.4
-2024-07-30 16:45:04,886 - INFO -   loss_fn: smooth_l1_loss
-2024-07-30 16:45:04,886 - INFO -   start_lr: 0.0002
-2024-07-30 16:45:04,886 - INFO -   ref_lr: 0.001
-2024-07-30 16:45:04,886 - INFO -   final_lr: 1.0e-06
-2024-07-30 16:45:04,886 - INFO -   final_lr_factor: 10000000.0
-2024-07-30 16:45:04,886 - INFO -   norm_pix_loss: False
-2024-07-30 16:45:04,886 - INFO -   use_bfloat16: True
-2024-07-30 16:45:04,886 - INFO - MASK
-2024-07-30 16:45:04,886 - INFO -   allow_overlap: False
-2024-07-30 16:45:04,886 - INFO -   aspect_ratio_targets: [0.75, 1.5]
-2024-07-30 16:45:04,886 - INFO -   min_keep: 5
-2024-07-30 16:45:04,886 - INFO -   num_enc_masks: 1
-2024-07-30 16:45:04,886 - INFO -   num_pred_masks: 4
-2024-07-30 16:45:04,886 - INFO -   enc_mask_scale: [0.85, 1.0]
-2024-07-30 16:45:04,886 - INFO -   pred_mask_scale: [0.15, 0.2]
-2024-07-30 16:45:04,886 - INFO -   max_mask_ratio: 0.9
-2024-07-30 16:45:04,886 - INFO -   mask_ratio: 0.75
-2024-07-30 16:45:04,886 - INFO - ARCHITECTURE
-2024-07-30 16:45:04,887 - INFO -   num_channels: 5
-2024-07-30 16:45:04,887 - INFO -   patch_size: 8
-2024-07-30 16:45:04,887 - INFO -   model_type: jepa_vit_small
-2024-07-30 16:45:04,887 - INFO -   pred_depth: 4
-2024-07-30 16:45:04,887 - INFO -   pred_emb_dim: 192
-2024-07-30 16:45:04,887 - INFO -   attn_pool: False
-2024-07-30 16:45:04,887 - INFO -   ra_dec: True
-2024-07-30 16:45:04,887 - INFO -   embed_dim: 1024
-2024-07-30 16:45:04,887 - INFO - LOGGING
-2024-07-30 16:45:04,887 - INFO -   level: DEBUG
-2024-07-30 16:45:04,887 - INFO - Notes
-2024-07-30 16:45:04,887 - INFO -   comment: Initial I-JEPA training.
-2024-07-30 16:45:07,478 - INFO - Using AdamW
-2024-07-30 16:45:07,480 - INFO - Starting fresh model to train...
-2024-07-30 16:45:07,501 - INFO - Rank 0/0: initializing models..
-2024-07-30 16:45:07,956 - INFO - Rank 0/0: models initialized.
-2024-07-30 16:45:08,039 - INFO - Found 295 patches with at least 5 of the ['G', 'I', 'R', 'Y', 'Z'] bands.
-2024-07-30 16:45:08,059 - INFO - Rank 0: initialized train dataloader with 302080 cutouts.
-2024-07-30 16:45:08,107 - INFO - Rank 0: initialized validation dataloader with 12800 cutouts.
-2024-07-30 16:45:08,107 - INFO - Training the network with a batch size of 64 per GPU ...
-2024-07-30 16:45:08,107 - INFO - Progress will be displayed every 100 batch iterations and the model will be saved every 10.0 minutes.
-2024-07-30 16:45:08,107 - INFO - Starting training loop...
-2024-07-30 16:45:09,226 - INFO - Rank 0 handles indices from 0 to 294
-2024-07-30 16:45:22,577 - INFO - Iter: 20: avg. loss 0.266041
-2024-07-30 16:45:28,493 - INFO - Iter: 40: avg. loss 0.185978
-2024-07-30 16:45:34,303 - INFO - Iter: 60: avg. loss 0.137947
-2024-07-30 16:45:39,588 - INFO - Iter: 80: avg. loss 0.107168
-2024-07-30 16:45:50,146 - INFO - Iter: 100: avg. loss 0.088092
-2024-07-30 16:45:50,191 - INFO - Rank 0: performing validation at iteration 100
-2024-07-30 16:45:58,595 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:46:06,368 - INFO - Performing classification task on rank 0...
-2024-07-30 16:46:08,896 - INFO - Training Accuracy: 0.843, Validation Accuracy: 0.846
-2024-07-30 16:46:08,896 - INFO - Training Precision: 0.848, Validation Precision: 0.847
-2024-07-30 16:46:08,896 - INFO - Training Recall: 0.843, Validation Recall: 0.846
-2024-07-30 16:46:08,896 - INFO - Training F1: 0.841, Validation F1: 0.844
-2024-07-30 16:46:08,898 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:46:11,285 - INFO - Performing regression task on rank 0..
-2024-07-30 16:46:22,999 - INFO - Training R2: 0.740, Validation R2: 0.690
-2024-07-30 16:46:23,000 - INFO - Rank 0: Validation done at iteration 100. Pretraining continues.
-2024-07-30 16:46:23,003 - INFO - [iter:   100] [loss: 0.087] [masks: 13.0, 10.7] [wd: 4.00e-02] [lr: 2.80e-04] [mem: 2.24e+03] (73.6 ms)
-2024-07-30 16:46:23,003 - INFO - Batch Iterations: 100/1000000
-2024-07-30 16:46:23,003 - INFO - Losses:
-2024-07-30 16:46:23,003 - INFO - Training Dataset
-2024-07-30 16:46:23,003 - INFO -   Total Loss: 0.087
-2024-07-30 16:46:23,003 - INFO -   Validation Dataset
-2024-07-30 16:46:23,003 - INFO -   Total Loss: 0.043
-2024-07-30 16:46:23,003 - INFO - Linear Probing Results:
-2024-07-30 16:46:23,003 - INFO - Classification Accuracy:
-2024-07-30 16:46:23,003 - INFO -   Training: 0.843, Validation: 0.846
-2024-07-30 16:46:23,003 - INFO - Classification Precision:
-2024-07-30 16:46:23,003 - INFO -   Training: 0.848, Validation: 0.847
-2024-07-30 16:46:23,003 - INFO - Classification Recall:
-2024-07-30 16:46:23,003 - INFO -   Training: 0.843, Validation: 0.846
-2024-07-30 16:46:23,003 - INFO - Classification F1:
-2024-07-30 16:46:23,003 - INFO -   Training: 0.841, Validation: 0.844
-2024-07-30 16:46:23,003 - INFO - Regression R2
-2024-07-30 16:46:23,003 - INFO -  Training: 0.740, Validation: 0.690
-2024-07-30 16:46:23,003 - INFO - iter: [  100] grad_stats: [7.01e-04 4.48e-04] (4.48e-04, 2.01e-03)
-2024-07-30 16:46:26,298 - INFO - Iter: 120: avg. loss 0.074835
-2024-07-30 16:46:32,237 - INFO - Iter: 140: avg. loss 0.064776
-2024-07-30 16:46:38,009 - INFO - Iter: 160: avg. loss 0.057163
-2024-07-30 16:46:49,081 - INFO - Iter: 180: avg. loss 0.051348
-2024-07-30 16:46:55,297 - INFO - Iter: 200: avg. loss 0.047008
-2024-07-30 16:46:55,349 - INFO - Rank 0: performing validation at iteration 200
-2024-07-30 16:47:03,575 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:47:11,109 - INFO - Performing classification task on rank 0...
-2024-07-30 16:47:14,043 - INFO - Training Accuracy: 0.822, Validation Accuracy: 0.829
-2024-07-30 16:47:14,043 - INFO - Training Precision: 0.828, Validation Precision: 0.831
-2024-07-30 16:47:14,043 - INFO - Training Recall: 0.822, Validation Recall: 0.829
-2024-07-30 16:47:14,043 - INFO - Training F1: 0.820, Validation F1: 0.827
-2024-07-30 16:47:14,045 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:47:16,447 - INFO - Performing regression task on rank 0..
-2024-07-30 16:47:28,329 - INFO - Training R2: 0.688, Validation R2: 0.661
-2024-07-30 16:47:28,331 - INFO - Rank 0: Validation done at iteration 200. Pretraining continues.
-2024-07-30 16:47:28,333 - INFO - [iter:   200] [loss: 0.047] [masks: 13.2, 10.7] [wd: 4.00e-02] [lr: 3.60e-04] [mem: 2.24e+03] (61.1 ms)
-2024-07-30 16:47:28,334 - INFO - Batch Iterations: 200/1000000
-2024-07-30 16:47:28,334 - INFO - Losses:
-2024-07-30 16:47:28,334 - INFO - Training Dataset
-2024-07-30 16:47:28,334 - INFO -   Total Loss: 0.047
-2024-07-30 16:47:28,334 - INFO -   Validation Dataset
-2024-07-30 16:47:28,334 - INFO -   Total Loss: 0.074
-2024-07-30 16:47:28,334 - INFO - Linear Probing Results:
-2024-07-30 16:47:28,334 - INFO - Classification Accuracy:
-2024-07-30 16:47:28,334 - INFO -   Training: 0.833, Validation: 0.838
-2024-07-30 16:47:28,334 - INFO - Classification Precision:
-2024-07-30 16:47:28,334 - INFO -   Training: 0.838, Validation: 0.839
-2024-07-30 16:47:28,334 - INFO - Classification Recall:
-2024-07-30 16:47:28,334 - INFO -   Training: 0.833, Validation: 0.838
-2024-07-30 16:47:28,334 - INFO - Classification F1:
-2024-07-30 16:47:28,334 - INFO -   Training: 0.831, Validation: 0.835
-2024-07-30 16:47:28,334 - INFO - Regression R2
-2024-07-30 16:47:28,334 - INFO -  Training: 0.714, Validation: 0.675
-2024-07-30 16:47:28,334 - INFO - iter: [  200] grad_stats: [9.76e-04 2.08e-05] (1.48e-05, 9.76e-04)
-2024-07-30 16:47:34,139 - INFO - Iter: 220: avg. loss 0.043631
-2024-07-30 16:47:40,155 - INFO - Iter: 240: avg. loss 0.041109
-2024-07-30 16:47:51,235 - INFO - Iter: 260: avg. loss 0.039132
-2024-07-30 16:47:57,356 - INFO - Iter: 280: avg. loss 0.037091
-2024-07-30 16:48:03,495 - INFO - Iter: 300: avg. loss 0.035577
-2024-07-30 16:48:03,545 - INFO - Rank 0: performing validation at iteration 300
-2024-07-30 16:48:11,820 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:48:19,068 - INFO - Performing classification task on rank 0...
-2024-07-30 16:48:21,764 - INFO - Training Accuracy: 0.803, Validation Accuracy: 0.813
-2024-07-30 16:48:21,764 - INFO - Training Precision: 0.811, Validation Precision: 0.815
-2024-07-30 16:48:21,764 - INFO - Training Recall: 0.803, Validation Recall: 0.813
-2024-07-30 16:48:21,764 - INFO - Training F1: 0.800, Validation F1: 0.810
-2024-07-30 16:48:21,765 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:48:24,135 - INFO - Performing regression task on rank 0..
-2024-07-30 16:48:36,190 - INFO - Training R2: 0.642, Validation R2: 0.638
-2024-07-30 16:48:39,808 - INFO - Rank 0: Validation done at iteration 300. Pretraining continues.
-2024-07-30 16:48:39,810 - INFO - [iter:   300] [loss: 0.036] [masks: 13.3, 10.6] [wd: 4.00e-02] [lr: 4.40e-04] [mem: 2.24e+03] (56.8 ms)
-2024-07-30 16:48:39,810 - INFO - Batch Iterations: 300/1000000
-2024-07-30 16:48:39,810 - INFO - Losses:
-2024-07-30 16:48:39,810 - INFO - Training Dataset
-2024-07-30 16:48:39,810 - INFO -   Total Loss: 0.036
-2024-07-30 16:48:39,810 - INFO -   Validation Dataset
-2024-07-30 16:48:39,810 - INFO -   Total Loss: 0.110
-2024-07-30 16:48:39,810 - INFO - Linear Probing Results:
-2024-07-30 16:48:39,810 - INFO - Classification Accuracy:
-2024-07-30 16:48:39,810 - INFO -   Training: 0.823, Validation: 0.829
-2024-07-30 16:48:39,810 - INFO - Classification Precision:
-2024-07-30 16:48:39,810 - INFO -   Training: 0.829, Validation: 0.831
-2024-07-30 16:48:39,810 - INFO - Classification Recall:
-2024-07-30 16:48:39,810 - INFO -   Training: 0.823, Validation: 0.829
-2024-07-30 16:48:39,810 - INFO - Classification F1:
-2024-07-30 16:48:39,810 - INFO -   Training: 0.821, Validation: 0.827
-2024-07-30 16:48:39,810 - INFO - Regression R2
-2024-07-30 16:48:39,811 - INFO -  Training: 0.690, Validation: 0.663
-2024-07-30 16:48:39,811 - INFO - iter: [  300] grad_stats: [4.50e-04 1.64e-04] (1.64e-04, 7.94e-04)
-2024-07-30 16:48:45,733 - INFO - Iter: 320: avg. loss 0.035463
-2024-07-30 16:48:56,180 - INFO - Iter: 340: avg. loss 0.034196
-2024-07-30 16:49:02,130 - INFO - Iter: 360: avg. loss 0.033659
-2024-07-30 16:49:08,044 - INFO - Iter: 380: avg. loss 0.033076
-2024-07-30 16:49:12,353 - INFO - Iter: 400: avg. loss 0.032168
-2024-07-30 16:49:12,417 - INFO - Rank 0: performing validation at iteration 400
-2024-07-30 16:49:22,452 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:49:29,953 - INFO - Performing classification task on rank 0...
-2024-07-30 16:49:32,359 - INFO - Training Accuracy: 0.771, Validation Accuracy: 0.782
-2024-07-30 16:49:32,359 - INFO - Training Precision: 0.784, Validation Precision: 0.785
-2024-07-30 16:49:32,360 - INFO - Training Recall: 0.771, Validation Recall: 0.782
-2024-07-30 16:49:32,360 - INFO - Training F1: 0.769, Validation F1: 0.779
-2024-07-30 16:49:32,361 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:49:34,736 - INFO - Performing regression task on rank 0..
-2024-07-30 16:49:44,201 - INFO - Training R2: 0.572, Validation R2: 0.561
-2024-07-30 16:49:46,904 - INFO - Rank 0: Validation done at iteration 400. Pretraining continues.
-2024-07-30 16:49:46,906 - INFO - [iter:   400] [loss: 0.032] [masks: 13.3, 10.6] [wd: 4.00e-02] [lr: 5.20e-04] [mem: 2.24e+03] (54.9 ms)
-2024-07-30 16:49:46,906 - INFO - Batch Iterations: 400/1000000
-2024-07-30 16:49:46,906 - INFO - Losses:
-2024-07-30 16:49:46,906 - INFO - Training Dataset
-2024-07-30 16:49:46,906 - INFO -   Total Loss: 0.032
-2024-07-30 16:49:46,906 - INFO -   Validation Dataset
-2024-07-30 16:49:46,906 - INFO -   Total Loss: 0.116
-2024-07-30 16:49:46,906 - INFO - Linear Probing Results:
-2024-07-30 16:49:46,906 - INFO - Classification Accuracy:
-2024-07-30 16:49:46,906 - INFO -   Training: 0.810, Validation: 0.818
-2024-07-30 16:49:46,907 - INFO - Classification Precision:
-2024-07-30 16:49:46,907 - INFO -   Training: 0.818, Validation: 0.819
-2024-07-30 16:49:46,907 - INFO - Classification Recall:
-2024-07-30 16:49:46,907 - INFO -   Training: 0.810, Validation: 0.818
-2024-07-30 16:49:46,907 - INFO - Classification F1:
-2024-07-30 16:49:46,907 - INFO -   Training: 0.808, Validation: 0.815
-2024-07-30 16:49:46,907 - INFO - Regression R2
-2024-07-30 16:49:46,907 - INFO -  Training: 0.660, Validation: 0.638
-2024-07-30 16:49:46,907 - INFO - iter: [  400] grad_stats: [2.44e-05 1.22e-05] (5.56e-06, 9.03e-05)
-2024-07-30 16:49:51,417 - INFO - Iter: 420: avg. loss 0.031047
-2024-07-30 16:49:57,351 - INFO - Iter: 440: avg. loss 0.029987
-2024-07-30 16:50:03,145 - INFO - Iter: 460: avg. loss 0.028950
-2024-07-30 16:50:08,517 - INFO - Iter: 480: avg. loss 0.027885
-2024-07-30 16:50:18,440 - INFO - Saving checkpoint at iteration 500 after 10.0 minutes of training.
-2024-07-30 16:50:18,981 - INFO - Iter: 500: avg. loss 0.026981
-2024-07-30 16:50:19,029 - INFO - Rank 0: performing validation at iteration 500
-2024-07-30 16:50:27,338 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:50:34,654 - INFO - Performing classification task on rank 0...
-2024-07-30 16:50:37,125 - INFO - Training Accuracy: 0.757, Validation Accuracy: 0.767
-2024-07-30 16:50:37,126 - INFO - Training Precision: 0.769, Validation Precision: 0.770
-2024-07-30 16:50:37,126 - INFO - Training Recall: 0.757, Validation Recall: 0.767
-2024-07-30 16:50:37,126 - INFO - Training F1: 0.756, Validation F1: 0.765
-2024-07-30 16:50:37,127 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:50:39,533 - INFO - Performing regression task on rank 0..
-2024-07-30 16:50:49,471 - INFO - Training R2: 0.533, Validation R2: 0.522
-2024-07-30 16:50:50,779 - INFO - Rank 0: Validation done at iteration 500. Pretraining continues.
-2024-07-30 16:50:50,780 - INFO - [iter:   500] [loss: 0.027] [masks: 13.4, 10.6] [wd: 4.00e-02] [lr: 6.00e-04] [mem: 2.24e+03] (53.5 ms)
-2024-07-30 16:50:50,780 - INFO - Batch Iterations: 500/1000000
-2024-07-30 16:50:50,780 - INFO - Losses:
-2024-07-30 16:50:50,780 - INFO - Training Dataset
-2024-07-30 16:50:50,780 - INFO -   Total Loss: 0.027
-2024-07-30 16:50:50,780 - INFO -   Validation Dataset
-2024-07-30 16:50:50,780 - INFO -   Total Loss: 0.101
-2024-07-30 16:50:50,780 - INFO - Linear Probing Results:
-2024-07-30 16:50:50,780 - INFO - Classification Accuracy:
-2024-07-30 16:50:50,780 - INFO -   Training: 0.799, Validation: 0.807
-2024-07-30 16:50:50,780 - INFO - Classification Precision:
-2024-07-30 16:50:50,780 - INFO -   Training: 0.808, Validation: 0.810
-2024-07-30 16:50:50,780 - INFO - Classification Recall:
-2024-07-30 16:50:50,780 - INFO -   Training: 0.799, Validation: 0.807
-2024-07-30 16:50:50,781 - INFO - Classification F1:
-2024-07-30 16:50:50,781 - INFO -   Training: 0.797, Validation: 0.805
-2024-07-30 16:50:50,781 - INFO - Regression R2
-2024-07-30 16:50:50,781 - INFO -  Training: 0.635, Validation: 0.614
-2024-07-30 16:50:50,781 - INFO - iter: [  500] grad_stats: [8.57e-05 1.04e-05] (9.29e-06, 8.57e-05)
-2024-07-30 16:50:56,789 - INFO - Iter: 520: avg. loss 0.026070
-2024-07-30 16:51:02,919 - INFO - Iter: 540: avg. loss 0.025212
-2024-07-30 16:51:08,975 - INFO - Iter: 560: avg. loss 0.024493
-2024-07-30 16:51:20,493 - INFO - Iter: 580: avg. loss 0.023708
-2024-07-30 16:51:26,452 - INFO - Iter: 600: avg. loss 0.023045
-2024-07-30 16:51:26,505 - INFO - Rank 0: performing validation at iteration 600
-2024-07-30 16:51:34,690 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:51:42,254 - INFO - Performing classification task on rank 0...
-2024-07-30 16:51:44,555 - INFO - Training Accuracy: 0.760, Validation Accuracy: 0.780
-2024-07-30 16:51:44,555 - INFO - Training Precision: 0.770, Validation Precision: 0.784
-2024-07-30 16:51:44,555 - INFO - Training Recall: 0.760, Validation Recall: 0.780
-2024-07-30 16:51:44,555 - INFO - Training F1: 0.758, Validation F1: 0.777
-2024-07-30 16:51:44,556 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:51:46,919 - INFO - Performing regression task on rank 0..
-2024-07-30 16:51:57,631 - INFO - Training R2: 0.523, Validation R2: 0.517
-2024-07-30 16:51:58,325 - INFO - Rank 0: Validation done at iteration 600. Pretraining continues.
-2024-07-30 16:51:58,327 - INFO - [iter:   600] [loss: 0.023] [masks: 13.4, 10.6] [wd: 4.00e-02] [lr: 6.80e-04] [mem: 2.24e+03] (52.6 ms)
-2024-07-30 16:51:58,327 - INFO - Batch Iterations: 600/1000000
-2024-07-30 16:51:58,327 - INFO - Losses:
-2024-07-30 16:51:58,327 - INFO - Training Dataset
-2024-07-30 16:51:58,327 - INFO -   Total Loss: 0.023
-2024-07-30 16:51:58,327 - INFO -   Validation Dataset
-2024-07-30 16:51:58,327 - INFO -   Total Loss: 0.089
-2024-07-30 16:51:58,327 - INFO - Linear Probing Results:
-2024-07-30 16:51:58,327 - INFO - Classification Accuracy:
-2024-07-30 16:51:58,327 - INFO -   Training: 0.793, Validation: 0.803
-2024-07-30 16:51:58,327 - INFO - Classification Precision:
-2024-07-30 16:51:58,327 - INFO -   Training: 0.802, Validation: 0.805
-2024-07-30 16:51:58,327 - INFO - Classification Recall:
-2024-07-30 16:51:58,327 - INFO -   Training: 0.793, Validation: 0.803
-2024-07-30 16:51:58,327 - INFO - Classification F1:
-2024-07-30 16:51:58,327 - INFO -   Training: 0.791, Validation: 0.800
-2024-07-30 16:51:58,327 - INFO - Regression R2
-2024-07-30 16:51:58,327 - INFO -  Training: 0.616, Validation: 0.598
-2024-07-30 16:51:58,328 - INFO - iter: [  600] grad_stats: [2.97e-04 7.15e-05] (3.09e-05, 8.11e-04)
-2024-07-30 16:52:04,263 - INFO - Iter: 620: avg. loss 0.022397
-2024-07-30 16:52:10,338 - INFO - Iter: 640: avg. loss 0.021770
-2024-07-30 16:52:21,216 - INFO - Iter: 660: avg. loss 0.021428
-2024-07-30 16:52:27,364 - INFO - Iter: 680: avg. loss 0.020928
-2024-07-30 16:52:33,258 - INFO - Iter: 700: avg. loss 0.020477
-2024-07-30 16:52:33,304 - INFO - Rank 0: performing validation at iteration 700
-2024-07-30 16:52:42,952 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:52:50,430 - INFO - Performing classification task on rank 0...
-2024-07-30 16:52:52,798 - INFO - Training Accuracy: 0.766, Validation Accuracy: 0.775
-2024-07-30 16:52:52,798 - INFO - Training Precision: 0.774, Validation Precision: 0.777
-2024-07-30 16:52:52,798 - INFO - Training Recall: 0.766, Validation Recall: 0.775
-2024-07-30 16:52:52,798 - INFO - Training F1: 0.765, Validation F1: 0.773
-2024-07-30 16:52:52,799 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:52:55,290 - INFO - Performing regression task on rank 0..
-2024-07-30 16:53:05,890 - INFO - Training R2: 0.520, Validation R2: 0.520
-2024-07-30 16:53:06,939 - INFO - Rank 0: Validation done at iteration 700. Pretraining continues.
-2024-07-30 16:53:06,940 - INFO - [iter:   700] [loss: 0.020] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 7.60e-04] [mem: 2.24e+03] (51.8 ms)
-2024-07-30 16:53:06,941 - INFO - Batch Iterations: 700/1000000
-2024-07-30 16:53:06,941 - INFO - Losses:
-2024-07-30 16:53:06,941 - INFO - Training Dataset
-2024-07-30 16:53:06,941 - INFO -   Total Loss: 0.020
-2024-07-30 16:53:06,941 - INFO -   Validation Dataset
-2024-07-30 16:53:06,941 - INFO -   Total Loss: 0.079
-2024-07-30 16:53:06,941 - INFO - Linear Probing Results:
-2024-07-30 16:53:06,941 - INFO - Classification Accuracy:
-2024-07-30 16:53:06,941 - INFO -   Training: 0.789, Validation: 0.799
-2024-07-30 16:53:06,941 - INFO - Classification Precision:
-2024-07-30 16:53:06,941 - INFO -   Training: 0.798, Validation: 0.801
-2024-07-30 16:53:06,941 - INFO - Classification Recall:
-2024-07-30 16:53:06,941 - INFO -   Training: 0.789, Validation: 0.799
-2024-07-30 16:53:06,941 - INFO - Classification F1:
-2024-07-30 16:53:06,941 - INFO -   Training: 0.787, Validation: 0.797
-2024-07-30 16:53:06,941 - INFO - Regression R2
-2024-07-30 16:53:06,941 - INFO -  Training: 0.603, Validation: 0.587
-2024-07-30 16:53:06,941 - INFO - iter: [  700] grad_stats: [7.75e-04 2.15e-04] (1.42e-04, 2.55e-03)
-2024-07-30 16:53:10,782 - INFO - Iter: 720: avg. loss 0.019969
-2024-07-30 16:53:21,816 - INFO - Iter: 740: avg. loss 0.019500
-2024-07-30 16:53:28,157 - INFO - Iter: 760: avg. loss 0.019098
-2024-07-30 16:53:34,275 - INFO - Iter: 780: avg. loss 0.018661
-2024-07-30 16:53:40,380 - INFO - Iter: 800: avg. loss 0.018298
-2024-07-30 16:53:45,342 - INFO - Rank 0: performing validation at iteration 800
-2024-07-30 16:53:53,771 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:54:01,574 - INFO - Performing classification task on rank 0...
-2024-07-30 16:54:04,086 - INFO - Training Accuracy: 0.770, Validation Accuracy: 0.777
-2024-07-30 16:54:04,086 - INFO - Training Precision: 0.777, Validation Precision: 0.779
-2024-07-30 16:54:04,086 - INFO - Training Recall: 0.770, Validation Recall: 0.777
-2024-07-30 16:54:04,086 - INFO - Training F1: 0.768, Validation F1: 0.776
-2024-07-30 16:54:04,088 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:54:06,593 - INFO - Performing regression task on rank 0..
-2024-07-30 16:54:15,927 - INFO - Training R2: 0.504, Validation R2: 0.502
-2024-07-30 16:54:16,366 - INFO - Rank 0: Validation done at iteration 800. Pretraining continues.
-2024-07-30 16:54:16,368 - INFO - [iter:   800] [loss: 0.018] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 8.40e-04] [mem: 2.24e+03] (51.2 ms)
-2024-07-30 16:54:16,369 - INFO - Batch Iterations: 800/1000000
-2024-07-30 16:54:16,369 - INFO - Losses:
-2024-07-30 16:54:16,369 - INFO - Training Dataset
-2024-07-30 16:54:16,369 - INFO -   Total Loss: 0.018
-2024-07-30 16:54:16,369 - INFO -   Validation Dataset
-2024-07-30 16:54:16,369 - INFO -   Total Loss: 0.074
-2024-07-30 16:54:16,369 - INFO - Linear Probing Results:
-2024-07-30 16:54:16,369 - INFO - Classification Accuracy:
-2024-07-30 16:54:16,369 - INFO -   Training: 0.787, Validation: 0.796
-2024-07-30 16:54:16,369 - INFO - Classification Precision:
-2024-07-30 16:54:16,369 - INFO -   Training: 0.795, Validation: 0.798
-2024-07-30 16:54:16,369 - INFO - Classification Recall:
-2024-07-30 16:54:16,369 - INFO -   Training: 0.787, Validation: 0.796
-2024-07-30 16:54:16,369 - INFO - Classification F1:
-2024-07-30 16:54:16,369 - INFO -   Training: 0.785, Validation: 0.794
-2024-07-30 16:54:16,369 - INFO - Regression R2
-2024-07-30 16:54:16,369 - INFO -  Training: 0.590, Validation: 0.576
-2024-07-30 16:54:16,369 - INFO - iter: [  800] grad_stats: [1.00e-05 3.38e-06] (2.61e-06, 4.89e-05)
-2024-07-30 16:54:22,368 - INFO - Iter: 820: avg. loss 0.017935
-2024-07-30 16:54:28,322 - INFO - Iter: 840: avg. loss 0.017624
-2024-07-30 16:54:32,220 - INFO - Iter: 860: avg. loss 0.017294
-2024-07-30 16:54:38,282 - INFO - Iter: 880: avg. loss 0.016963
-2024-07-30 16:54:49,271 - INFO - Iter: 900: avg. loss 0.016613
-2024-07-30 16:54:49,317 - INFO - Rank 0: performing validation at iteration 900
-2024-07-30 16:54:57,692 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:55:05,205 - INFO - Performing classification task on rank 0...
-2024-07-30 16:55:07,629 - INFO - Training Accuracy: 0.754, Validation Accuracy: 0.765
-2024-07-30 16:55:07,629 - INFO - Training Precision: 0.766, Validation Precision: 0.769
-2024-07-30 16:55:07,629 - INFO - Training Recall: 0.754, Validation Recall: 0.765
-2024-07-30 16:55:07,629 - INFO - Training F1: 0.752, Validation F1: 0.762
-2024-07-30 16:55:07,631 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:55:10,154 - INFO - Performing regression task on rank 0..
-2024-07-30 16:55:20,097 - INFO - Training R2: 0.494, Validation R2: 0.493
-2024-07-30 16:55:20,514 - INFO - Rank 0: Validation done at iteration 900. Pretraining continues.
-2024-07-30 16:55:20,516 - INFO - [iter:   900] [loss: 0.017] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 9.20e-04] [mem: 2.24e+03] (50.8 ms)
-2024-07-30 16:55:20,517 - INFO - Batch Iterations: 900/1000000
-2024-07-30 16:55:20,517 - INFO - Losses:
-2024-07-30 16:55:20,517 - INFO - Training Dataset
-2024-07-30 16:55:20,517 - INFO -   Total Loss: 0.017
-2024-07-30 16:55:20,517 - INFO -   Validation Dataset
-2024-07-30 16:55:20,517 - INFO -   Total Loss: 0.068
-2024-07-30 16:55:20,517 - INFO - Linear Probing Results:
-2024-07-30 16:55:20,517 - INFO - Classification Accuracy:
-2024-07-30 16:55:20,517 - INFO -   Training: 0.783, Validation: 0.793
-2024-07-30 16:55:20,517 - INFO - Classification Precision:
-2024-07-30 16:55:20,517 - INFO -   Training: 0.792, Validation: 0.795
-2024-07-30 16:55:20,517 - INFO - Classification Recall:
-2024-07-30 16:55:20,517 - INFO -   Training: 0.783, Validation: 0.793
-2024-07-30 16:55:20,517 - INFO - Classification F1:
-2024-07-30 16:55:20,517 - INFO -   Training: 0.781, Validation: 0.790
-2024-07-30 16:55:20,517 - INFO - Regression R2
-2024-07-30 16:55:20,517 - INFO -  Training: 0.579, Validation: 0.567
-2024-07-30 16:55:20,517 - INFO - iter: [  900] grad_stats: [1.43e-05 9.86e-07] (8.61e-07, 2.00e-05)
-2024-07-30 16:55:26,375 - INFO - Iter: 920: avg. loss 0.016273
-2024-07-30 16:55:32,417 - INFO - Iter: 940: avg. loss 0.015969
-2024-07-30 16:55:38,438 - INFO - Iter: 960: avg. loss 0.015697
-2024-07-30 16:55:49,036 - INFO - Iter: 980: avg. loss 0.015407
-2024-07-30 16:55:55,148 - INFO - Saving checkpoint at iteration 1000 after 10.0 minutes of training.
-2024-07-30 16:55:55,649 - INFO - Iter: 1000: avg. loss 0.015159
-2024-07-30 16:55:55,651 - INFO - Rank 0: Iter: 1000; learning rate: 0.00100; wd: 0.04000
-2024-07-30 16:55:55,708 - INFO - Rank 0: performing validation at iteration 1000
-2024-07-30 16:56:04,061 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:56:11,659 - INFO - Performing classification task on rank 0...
-2024-07-30 16:56:14,429 - INFO - Training Accuracy: 0.730, Validation Accuracy: 0.736
-2024-07-30 16:56:14,429 - INFO - Training Precision: 0.743, Validation Precision: 0.739
-2024-07-30 16:56:14,429 - INFO - Training Recall: 0.730, Validation Recall: 0.736
-2024-07-30 16:56:14,429 - INFO - Training F1: 0.729, Validation F1: 0.733
-2024-07-30 16:56:14,431 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:56:17,006 - INFO - Performing regression task on rank 0..
-2024-07-30 16:56:28,124 - INFO - Training R2: 0.484, Validation R2: 0.484
-2024-07-30 16:56:28,826 - INFO - Rank 0: Validation done at iteration 1000. Pretraining continues.
-2024-07-30 16:56:28,829 - INFO - [iter:  1000] [loss: 0.015] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (50.5 ms)
-2024-07-30 16:56:28,829 - INFO - Batch Iterations: 1000/1000000
-2024-07-30 16:56:28,829 - INFO - Losses:
-2024-07-30 16:56:28,829 - INFO - Training Dataset
-2024-07-30 16:56:28,829 - INFO -   Total Loss: 0.015
-2024-07-30 16:56:28,829 - INFO -   Validation Dataset
-2024-07-30 16:56:28,829 - INFO -   Total Loss: 0.064
-2024-07-30 16:56:28,829 - INFO - Linear Probing Results:
-2024-07-30 16:56:28,829 - INFO - Classification Accuracy:
-2024-07-30 16:56:28,829 - INFO -   Training: 0.778, Validation: 0.787
-2024-07-30 16:56:28,829 - INFO - Classification Precision:
-2024-07-30 16:56:28,829 - INFO -   Training: 0.787, Validation: 0.789
-2024-07-30 16:56:28,829 - INFO - Classification Recall:
-2024-07-30 16:56:28,829 - INFO -   Training: 0.778, Validation: 0.787
-2024-07-30 16:56:28,829 - INFO - Classification F1:
-2024-07-30 16:56:28,829 - INFO -   Training: 0.776, Validation: 0.785
-2024-07-30 16:56:28,829 - INFO - Regression R2
-2024-07-30 16:56:28,830 - INFO -  Training: 0.570, Validation: 0.559
-2024-07-30 16:56:28,830 - INFO - iter: [ 1000] grad_stats: [1.91e-05 8.51e-07] (8.51e-07, 3.21e-05)
-2024-07-30 16:56:34,966 - INFO - Iter: 1020: avg. loss 0.014898
-2024-07-30 16:56:40,966 - INFO - Iter: 1040: avg. loss 0.014643
-2024-07-30 16:56:51,130 - INFO - Iter: 1060: avg. loss 0.014398
-2024-07-30 16:56:57,315 - INFO - Iter: 1080: avg. loss 0.014177
-2024-07-30 16:57:04,201 - INFO - Iter: 1100: avg. loss 0.013954
-2024-07-30 16:57:04,248 - INFO - Rank 0: performing validation at iteration 1100
-2024-07-30 16:57:12,741 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:57:20,671 - INFO - Performing classification task on rank 0...
-2024-07-30 16:57:23,039 - INFO - Training Accuracy: 0.719, Validation Accuracy: 0.723
-2024-07-30 16:57:23,039 - INFO - Training Precision: 0.731, Validation Precision: 0.726
-2024-07-30 16:57:23,039 - INFO - Training Recall: 0.719, Validation Recall: 0.723
-2024-07-30 16:57:23,039 - INFO - Training F1: 0.718, Validation F1: 0.722
-2024-07-30 16:57:23,041 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:57:25,661 - INFO - Performing regression task on rank 0..
-2024-07-30 16:57:34,485 - INFO - Training R2: 0.475, Validation R2: 0.483
-2024-07-30 16:57:35,182 - INFO - Rank 0: Validation done at iteration 1100. Pretraining continues.
-2024-07-30 16:57:35,183 - INFO - [iter:  1100] [loss: 0.014] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (50.3 ms)
-2024-07-30 16:57:35,184 - INFO - Batch Iterations: 1100/1000000
-2024-07-30 16:57:35,184 - INFO - Losses:
-2024-07-30 16:57:35,184 - INFO - Training Dataset
-2024-07-30 16:57:35,184 - INFO -   Total Loss: 0.014
-2024-07-30 16:57:35,184 - INFO -   Validation Dataset
-2024-07-30 16:57:35,184 - INFO -   Total Loss: 0.061
-2024-07-30 16:57:35,184 - INFO - Linear Probing Results:
-2024-07-30 16:57:35,184 - INFO - Classification Accuracy:
-2024-07-30 16:57:35,184 - INFO -   Training: 0.772, Validation: 0.781
-2024-07-30 16:57:35,184 - INFO - Classification Precision:
-2024-07-30 16:57:35,184 - INFO -   Training: 0.782, Validation: 0.784
-2024-07-30 16:57:35,184 - INFO - Classification Recall:
-2024-07-30 16:57:35,184 - INFO -   Training: 0.772, Validation: 0.781
-2024-07-30 16:57:35,184 - INFO - Classification F1:
-2024-07-30 16:57:35,184 - INFO -   Training: 0.771, Validation: 0.779
-2024-07-30 16:57:35,184 - INFO - Regression R2
-2024-07-30 16:57:35,184 - INFO -  Training: 0.561, Validation: 0.552
-2024-07-30 16:57:35,184 - INFO - iter: [ 1100] grad_stats: [1.66e-05 1.32e-06] (9.81e-07, 3.35e-05)
-2024-07-30 16:57:40,951 - INFO - Iter: 1120: avg. loss 0.013754
-2024-07-30 16:57:52,301 - INFO - Iter: 1140: avg. loss 0.013565
-2024-07-30 16:57:55,599 - INFO - Iter: 1160: avg. loss 0.013358
-2024-07-30 16:58:01,690 - INFO - Iter: 1180: avg. loss 0.013187
-2024-07-30 16:58:05,375 - INFO - Iter: 1200: avg. loss 0.012987
-2024-07-30 16:58:05,421 - INFO - Rank 0: performing validation at iteration 1200
-2024-07-30 16:58:15,672 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:58:23,302 - INFO - Performing classification task on rank 0...
-2024-07-30 16:58:25,586 - INFO - Training Accuracy: 0.713, Validation Accuracy: 0.708
-2024-07-30 16:58:25,586 - INFO - Training Precision: 0.724, Validation Precision: 0.711
-2024-07-30 16:58:25,586 - INFO - Training Recall: 0.713, Validation Recall: 0.708
-2024-07-30 16:58:25,586 - INFO - Training F1: 0.713, Validation F1: 0.708
-2024-07-30 16:58:25,589 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:58:28,241 - INFO - Performing regression task on rank 0..
-2024-07-30 16:58:39,066 - INFO - Training R2: 0.476, Validation R2: 0.487
-2024-07-30 16:58:40,185 - INFO - Rank 0: Validation done at iteration 1200. Pretraining continues.
-2024-07-30 16:58:40,189 - INFO - [iter:  1200] [loss: 0.013] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (50.2 ms)
-2024-07-30 16:58:40,189 - INFO - Batch Iterations: 1200/1000000
-2024-07-30 16:58:40,189 - INFO - Losses:
-2024-07-30 16:58:40,189 - INFO - Training Dataset
-2024-07-30 16:58:40,189 - INFO -   Total Loss: 0.013
-2024-07-30 16:58:40,190 - INFO -   Validation Dataset
-2024-07-30 16:58:40,190 - INFO -   Total Loss: 0.058
-2024-07-30 16:58:40,190 - INFO - Linear Probing Results:
-2024-07-30 16:58:40,190 - INFO - Classification Accuracy:
-2024-07-30 16:58:40,190 - INFO -   Training: 0.767, Validation: 0.775
-2024-07-30 16:58:40,190 - INFO - Classification Precision:
-2024-07-30 16:58:40,190 - INFO -   Training: 0.777, Validation: 0.778
-2024-07-30 16:58:40,190 - INFO - Classification Recall:
-2024-07-30 16:58:40,190 - INFO -   Training: 0.767, Validation: 0.775
-2024-07-30 16:58:40,190 - INFO - Classification F1:
-2024-07-30 16:58:40,190 - INFO -   Training: 0.766, Validation: 0.773
-2024-07-30 16:58:40,190 - INFO - Regression R2
-2024-07-30 16:58:40,190 - INFO -  Training: 0.554, Validation: 0.547
-2024-07-30 16:58:40,190 - INFO - iter: [ 1200] grad_stats: [1.35e-06 3.57e-07] (9.54e-08, 9.12e-06)
-2024-07-30 16:58:46,140 - INFO - Iter: 1220: avg. loss 0.012815
-2024-07-30 16:58:50,432 - INFO - Iter: 1240: avg. loss 0.012647
-2024-07-30 16:58:56,439 - INFO - Iter: 1260: avg. loss 0.012462
-2024-07-30 16:59:02,402 - INFO - Iter: 1280: avg. loss 0.012318
-2024-07-30 16:59:13,517 - INFO - Iter: 1300: avg. loss 0.012169
-2024-07-30 16:59:13,567 - INFO - Rank 0: performing validation at iteration 1300
-2024-07-30 16:59:21,961 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:59:29,569 - INFO - Performing classification task on rank 0...
-2024-07-30 16:59:32,148 - INFO - Training Accuracy: 0.711, Validation Accuracy: 0.707
-2024-07-30 16:59:32,148 - INFO - Training Precision: 0.721, Validation Precision: 0.710
-2024-07-30 16:59:32,148 - INFO - Training Recall: 0.711, Validation Recall: 0.707
-2024-07-30 16:59:32,148 - INFO - Training F1: 0.711, Validation F1: 0.707
-2024-07-30 16:59:32,149 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 16:59:34,695 - INFO - Performing regression task on rank 0..
-2024-07-30 16:59:45,430 - INFO - Training R2: 0.480, Validation R2: 0.491
-2024-07-30 16:59:45,829 - INFO - Rank 0: Validation done at iteration 1300. Pretraining continues.
-2024-07-30 16:59:45,831 - INFO - [iter:  1300] [loss: 0.012] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (50.1 ms)
-2024-07-30 16:59:45,831 - INFO - Batch Iterations: 1300/1000000
-2024-07-30 16:59:45,831 - INFO - Losses:
-2024-07-30 16:59:45,831 - INFO - Training Dataset
-2024-07-30 16:59:45,831 - INFO -   Total Loss: 0.012
-2024-07-30 16:59:45,831 - INFO -   Validation Dataset
-2024-07-30 16:59:45,831 - INFO -   Total Loss: 0.056
-2024-07-30 16:59:45,831 - INFO - Linear Probing Results:
-2024-07-30 16:59:45,831 - INFO - Classification Accuracy:
-2024-07-30 16:59:45,831 - INFO -   Training: 0.763, Validation: 0.770
-2024-07-30 16:59:45,831 - INFO - Classification Precision:
-2024-07-30 16:59:45,831 - INFO -   Training: 0.773, Validation: 0.772
-2024-07-30 16:59:45,831 - INFO - Classification Recall:
-2024-07-30 16:59:45,831 - INFO -   Training: 0.763, Validation: 0.770
-2024-07-30 16:59:45,831 - INFO - Classification F1:
-2024-07-30 16:59:45,831 - INFO -   Training: 0.762, Validation: 0.768
-2024-07-30 16:59:45,831 - INFO - Regression R2
-2024-07-30 16:59:45,831 - INFO -  Training: 0.548, Validation: 0.542
-2024-07-30 16:59:45,831 - INFO - iter: [ 1300] grad_stats: [1.43e-05 3.02e-06] (2.88e-06, 7.69e-05)
-2024-07-30 16:59:52,378 - INFO - Iter: 1320: avg. loss 0.012049
-2024-07-30 16:59:57,496 - INFO - Iter: 1340: avg. loss 0.011902
-2024-07-30 17:00:03,012 - INFO - Iter: 1360: avg. loss 0.011776
-2024-07-30 17:00:13,958 - INFO - Iter: 1380: avg. loss 0.011650
-2024-07-30 17:00:20,053 - INFO - Iter: 1400: avg. loss 0.011538
-2024-07-30 17:00:20,100 - INFO - Rank 0: performing validation at iteration 1400
-2024-07-30 17:00:28,409 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:00:36,054 - INFO - Performing classification task on rank 0...
-2024-07-30 17:00:38,540 - INFO - Training Accuracy: 0.713, Validation Accuracy: 0.708
-2024-07-30 17:00:38,540 - INFO - Training Precision: 0.723, Validation Precision: 0.711
-2024-07-30 17:00:38,540 - INFO - Training Recall: 0.713, Validation Recall: 0.708
-2024-07-30 17:00:38,540 - INFO - Training F1: 0.713, Validation F1: 0.708
-2024-07-30 17:00:38,544 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:00:41,174 - INFO - Performing regression task on rank 0..
-2024-07-30 17:00:51,299 - INFO - Training R2: 0.490, Validation R2: 0.500
-2024-07-30 17:00:51,903 - INFO - Rank 0: Validation done at iteration 1400. Pretraining continues.
-2024-07-30 17:00:51,905 - INFO - [iter:  1400] [loss: 0.012] [masks: 13.6, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.9 ms)
-2024-07-30 17:00:51,905 - INFO - Batch Iterations: 1400/1000000
-2024-07-30 17:00:51,905 - INFO - Losses:
-2024-07-30 17:00:51,905 - INFO - Training Dataset
-2024-07-30 17:00:51,906 - INFO -   Total Loss: 0.012
-2024-07-30 17:00:51,906 - INFO -   Validation Dataset
-2024-07-30 17:00:51,906 - INFO -   Total Loss: 0.055
-2024-07-30 17:00:51,906 - INFO - Linear Probing Results:
-2024-07-30 17:00:51,906 - INFO - Classification Accuracy:
-2024-07-30 17:00:51,906 - INFO -   Training: 0.759, Validation: 0.766
-2024-07-30 17:00:51,906 - INFO - Classification Precision:
-2024-07-30 17:00:51,906 - INFO -   Training: 0.769, Validation: 0.768
-2024-07-30 17:00:51,906 - INFO - Classification Recall:
-2024-07-30 17:00:51,906 - INFO -   Training: 0.759, Validation: 0.766
-2024-07-30 17:00:51,906 - INFO - Classification F1:
-2024-07-30 17:00:51,906 - INFO -   Training: 0.758, Validation: 0.764
-2024-07-30 17:00:51,906 - INFO - Regression R2
-2024-07-30 17:00:51,906 - INFO -  Training: 0.544, Validation: 0.539
-2024-07-30 17:00:51,906 - INFO - iter: [ 1400] grad_stats: [3.88e-04 3.14e-05] (1.92e-05, 2.02e-03)
-2024-07-30 17:00:57,690 - INFO - Iter: 1420: avg. loss 0.011424
-2024-07-30 17:01:02,333 - INFO - Iter: 1440: avg. loss 0.011275
-2024-07-30 17:01:10,506 - INFO - Iter: 1460: avg. loss 0.011148
-2024-07-30 17:01:14,204 - INFO - Iter: 1480: avg. loss 0.011024
-2024-07-30 17:01:18,400 - INFO - Saving checkpoint at iteration 1500 after 10.0 minutes of training.
-2024-07-30 17:01:18,893 - INFO - Iter: 1500: avg. loss 0.010928
-2024-07-30 17:01:18,940 - INFO - Rank 0: performing validation at iteration 1500
-2024-07-30 17:01:27,437 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:01:35,287 - INFO - Performing classification task on rank 0...
-2024-07-30 17:01:37,576 - INFO - Training Accuracy: 0.715, Validation Accuracy: 0.718
-2024-07-30 17:01:37,576 - INFO - Training Precision: 0.726, Validation Precision: 0.721
-2024-07-30 17:01:37,576 - INFO - Training Recall: 0.715, Validation Recall: 0.718
-2024-07-30 17:01:37,576 - INFO - Training F1: 0.715, Validation F1: 0.717
-2024-07-30 17:01:37,578 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:01:40,270 - INFO - Performing regression task on rank 0..
-2024-07-30 17:01:50,501 - INFO - Training R2: 0.489, Validation R2: 0.500
-2024-07-30 17:01:51,178 - INFO - Rank 0: Validation done at iteration 1500. Pretraining continues.
-2024-07-30 17:01:51,180 - INFO - [iter:  1500] [loss: 0.011] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.8 ms)
-2024-07-30 17:01:51,180 - INFO - Batch Iterations: 1500/1000000
-2024-07-30 17:01:51,180 - INFO - Losses:
-2024-07-30 17:01:51,180 - INFO - Training Dataset
-2024-07-30 17:01:51,180 - INFO -   Total Loss: 0.011
-2024-07-30 17:01:51,181 - INFO -   Validation Dataset
-2024-07-30 17:01:51,181 - INFO -   Total Loss: 0.053
-2024-07-30 17:01:51,181 - INFO - Linear Probing Results:
-2024-07-30 17:01:51,181 - INFO - Classification Accuracy:
-2024-07-30 17:01:51,181 - INFO -   Training: 0.756, Validation: 0.762
-2024-07-30 17:01:51,181 - INFO - Classification Precision:
-2024-07-30 17:01:51,181 - INFO -   Training: 0.766, Validation: 0.765
-2024-07-30 17:01:51,181 - INFO - Classification Recall:
-2024-07-30 17:01:51,181 - INFO -   Training: 0.756, Validation: 0.762
-2024-07-30 17:01:51,181 - INFO - Classification F1:
-2024-07-30 17:01:51,181 - INFO -   Training: 0.755, Validation: 0.761
-2024-07-30 17:01:51,181 - INFO - Regression R2
-2024-07-30 17:01:51,181 - INFO -  Training: 0.541, Validation: 0.537
-2024-07-30 17:01:51,181 - INFO - iter: [ 1500] grad_stats: [9.01e-05 1.17e-05] (7.18e-06, 6.14e-04)
-2024-07-30 17:01:54,337 - INFO - Iter: 1520: avg. loss 0.010789
-2024-07-30 17:02:02,650 - INFO - Iter: 1540: avg. loss 0.010682
-2024-07-30 17:02:07,371 - INFO - Iter: 1560: avg. loss 0.010549
-2024-07-30 17:02:10,967 - INFO - Iter: 1580: avg. loss 0.010418
-2024-07-30 17:02:16,831 - INFO - Iter: 1600: avg. loss 0.010324
-2024-07-30 17:02:16,876 - INFO - Rank 0: performing validation at iteration 1600
-2024-07-30 17:02:27,089 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:02:34,756 - INFO - Performing classification task on rank 0...
-2024-07-30 17:02:37,072 - INFO - Training Accuracy: 0.713, Validation Accuracy: 0.713
-2024-07-30 17:02:37,072 - INFO - Training Precision: 0.723, Validation Precision: 0.716
-2024-07-30 17:02:37,072 - INFO - Training Recall: 0.713, Validation Recall: 0.713
-2024-07-30 17:02:37,072 - INFO - Training F1: 0.712, Validation F1: 0.713
-2024-07-30 17:02:37,073 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:02:39,635 - INFO - Performing regression task on rank 0..
-2024-07-30 17:02:49,816 - INFO - Training R2: 0.491, Validation R2: 0.503
-2024-07-30 17:02:50,231 - INFO - Rank 0: Validation done at iteration 1600. Pretraining continues.
-2024-07-30 17:02:50,234 - INFO - [iter:  1600] [loss: 0.010] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.7 ms)
-2024-07-30 17:02:50,235 - INFO - Batch Iterations: 1600/1000000
-2024-07-30 17:02:50,235 - INFO - Losses:
-2024-07-30 17:02:50,235 - INFO - Training Dataset
-2024-07-30 17:02:50,235 - INFO -   Total Loss: 0.010
-2024-07-30 17:02:50,235 - INFO -   Validation Dataset
-2024-07-30 17:02:50,235 - INFO -   Total Loss: 0.052
-2024-07-30 17:02:50,235 - INFO - Linear Probing Results:
-2024-07-30 17:02:50,235 - INFO - Classification Accuracy:
-2024-07-30 17:02:50,235 - INFO -   Training: 0.754, Validation: 0.759
-2024-07-30 17:02:50,235 - INFO - Classification Precision:
-2024-07-30 17:02:50,235 - INFO -   Training: 0.764, Validation: 0.762
-2024-07-30 17:02:50,235 - INFO - Classification Recall:
-2024-07-30 17:02:50,235 - INFO -   Training: 0.754, Validation: 0.759
-2024-07-30 17:02:50,235 - INFO - Classification F1:
-2024-07-30 17:02:50,235 - INFO -   Training: 0.753, Validation: 0.758
-2024-07-30 17:02:50,235 - INFO - Regression R2
-2024-07-30 17:02:50,235 - INFO -  Training: 0.538, Validation: 0.535
-2024-07-30 17:02:50,235 - INFO - iter: [ 1600] grad_stats: [2.01e-04 1.27e-05] (6.64e-06, 2.46e-04)
-2024-07-30 17:02:55,016 - INFO - Iter: 1620: avg. loss 0.010264
-2024-07-30 17:02:58,731 - INFO - Iter: 1640: avg. loss 0.010300
-2024-07-30 17:03:04,735 - INFO - Iter: 1660: avg. loss 0.010191
-2024-07-30 17:03:10,600 - INFO - Iter: 1680: avg. loss 0.010105
-2024-07-30 17:03:18,676 - INFO - Iter: 1700: avg. loss 0.009994
-2024-07-30 17:03:18,728 - INFO - Rank 0: performing validation at iteration 1700
-2024-07-30 17:03:27,027 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:03:34,708 - INFO - Performing classification task on rank 0...
-2024-07-30 17:03:36,924 - INFO - Training Accuracy: 0.702, Validation Accuracy: 0.707
-2024-07-30 17:03:36,925 - INFO - Training Precision: 0.713, Validation Precision: 0.710
-2024-07-30 17:03:36,925 - INFO - Training Recall: 0.702, Validation Recall: 0.707
-2024-07-30 17:03:36,925 - INFO - Training F1: 0.703, Validation F1: 0.707
-2024-07-30 17:03:36,926 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:03:39,647 - INFO - Performing regression task on rank 0..
-2024-07-30 17:03:50,387 - INFO - Training R2: 0.487, Validation R2: 0.492
-2024-07-30 17:03:51,260 - INFO - Rank 0: Validation done at iteration 1700. Pretraining continues.
-2024-07-30 17:03:51,265 - INFO - [iter:  1700] [loss: 0.010] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.6 ms)
-2024-07-30 17:03:51,265 - INFO - Batch Iterations: 1700/1000000
-2024-07-30 17:03:51,265 - INFO - Losses:
-2024-07-30 17:03:51,265 - INFO - Training Dataset
-2024-07-30 17:03:51,265 - INFO -   Total Loss: 0.010
-2024-07-30 17:03:51,265 - INFO -   Validation Dataset
-2024-07-30 17:03:51,265 - INFO -   Total Loss: 0.051
-2024-07-30 17:03:51,265 - INFO - Linear Probing Results:
-2024-07-30 17:03:51,265 - INFO - Classification Accuracy:
-2024-07-30 17:03:51,265 - INFO -   Training: 0.751, Validation: 0.756
-2024-07-30 17:03:51,266 - INFO - Classification Precision:
-2024-07-30 17:03:51,266 - INFO -   Training: 0.761, Validation: 0.759
-2024-07-30 17:03:51,266 - INFO - Classification Recall:
-2024-07-30 17:03:51,266 - INFO -   Training: 0.751, Validation: 0.756
-2024-07-30 17:03:51,266 - INFO - Classification F1:
-2024-07-30 17:03:51,266 - INFO -   Training: 0.750, Validation: 0.755
-2024-07-30 17:03:51,266 - INFO - Regression R2
-2024-07-30 17:03:51,266 - INFO -  Training: 0.535, Validation: 0.532
-2024-07-30 17:03:51,266 - INFO - iter: [ 1700] grad_stats: [2.76e-07 4.32e-08] (3.01e-08, 7.38e-07)
-2024-07-30 17:03:57,194 - INFO - Iter: 1720: avg. loss 0.009907
-2024-07-30 17:04:03,249 - INFO - Iter: 1740: avg. loss 0.009840
-2024-07-30 17:04:09,207 - INFO - Iter: 1760: avg. loss 0.009747
-2024-07-30 17:04:20,333 - INFO - Iter: 1780: avg. loss 0.009670
-2024-07-30 17:04:26,234 - INFO - Iter: 1800: avg. loss 0.009599
-2024-07-30 17:04:26,286 - INFO - Rank 0: performing validation at iteration 1800
-2024-07-30 17:04:35,741 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:04:43,501 - INFO - Performing classification task on rank 0...
-2024-07-30 17:04:45,761 - INFO - Training Accuracy: 0.701, Validation Accuracy: 0.708
-2024-07-30 17:04:45,762 - INFO - Training Precision: 0.716, Validation Precision: 0.713
-2024-07-30 17:04:45,762 - INFO - Training Recall: 0.701, Validation Recall: 0.708
-2024-07-30 17:04:45,762 - INFO - Training F1: 0.701, Validation F1: 0.708
-2024-07-30 17:04:45,763 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:04:48,345 - INFO - Performing regression task on rank 0..
-2024-07-30 17:04:57,282 - INFO - Training R2: 0.459, Validation R2: 0.448
-2024-07-30 17:04:57,934 - INFO - Rank 0: Validation done at iteration 1800. Pretraining continues.
-2024-07-30 17:04:57,936 - INFO - [iter:  1800] [loss: 0.010] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.6 ms)
-2024-07-30 17:04:57,937 - INFO - Batch Iterations: 1800/1000000
-2024-07-30 17:04:57,937 - INFO - Losses:
-2024-07-30 17:04:57,937 - INFO - Training Dataset
-2024-07-30 17:04:57,937 - INFO -   Total Loss: 0.010
-2024-07-30 17:04:57,937 - INFO -   Validation Dataset
-2024-07-30 17:04:57,937 - INFO -   Total Loss: 0.049
-2024-07-30 17:04:57,937 - INFO - Linear Probing Results:
-2024-07-30 17:04:57,937 - INFO - Classification Accuracy:
-2024-07-30 17:04:57,937 - INFO -   Training: 0.748, Validation: 0.754
-2024-07-30 17:04:57,937 - INFO - Classification Precision:
-2024-07-30 17:04:57,937 - INFO -   Training: 0.758, Validation: 0.756
-2024-07-30 17:04:57,937 - INFO - Classification Recall:
-2024-07-30 17:04:57,937 - INFO -   Training: 0.748, Validation: 0.754
-2024-07-30 17:04:57,937 - INFO - Classification F1:
-2024-07-30 17:04:57,937 - INFO -   Training: 0.747, Validation: 0.752
-2024-07-30 17:04:57,937 - INFO - Regression R2
-2024-07-30 17:04:57,937 - INFO -  Training: 0.530, Validation: 0.527
-2024-07-30 17:04:57,937 - INFO - iter: [ 1800] grad_stats: [1.05e-06 2.05e-07] (1.27e-07, 5.11e-06)
-2024-07-30 17:05:03,743 - INFO - Iter: 1820: avg. loss 0.009558
-2024-07-30 17:05:08,288 - INFO - Iter: 1840: avg. loss 0.009477
-2024-07-30 17:05:19,563 - INFO - Iter: 1860: avg. loss 0.009394
-2024-07-30 17:05:25,593 - INFO - Iter: 1880: avg. loss 0.009322
-2024-07-30 17:05:31,866 - INFO - Iter: 1900: avg. loss 0.009247
-2024-07-30 17:05:31,950 - INFO - Rank 0: performing validation at iteration 1900
-2024-07-30 17:05:40,288 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:05:48,016 - INFO - Performing classification task on rank 0...
-2024-07-30 17:05:50,355 - INFO - Training Accuracy: 0.690, Validation Accuracy: 0.707
-2024-07-30 17:05:50,355 - INFO - Training Precision: 0.707, Validation Precision: 0.714
-2024-07-30 17:05:50,355 - INFO - Training Recall: 0.690, Validation Recall: 0.707
-2024-07-30 17:05:50,355 - INFO - Training F1: 0.691, Validation F1: 0.706
-2024-07-30 17:05:50,356 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:05:52,966 - INFO - Performing regression task on rank 0..
-2024-07-30 17:06:02,398 - INFO - Training R2: 0.444, Validation R2: 0.438
-2024-07-30 17:06:02,850 - INFO - Rank 0: Validation done at iteration 1900. Pretraining continues.
-2024-07-30 17:06:02,853 - INFO - [iter:  1900] [loss: 0.009] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.7 ms)
-2024-07-30 17:06:02,853 - INFO - Batch Iterations: 1900/1000000
-2024-07-30 17:06:02,853 - INFO - Losses:
-2024-07-30 17:06:02,853 - INFO - Training Dataset
-2024-07-30 17:06:02,853 - INFO -   Total Loss: 0.009
-2024-07-30 17:06:02,853 - INFO -   Validation Dataset
-2024-07-30 17:06:02,853 - INFO -   Total Loss: 0.048
-2024-07-30 17:06:02,853 - INFO - Linear Probing Results:
-2024-07-30 17:06:02,853 - INFO - Classification Accuracy:
-2024-07-30 17:06:02,853 - INFO -   Training: 0.745, Validation: 0.751
-2024-07-30 17:06:02,853 - INFO - Classification Precision:
-2024-07-30 17:06:02,853 - INFO -   Training: 0.755, Validation: 0.754
-2024-07-30 17:06:02,853 - INFO - Classification Recall:
-2024-07-30 17:06:02,853 - INFO -   Training: 0.745, Validation: 0.751
-2024-07-30 17:06:02,853 - INFO - Classification F1:
-2024-07-30 17:06:02,853 - INFO -   Training: 0.744, Validation: 0.750
-2024-07-30 17:06:02,854 - INFO - Regression R2
-2024-07-30 17:06:02,854 - INFO -  Training: 0.526, Validation: 0.523
-2024-07-30 17:06:02,854 - INFO - iter: [ 1900] grad_stats: [4.31e-06 9.23e-07] (8.24e-07, 8.14e-05)
-2024-07-30 17:06:08,864 - INFO - Iter: 1920: avg. loss 0.009172
-2024-07-30 17:06:20,021 - INFO - Iter: 1940: avg. loss 0.009106
-2024-07-30 17:06:26,095 - INFO - Iter: 1960: avg. loss 0.009033
-2024-07-30 17:06:32,278 - INFO - Iter: 1980: avg. loss 0.008954
-2024-07-30 17:06:38,206 - INFO - Saving checkpoint at iteration 2000 after 10.0 minutes of training.
-2024-07-30 17:06:38,737 - INFO - Iter: 2000: avg. loss 0.008883
-2024-07-30 17:06:43,309 - INFO - Rank 0: Iter: 2000; learning rate: 0.00100; wd: 0.04000
-2024-07-30 17:06:43,358 - INFO - Rank 0: performing validation at iteration 2000
-2024-07-30 17:06:51,700 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:06:59,668 - INFO - Performing classification task on rank 0...
-2024-07-30 17:07:01,993 - INFO - Training Accuracy: 0.702, Validation Accuracy: 0.727
-2024-07-30 17:07:01,993 - INFO - Training Precision: 0.718, Validation Precision: 0.733
-2024-07-30 17:07:01,993 - INFO - Training Recall: 0.702, Validation Recall: 0.727
-2024-07-30 17:07:01,993 - INFO - Training F1: 0.703, Validation F1: 0.726
-2024-07-30 17:07:01,994 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:07:04,608 - INFO - Performing regression task on rank 0..
-2024-07-30 17:07:14,099 - INFO - Training R2: 0.453, Validation R2: 0.445
-2024-07-30 17:07:14,539 - INFO - Rank 0: Validation done at iteration 2000. Pretraining continues.
-2024-07-30 17:07:14,540 - INFO - [iter:  2000] [loss: 0.009] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.6 ms)
-2024-07-30 17:07:14,541 - INFO - Batch Iterations: 2000/1000000
-2024-07-30 17:07:14,541 - INFO - Losses:
-2024-07-30 17:07:14,541 - INFO - Training Dataset
-2024-07-30 17:07:14,541 - INFO -   Total Loss: 0.009
-2024-07-30 17:07:14,541 - INFO -   Validation Dataset
-2024-07-30 17:07:14,541 - INFO -   Total Loss: 0.047
-2024-07-30 17:07:14,541 - INFO - Linear Probing Results:
-2024-07-30 17:07:14,541 - INFO - Classification Accuracy:
-2024-07-30 17:07:14,541 - INFO -   Training: 0.743, Validation: 0.750
-2024-07-30 17:07:14,541 - INFO - Classification Precision:
-2024-07-30 17:07:14,541 - INFO -   Training: 0.754, Validation: 0.753
-2024-07-30 17:07:14,541 - INFO - Classification Recall:
-2024-07-30 17:07:14,541 - INFO -   Training: 0.743, Validation: 0.750
-2024-07-30 17:07:14,541 - INFO - Classification F1:
-2024-07-30 17:07:14,541 - INFO -   Training: 0.742, Validation: 0.749
-2024-07-30 17:07:14,541 - INFO - Regression R2
-2024-07-30 17:07:14,541 - INFO -  Training: 0.522, Validation: 0.519
-2024-07-30 17:07:14,541 - INFO - iter: [ 2000] grad_stats: [2.04e-06 7.60e-07] (2.34e-07, 6.98e-06)
-2024-07-30 17:07:20,550 - INFO - Iter: 2020: avg. loss 0.008810
-2024-07-30 17:07:26,514 - INFO - Iter: 2040: avg. loss 0.008751
-2024-07-30 17:07:32,354 - INFO - Iter: 2060: avg. loss 0.008682
-2024-07-30 17:07:38,498 - INFO - Iter: 2080: avg. loss 0.008626
-2024-07-30 17:07:49,229 - INFO - Iter: 2100: avg. loss 0.008561
-2024-07-30 17:07:49,295 - INFO - Rank 0: performing validation at iteration 2100
-2024-07-30 17:07:57,669 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:08:05,389 - INFO - Performing classification task on rank 0...
-2024-07-30 17:08:07,539 - INFO - Training Accuracy: 0.699, Validation Accuracy: 0.723
-2024-07-30 17:08:07,539 - INFO - Training Precision: 0.715, Validation Precision: 0.730
-2024-07-30 17:08:07,539 - INFO - Training Recall: 0.699, Validation Recall: 0.723
-2024-07-30 17:08:07,539 - INFO - Training F1: 0.700, Validation F1: 0.722
-2024-07-30 17:08:07,540 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:08:10,172 - INFO - Performing regression task on rank 0..
-2024-07-30 17:08:19,796 - INFO - Training R2: 0.461, Validation R2: 0.441
-2024-07-30 17:08:20,278 - INFO - Rank 0: Validation done at iteration 2100. Pretraining continues.
-2024-07-30 17:08:20,280 - INFO - [iter:  2100] [loss: 0.009] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.6 ms)
-2024-07-30 17:08:20,281 - INFO - Batch Iterations: 2100/1000000
-2024-07-30 17:08:20,281 - INFO - Losses:
-2024-07-30 17:08:20,281 - INFO - Training Dataset
-2024-07-30 17:08:20,281 - INFO -   Total Loss: 0.009
-2024-07-30 17:08:20,281 - INFO -   Validation Dataset
-2024-07-30 17:08:20,281 - INFO -   Total Loss: 0.045
-2024-07-30 17:08:20,281 - INFO - Linear Probing Results:
-2024-07-30 17:08:20,281 - INFO - Classification Accuracy:
-2024-07-30 17:08:20,281 - INFO -   Training: 0.741, Validation: 0.749
-2024-07-30 17:08:20,281 - INFO - Classification Precision:
-2024-07-30 17:08:20,281 - INFO -   Training: 0.752, Validation: 0.752
-2024-07-30 17:08:20,281 - INFO - Classification Recall:
-2024-07-30 17:08:20,281 - INFO -   Training: 0.741, Validation: 0.749
-2024-07-30 17:08:20,281 - INFO - Classification F1:
-2024-07-30 17:08:20,281 - INFO -   Training: 0.740, Validation: 0.747
-2024-07-30 17:08:20,281 - INFO - Regression R2
-2024-07-30 17:08:20,281 - INFO -  Training: 0.519, Validation: 0.515
-2024-07-30 17:08:20,281 - INFO - iter: [ 2100] grad_stats: [2.39e-05 7.72e-06] (3.43e-06, 6.54e-05)
-2024-07-30 17:08:26,412 - INFO - Iter: 2120: avg. loss 0.008492
-2024-07-30 17:08:32,262 - INFO - Iter: 2140: avg. loss 0.008429
-2024-07-30 17:08:38,218 - INFO - Iter: 2160: avg. loss 0.008366
-2024-07-30 17:08:48,852 - INFO - Iter: 2180: avg. loss 0.008313
-2024-07-30 17:08:54,823 - INFO - Iter: 2200: avg. loss 0.008254
-2024-07-30 17:08:54,907 - INFO - Rank 0: performing validation at iteration 2200
-2024-07-30 17:09:03,346 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:09:11,136 - INFO - Performing classification task on rank 0...
-2024-07-30 17:09:13,447 - INFO - Training Accuracy: 0.701, Validation Accuracy: 0.723
-2024-07-30 17:09:13,447 - INFO - Training Precision: 0.716, Validation Precision: 0.729
-2024-07-30 17:09:13,447 - INFO - Training Recall: 0.701, Validation Recall: 0.723
-2024-07-30 17:09:13,447 - INFO - Training F1: 0.701, Validation F1: 0.722
-2024-07-30 17:09:13,449 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:09:16,033 - INFO - Performing regression task on rank 0..
-2024-07-30 17:09:25,205 - INFO - Training R2: 0.466, Validation R2: 0.457
-2024-07-30 17:09:25,631 - INFO - Rank 0: Validation done at iteration 2200. Pretraining continues.
-2024-07-30 17:09:25,633 - INFO - [iter:  2200] [loss: 0.008] [masks: 13.4, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.6 ms)
-2024-07-30 17:09:25,633 - INFO - Batch Iterations: 2200/1000000
-2024-07-30 17:09:25,633 - INFO - Losses:
-2024-07-30 17:09:25,633 - INFO - Training Dataset
-2024-07-30 17:09:25,633 - INFO -   Total Loss: 0.008
-2024-07-30 17:09:25,633 - INFO -   Validation Dataset
-2024-07-30 17:09:25,633 - INFO -   Total Loss: 0.044
-2024-07-30 17:09:25,633 - INFO - Linear Probing Results:
-2024-07-30 17:09:25,633 - INFO - Classification Accuracy:
-2024-07-30 17:09:25,634 - INFO -   Training: 0.739, Validation: 0.747
-2024-07-30 17:09:25,634 - INFO - Classification Precision:
-2024-07-30 17:09:25,634 - INFO -   Training: 0.750, Validation: 0.751
-2024-07-30 17:09:25,634 - INFO - Classification Recall:
-2024-07-30 17:09:25,634 - INFO -   Training: 0.739, Validation: 0.747
-2024-07-30 17:09:25,634 - INFO - Classification F1:
-2024-07-30 17:09:25,634 - INFO -   Training: 0.738, Validation: 0.746
-2024-07-30 17:09:25,634 - INFO - Regression R2
-2024-07-30 17:09:25,634 - INFO -  Training: 0.517, Validation: 0.512
-2024-07-30 17:09:25,634 - INFO - iter: [ 2200] grad_stats: [1.97e-05 5.53e-06] (4.23e-06, 9.47e-05)
-2024-07-30 17:09:31,702 - INFO - Iter: 2220: avg. loss 0.008202
-2024-07-30 17:09:35,876 - INFO - Iter: 2240: avg. loss 0.008134
-2024-07-30 17:09:45,298 - INFO - Iter: 2260: avg. loss 0.008072
-2024-07-30 17:09:51,141 - INFO - Iter: 2280: avg. loss 0.008014
-2024-07-30 17:09:57,077 - INFO - Iter: 2300: avg. loss 0.007967
-2024-07-30 17:09:57,140 - INFO - Rank 0: performing validation at iteration 2300
-2024-07-30 17:10:05,454 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:10:13,107 - INFO - Performing classification task on rank 0...
-2024-07-30 17:10:15,353 - INFO - Training Accuracy: 0.700, Validation Accuracy: 0.718
-2024-07-30 17:10:15,353 - INFO - Training Precision: 0.715, Validation Precision: 0.724
-2024-07-30 17:10:15,353 - INFO - Training Recall: 0.700, Validation Recall: 0.718
-2024-07-30 17:10:15,353 - INFO - Training F1: 0.700, Validation F1: 0.717
-2024-07-30 17:10:15,355 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:10:17,953 - INFO - Performing regression task on rank 0..
-2024-07-30 17:10:26,746 - INFO - Training R2: 0.474, Validation R2: 0.470
-2024-07-30 17:10:27,160 - INFO - Rank 0: Validation done at iteration 2300. Pretraining continues.
-2024-07-30 17:10:27,162 - INFO - [iter:  2300] [loss: 0.008] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.5 ms)
-2024-07-30 17:10:27,162 - INFO - Batch Iterations: 2300/1000000
-2024-07-30 17:10:27,162 - INFO - Losses:
-2024-07-30 17:10:27,162 - INFO - Training Dataset
-2024-07-30 17:10:27,162 - INFO -   Total Loss: 0.008
-2024-07-30 17:10:27,162 - INFO -   Validation Dataset
-2024-07-30 17:10:27,162 - INFO -   Total Loss: 0.042
-2024-07-30 17:10:27,163 - INFO - Linear Probing Results:
-2024-07-30 17:10:27,163 - INFO - Classification Accuracy:
-2024-07-30 17:10:27,163 - INFO -   Training: 0.737, Validation: 0.746
-2024-07-30 17:10:27,163 - INFO - Classification Precision:
-2024-07-30 17:10:27,163 - INFO -   Training: 0.749, Validation: 0.750
-2024-07-30 17:10:27,163 - INFO - Classification Recall:
-2024-07-30 17:10:27,163 - INFO -   Training: 0.737, Validation: 0.746
-2024-07-30 17:10:27,163 - INFO - Classification F1:
-2024-07-30 17:10:27,163 - INFO -   Training: 0.736, Validation: 0.745
-2024-07-30 17:10:27,163 - INFO - Regression R2
-2024-07-30 17:10:27,163 - INFO -  Training: 0.515, Validation: 0.511
-2024-07-30 17:10:27,163 - INFO - iter: [ 2300] grad_stats: [4.66e-06 1.67e-06] (1.23e-06, 2.49e-05)
-2024-07-30 17:10:33,129 - INFO - Iter: 2320: avg. loss 0.007913
-2024-07-30 17:10:41,885 - INFO - Iter: 2340: avg. loss 0.007866
-2024-07-30 17:10:45,887 - INFO - Iter: 2360: avg. loss 0.007803
-2024-07-30 17:10:52,149 - INFO - Iter: 2380: avg. loss 0.007750
-2024-07-30 17:10:58,426 - INFO - Iter: 2400: avg. loss 0.007698
-2024-07-30 17:11:00,500 - INFO - Rank 0: performing validation at iteration 2400
-2024-07-30 17:11:08,808 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:11:16,487 - INFO - Performing classification task on rank 0...
-2024-07-30 17:11:18,823 - INFO - Training Accuracy: 0.698, Validation Accuracy: 0.718
-2024-07-30 17:11:18,823 - INFO - Training Precision: 0.713, Validation Precision: 0.724
-2024-07-30 17:11:18,823 - INFO - Training Recall: 0.698, Validation Recall: 0.718
-2024-07-30 17:11:18,823 - INFO - Training F1: 0.698, Validation F1: 0.717
-2024-07-30 17:11:18,828 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:11:21,400 - INFO - Performing regression task on rank 0..
-2024-07-30 17:11:30,863 - INFO - Training R2: 0.466, Validation R2: 0.461
-2024-07-30 17:11:31,598 - INFO - Rank 0: Validation done at iteration 2400. Pretraining continues.
-2024-07-30 17:11:31,600 - INFO - [iter:  2400] [loss: 0.008] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.5 ms)
-2024-07-30 17:11:31,600 - INFO - Batch Iterations: 2400/1000000
-2024-07-30 17:11:31,600 - INFO - Losses:
-2024-07-30 17:11:31,600 - INFO - Training Dataset
-2024-07-30 17:11:31,600 - INFO -   Total Loss: 0.008
-2024-07-30 17:11:31,600 - INFO -   Validation Dataset
-2024-07-30 17:11:31,600 - INFO -   Total Loss: 0.041
-2024-07-30 17:11:31,600 - INFO - Linear Probing Results:
-2024-07-30 17:11:31,601 - INFO - Classification Accuracy:
-2024-07-30 17:11:31,601 - INFO -   Training: 0.735, Validation: 0.745
-2024-07-30 17:11:31,601 - INFO - Classification Precision:
-2024-07-30 17:11:31,601 - INFO -   Training: 0.747, Validation: 0.749
-2024-07-30 17:11:31,601 - INFO - Classification Recall:
-2024-07-30 17:11:31,601 - INFO -   Training: 0.735, Validation: 0.745
-2024-07-30 17:11:31,601 - INFO - Classification F1:
-2024-07-30 17:11:31,601 - INFO -   Training: 0.735, Validation: 0.744
-2024-07-30 17:11:31,601 - INFO - Regression R2
-2024-07-30 17:11:31,601 - INFO -  Training: 0.513, Validation: 0.509
-2024-07-30 17:11:31,601 - INFO - iter: [ 2400] grad_stats: [9.43e-06 6.19e-06] (2.93e-06, 6.26e-05)
-2024-07-30 17:11:37,455 - INFO - Iter: 2420: avg. loss 0.007642
-2024-07-30 17:11:41,543 - INFO - Iter: 2440: avg. loss 0.007590
-2024-07-30 17:11:47,452 - INFO - Iter: 2460: avg. loss 0.007533
-2024-07-30 17:11:53,622 - INFO - Iter: 2480: avg. loss 0.007486
-2024-07-30 17:12:04,685 - INFO - Saving checkpoint at iteration 2500 after 10.0 minutes of training.
-2024-07-30 17:12:05,200 - INFO - Iter: 2500: avg. loss 0.007434
-2024-07-30 17:12:05,247 - INFO - Rank 0: performing validation at iteration 2500
-2024-07-30 17:12:13,559 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:12:21,205 - INFO - Performing classification task on rank 0...
-2024-07-30 17:12:23,328 - INFO - Training Accuracy: 0.699, Validation Accuracy: 0.715
-2024-07-30 17:12:23,328 - INFO - Training Precision: 0.715, Validation Precision: 0.723
-2024-07-30 17:12:23,328 - INFO - Training Recall: 0.699, Validation Recall: 0.715
-2024-07-30 17:12:23,328 - INFO - Training F1: 0.699, Validation F1: 0.715
-2024-07-30 17:12:23,329 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:12:25,947 - INFO - Performing regression task on rank 0..
-2024-07-30 17:12:36,531 - INFO - Training R2: 0.465, Validation R2: 0.444
-2024-07-30 17:12:36,916 - INFO - Rank 0: Validation done at iteration 2500. Pretraining continues.
-2024-07-30 17:12:36,917 - INFO - [iter:  2500] [loss: 0.007] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.4 ms)
-2024-07-30 17:12:36,918 - INFO - Batch Iterations: 2500/1000000
-2024-07-30 17:12:36,918 - INFO - Losses:
-2024-07-30 17:12:36,918 - INFO - Training Dataset
-2024-07-30 17:12:36,918 - INFO -   Total Loss: 0.007
-2024-07-30 17:12:36,918 - INFO -   Validation Dataset
-2024-07-30 17:12:36,918 - INFO -   Total Loss: 0.040
-2024-07-30 17:12:36,918 - INFO - Linear Probing Results:
-2024-07-30 17:12:36,918 - INFO - Classification Accuracy:
-2024-07-30 17:12:36,918 - INFO -   Training: 0.734, Validation: 0.744
-2024-07-30 17:12:36,918 - INFO - Classification Precision:
-2024-07-30 17:12:36,918 - INFO -   Training: 0.746, Validation: 0.748
-2024-07-30 17:12:36,918 - INFO - Classification Recall:
-2024-07-30 17:12:36,918 - INFO -   Training: 0.734, Validation: 0.744
-2024-07-30 17:12:36,918 - INFO - Classification F1:
-2024-07-30 17:12:36,919 - INFO -   Training: 0.733, Validation: 0.743
-2024-07-30 17:12:36,919 - INFO - Regression R2
-2024-07-30 17:12:36,919 - INFO -  Training: 0.511, Validation: 0.506
-2024-07-30 17:12:36,919 - INFO - iter: [ 2500] grad_stats: [1.29e-05 3.22e-06] (1.76e-06, 3.66e-05)
-2024-07-30 17:12:42,955 - INFO - Iter: 2520: avg. loss 0.007388
-2024-07-30 17:12:49,011 - INFO - Iter: 2540: avg. loss 0.007349
-2024-07-30 17:12:53,870 - INFO - Iter: 2560: avg. loss 0.007301
-2024-07-30 17:13:05,130 - INFO - Iter: 2580: avg. loss 0.007259
-2024-07-30 17:13:11,265 - INFO - Iter: 2600: avg. loss 0.007213
-2024-07-30 17:13:11,316 - INFO - Rank 0: performing validation at iteration 2600
-2024-07-30 17:13:19,683 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:13:27,549 - INFO - Performing classification task on rank 0...
-2024-07-30 17:13:29,718 - INFO - Training Accuracy: 0.704, Validation Accuracy: 0.717
-2024-07-30 17:13:29,718 - INFO - Training Precision: 0.722, Validation Precision: 0.724
-2024-07-30 17:13:29,718 - INFO - Training Recall: 0.704, Validation Recall: 0.717
-2024-07-30 17:13:29,718 - INFO - Training F1: 0.703, Validation F1: 0.716
-2024-07-30 17:13:29,719 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:13:32,294 - INFO - Performing regression task on rank 0..
-2024-07-30 17:13:42,481 - INFO - Training R2: 0.466, Validation R2: 0.468
-2024-07-30 17:13:43,113 - INFO - Rank 0: Validation done at iteration 2600. Pretraining continues.
-2024-07-30 17:13:43,115 - INFO - [iter:  2600] [loss: 0.007] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.4 ms)
-2024-07-30 17:13:43,116 - INFO - Batch Iterations: 2600/1000000
-2024-07-30 17:13:43,116 - INFO - Losses:
-2024-07-30 17:13:43,116 - INFO - Training Dataset
-2024-07-30 17:13:43,116 - INFO -   Total Loss: 0.007
-2024-07-30 17:13:43,116 - INFO -   Validation Dataset
-2024-07-30 17:13:43,116 - INFO -   Total Loss: 0.039
-2024-07-30 17:13:43,116 - INFO - Linear Probing Results:
-2024-07-30 17:13:43,116 - INFO - Classification Accuracy:
-2024-07-30 17:13:43,116 - INFO -   Training: 0.733, Validation: 0.743
-2024-07-30 17:13:43,116 - INFO - Classification Precision:
-2024-07-30 17:13:43,116 - INFO -   Training: 0.745, Validation: 0.747
-2024-07-30 17:13:43,116 - INFO - Classification Recall:
-2024-07-30 17:13:43,116 - INFO -   Training: 0.733, Validation: 0.743
-2024-07-30 17:13:43,116 - INFO - Classification F1:
-2024-07-30 17:13:43,116 - INFO -   Training: 0.732, Validation: 0.742
-2024-07-30 17:13:43,116 - INFO - Regression R2
-2024-07-30 17:13:43,116 - INFO -  Training: 0.509, Validation: 0.504
-2024-07-30 17:13:43,116 - INFO - iter: [ 2600] grad_stats: [5.51e-06 2.92e-06] (1.20e-06, 3.21e-05)
-2024-07-30 17:13:48,999 - INFO - Iter: 2620: avg. loss 0.007168
-2024-07-30 17:13:52,595 - INFO - Iter: 2640: avg. loss 0.007114
-2024-07-30 17:14:02,095 - INFO - Iter: 2660: avg. loss 0.007076
-2024-07-30 17:14:08,292 - INFO - Iter: 2680: avg. loss 0.007029
-2024-07-30 17:14:14,493 - INFO - Iter: 2700: avg. loss 0.006988
-2024-07-30 17:14:14,563 - INFO - Rank 0: performing validation at iteration 2700
-2024-07-30 17:14:23,043 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:14:30,660 - INFO - Performing classification task on rank 0...
-2024-07-30 17:14:32,775 - INFO - Training Accuracy: 0.708, Validation Accuracy: 0.716
-2024-07-30 17:14:32,775 - INFO - Training Precision: 0.726, Validation Precision: 0.725
-2024-07-30 17:14:32,775 - INFO - Training Recall: 0.708, Validation Recall: 0.716
-2024-07-30 17:14:32,775 - INFO - Training F1: 0.707, Validation F1: 0.715
-2024-07-30 17:14:32,777 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:14:35,384 - INFO - Performing regression task on rank 0..
-2024-07-30 17:14:44,436 - INFO - Training R2: 0.462, Validation R2: 0.466
-2024-07-30 17:14:44,835 - INFO - Rank 0: Validation done at iteration 2700. Pretraining continues.
-2024-07-30 17:14:44,836 - INFO - [iter:  2700] [loss: 0.007] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.4 ms)
-2024-07-30 17:14:44,837 - INFO - Batch Iterations: 2700/1000000
-2024-07-30 17:14:44,837 - INFO - Losses:
-2024-07-30 17:14:44,837 - INFO - Training Dataset
-2024-07-30 17:14:44,837 - INFO -   Total Loss: 0.007
-2024-07-30 17:14:44,837 - INFO -   Validation Dataset
-2024-07-30 17:14:44,837 - INFO -   Total Loss: 0.038
-2024-07-30 17:14:44,837 - INFO - Linear Probing Results:
-2024-07-30 17:14:44,837 - INFO - Classification Accuracy:
-2024-07-30 17:14:44,837 - INFO -   Training: 0.732, Validation: 0.742
-2024-07-30 17:14:44,837 - INFO - Classification Precision:
-2024-07-30 17:14:44,837 - INFO -   Training: 0.744, Validation: 0.746
-2024-07-30 17:14:44,837 - INFO - Classification Recall:
-2024-07-30 17:14:44,838 - INFO -   Training: 0.732, Validation: 0.742
-2024-07-30 17:14:44,838 - INFO - Classification F1:
-2024-07-30 17:14:44,838 - INFO -   Training: 0.731, Validation: 0.741
-2024-07-30 17:14:44,838 - INFO - Regression R2
-2024-07-30 17:14:44,838 - INFO -  Training: 0.508, Validation: 0.503
-2024-07-30 17:14:44,838 - INFO - iter: [ 2700] grad_stats: [1.36e-04 7.51e-06] (3.62e-06, 2.61e-04)
-2024-07-30 17:14:55,725 - INFO - Iter: 2720: avg. loss 0.006947
-2024-07-30 17:15:01,736 - INFO - Iter: 2740: avg. loss 0.006906
-2024-07-30 17:15:07,883 - INFO - Iter: 2760: avg. loss 0.006863
-2024-07-30 17:15:14,052 - INFO - Iter: 2780: avg. loss 0.006833
-2024-07-30 17:15:20,131 - INFO - Iter: 2800: avg. loss 0.006793
-2024-07-30 17:15:25,285 - INFO - Rank 0: performing validation at iteration 2800
-2024-07-30 17:15:36,966 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:15:44,610 - INFO - Performing classification task on rank 0...
-2024-07-30 17:15:46,817 - INFO - Training Accuracy: 0.705, Validation Accuracy: 0.712
-2024-07-30 17:15:46,817 - INFO - Training Precision: 0.723, Validation Precision: 0.721
-2024-07-30 17:15:46,817 - INFO - Training Recall: 0.705, Validation Recall: 0.712
-2024-07-30 17:15:46,817 - INFO - Training F1: 0.704, Validation F1: 0.711
-2024-07-30 17:15:46,818 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:15:49,466 - INFO - Performing regression task on rank 0..
-2024-07-30 17:15:59,851 - INFO - Training R2: 0.459, Validation R2: 0.455
-2024-07-30 17:16:00,238 - INFO - Rank 0: Validation done at iteration 2800. Pretraining continues.
-2024-07-30 17:16:00,239 - INFO - [iter:  2800] [loss: 0.007] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.4 ms)
-2024-07-30 17:16:00,240 - INFO - Batch Iterations: 2800/1000000
-2024-07-30 17:16:00,240 - INFO - Losses:
-2024-07-30 17:16:00,240 - INFO - Training Dataset
-2024-07-30 17:16:00,240 - INFO -   Total Loss: 0.007
-2024-07-30 17:16:00,240 - INFO -   Validation Dataset
-2024-07-30 17:16:00,240 - INFO -   Total Loss: 0.037
-2024-07-30 17:16:00,240 - INFO - Linear Probing Results:
-2024-07-30 17:16:00,240 - INFO - Classification Accuracy:
-2024-07-30 17:16:00,240 - INFO -   Training: 0.731, Validation: 0.741
-2024-07-30 17:16:00,240 - INFO - Classification Precision:
-2024-07-30 17:16:00,240 - INFO -   Training: 0.743, Validation: 0.745
-2024-07-30 17:16:00,240 - INFO - Classification Recall:
-2024-07-30 17:16:00,240 - INFO -   Training: 0.731, Validation: 0.741
-2024-07-30 17:16:00,240 - INFO - Classification F1:
-2024-07-30 17:16:00,240 - INFO -   Training: 0.730, Validation: 0.740
-2024-07-30 17:16:00,240 - INFO - Regression R2
-2024-07-30 17:16:00,240 - INFO -  Training: 0.506, Validation: 0.501
-2024-07-30 17:16:00,240 - INFO - iter: [ 2800] grad_stats: [4.66e-06 2.39e-06] (1.48e-06, 2.77e-05)
-2024-07-30 17:16:06,265 - INFO - Iter: 2820: avg. loss 0.006766
-2024-07-30 17:16:12,339 - INFO - Iter: 2840: avg. loss 0.006739
-2024-07-30 17:16:18,424 - INFO - Iter: 2860: avg. loss 0.006699
-2024-07-30 17:16:21,886 - INFO - Iter: 2880: avg. loss 0.006656
-2024-07-30 17:16:33,389 - INFO - Iter: 2900: avg. loss 0.006621
-2024-07-30 17:16:33,448 - INFO - Rank 0: performing validation at iteration 2900
-2024-07-30 17:16:42,468 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:16:50,268 - INFO - Performing classification task on rank 0...
-2024-07-30 17:16:52,488 - INFO - Training Accuracy: 0.686, Validation Accuracy: 0.696
-2024-07-30 17:16:52,488 - INFO - Training Precision: 0.709, Validation Precision: 0.711
-2024-07-30 17:16:52,488 - INFO - Training Recall: 0.686, Validation Recall: 0.696
-2024-07-30 17:16:52,488 - INFO - Training F1: 0.686, Validation F1: 0.695
-2024-07-30 17:16:52,489 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:16:55,029 - INFO - Performing regression task on rank 0..
-2024-07-30 17:17:05,513 - INFO - Training R2: 0.451, Validation R2: 0.454
-2024-07-30 17:17:06,334 - INFO - Rank 0: Validation done at iteration 2900. Pretraining continues.
-2024-07-30 17:17:06,337 - INFO - [iter:  2900] [loss: 0.007] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.3 ms)
-2024-07-30 17:17:06,337 - INFO - Batch Iterations: 2900/1000000
-2024-07-30 17:17:06,337 - INFO - Losses:
-2024-07-30 17:17:06,337 - INFO - Training Dataset
-2024-07-30 17:17:06,338 - INFO -   Total Loss: 0.007
-2024-07-30 17:17:06,338 - INFO -   Validation Dataset
-2024-07-30 17:17:06,338 - INFO -   Total Loss: 0.036
-2024-07-30 17:17:06,338 - INFO - Linear Probing Results:
-2024-07-30 17:17:06,338 - INFO - Classification Accuracy:
-2024-07-30 17:17:06,338 - INFO -   Training: 0.729, Validation: 0.739
-2024-07-30 17:17:06,338 - INFO - Classification Precision:
-2024-07-30 17:17:06,338 - INFO -   Training: 0.742, Validation: 0.744
-2024-07-30 17:17:06,338 - INFO - Classification Recall:
-2024-07-30 17:17:06,338 - INFO -   Training: 0.729, Validation: 0.739
-2024-07-30 17:17:06,338 - INFO - Classification F1:
-2024-07-30 17:17:06,338 - INFO -   Training: 0.729, Validation: 0.738
-2024-07-30 17:17:06,338 - INFO - Regression R2
-2024-07-30 17:17:06,338 - INFO -  Training: 0.504, Validation: 0.500
-2024-07-30 17:17:06,338 - INFO - iter: [ 2900] grad_stats: [2.22e-06 1.20e-06] (7.00e-07, 1.06e-05)
-2024-07-30 17:17:12,359 - INFO - Iter: 2920: avg. loss 0.006591
-2024-07-30 17:17:18,436 - INFO - Iter: 2940: avg. loss 0.006560
-2024-07-30 17:17:24,593 - INFO - Iter: 2960: avg. loss 0.006524
-2024-07-30 17:17:35,648 - INFO - Iter: 2980: avg. loss 0.006487
-2024-07-30 17:17:41,566 - INFO - Saving checkpoint at iteration 3000 after 10.0 minutes of training.
-2024-07-30 17:17:42,067 - INFO - Iter: 3000: avg. loss 0.006456
-2024-07-30 17:17:42,069 - INFO - Rank 0: Iter: 3000; learning rate: 0.00100; wd: 0.04001
-2024-07-30 17:17:42,115 - INFO - Rank 0: performing validation at iteration 3000
-2024-07-30 17:17:50,520 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:17:58,280 - INFO - Performing classification task on rank 0...
-2024-07-30 17:18:00,348 - INFO - Training Accuracy: 0.685, Validation Accuracy: 0.703
-2024-07-30 17:18:00,348 - INFO - Training Precision: 0.711, Validation Precision: 0.719
-2024-07-30 17:18:00,348 - INFO - Training Recall: 0.685, Validation Recall: 0.703
-2024-07-30 17:18:00,348 - INFO - Training F1: 0.684, Validation F1: 0.701
-2024-07-30 17:18:00,350 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:18:02,949 - INFO - Performing regression task on rank 0..
-2024-07-30 17:18:12,566 - INFO - Training R2: 0.447, Validation R2: 0.454
-2024-07-30 17:18:12,951 - INFO - Rank 0: Validation done at iteration 3000. Pretraining continues.
-2024-07-30 17:18:12,952 - INFO - [iter:  3000] [loss: 0.006] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.4 ms)
-2024-07-30 17:18:12,953 - INFO - Batch Iterations: 3000/1000000
-2024-07-30 17:18:12,953 - INFO - Losses:
-2024-07-30 17:18:12,953 - INFO - Training Dataset
-2024-07-30 17:18:12,953 - INFO -   Total Loss: 0.006
-2024-07-30 17:18:12,953 - INFO -   Validation Dataset
-2024-07-30 17:18:12,953 - INFO -   Total Loss: 0.036
-2024-07-30 17:18:12,953 - INFO - Linear Probing Results:
-2024-07-30 17:18:12,953 - INFO - Classification Accuracy:
-2024-07-30 17:18:12,953 - INFO -   Training: 0.728, Validation: 0.738
-2024-07-30 17:18:12,953 - INFO - Classification Precision:
-2024-07-30 17:18:12,953 - INFO -   Training: 0.741, Validation: 0.743
-2024-07-30 17:18:12,953 - INFO - Classification Recall:
-2024-07-30 17:18:12,953 - INFO -   Training: 0.728, Validation: 0.738
-2024-07-30 17:18:12,953 - INFO - Classification F1:
-2024-07-30 17:18:12,953 - INFO -   Training: 0.727, Validation: 0.737
-2024-07-30 17:18:12,953 - INFO - Regression R2
-2024-07-30 17:18:12,953 - INFO -  Training: 0.502, Validation: 0.498
-2024-07-30 17:18:12,953 - INFO - iter: [ 3000] grad_stats: [6.70e-05 5.30e-06] (3.31e-06, 9.52e-05)
-2024-07-30 17:18:18,914 - INFO - Iter: 3020: avg. loss 0.006434
-2024-07-30 17:18:24,048 - INFO - Iter: 3040: avg. loss 0.006398
-2024-07-30 17:18:34,183 - INFO - Iter: 3060: avg. loss 0.006378
-2024-07-30 17:18:40,890 - INFO - Iter: 3080: avg. loss 0.006353
-2024-07-30 17:18:46,833 - INFO - Iter: 3100: avg. loss 0.006329
-2024-07-30 17:18:46,882 - INFO - Rank 0: performing validation at iteration 3100
-2024-07-30 17:18:55,186 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:19:02,872 - INFO - Performing classification task on rank 0...
-2024-07-30 17:19:05,018 - INFO - Training Accuracy: 0.689, Validation Accuracy: 0.713
-2024-07-30 17:19:05,018 - INFO - Training Precision: 0.711, Validation Precision: 0.725
-2024-07-30 17:19:05,018 - INFO - Training Recall: 0.689, Validation Recall: 0.713
-2024-07-30 17:19:05,018 - INFO - Training F1: 0.688, Validation F1: 0.711
-2024-07-30 17:19:05,019 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:19:07,635 - INFO - Performing regression task on rank 0..
-2024-07-30 17:19:18,189 - INFO - Training R2: 0.446, Validation R2: 0.453
-2024-07-30 17:19:18,826 - INFO - Rank 0: Validation done at iteration 3100. Pretraining continues.
-2024-07-30 17:19:18,828 - INFO - [iter:  3100] [loss: 0.006] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.3 ms)
-2024-07-30 17:19:18,829 - INFO - Batch Iterations: 3100/1000000
-2024-07-30 17:19:18,829 - INFO - Losses:
-2024-07-30 17:19:18,829 - INFO - Training Dataset
-2024-07-30 17:19:18,829 - INFO -   Total Loss: 0.006
-2024-07-30 17:19:18,829 - INFO -   Validation Dataset
-2024-07-30 17:19:18,829 - INFO -   Total Loss: 0.036
-2024-07-30 17:19:18,829 - INFO - Linear Probing Results:
-2024-07-30 17:19:18,829 - INFO - Classification Accuracy:
-2024-07-30 17:19:18,829 - INFO -   Training: 0.727, Validation: 0.737
-2024-07-30 17:19:18,829 - INFO - Classification Precision:
-2024-07-30 17:19:18,829 - INFO -   Training: 0.740, Validation: 0.742
-2024-07-30 17:19:18,829 - INFO - Classification Recall:
-2024-07-30 17:19:18,829 - INFO -   Training: 0.727, Validation: 0.737
-2024-07-30 17:19:18,829 - INFO - Classification F1:
-2024-07-30 17:19:18,829 - INFO -   Training: 0.726, Validation: 0.736
-2024-07-30 17:19:18,829 - INFO - Regression R2
-2024-07-30 17:19:18,829 - INFO -  Training: 0.500, Validation: 0.497
-2024-07-30 17:19:18,829 - INFO - iter: [ 3100] grad_stats: [6.87e-06 4.14e-06] (7.43e-07, 3.48e-05)
-2024-07-30 17:19:24,879 - INFO - Iter: 3120: avg. loss 0.006323
-2024-07-30 17:19:35,811 - INFO - Iter: 3140: avg. loss 0.006323
-2024-07-30 17:19:42,157 - INFO - Iter: 3160: avg. loss 0.006305
-2024-07-30 17:19:46,708 - INFO - Iter: 3180: avg. loss 0.006276
-2024-07-30 17:19:56,818 - INFO - Iter: 3200: avg. loss 0.006251
-2024-07-30 17:19:56,883 - INFO - Rank 0: performing validation at iteration 3200
-2024-07-30 17:20:05,452 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:20:13,241 - INFO - Performing classification task on rank 0...
-2024-07-30 17:20:15,490 - INFO - Training Accuracy: 0.688, Validation Accuracy: 0.710
-2024-07-30 17:20:15,490 - INFO - Training Precision: 0.712, Validation Precision: 0.725
-2024-07-30 17:20:15,490 - INFO - Training Recall: 0.688, Validation Recall: 0.710
-2024-07-30 17:20:15,490 - INFO - Training F1: 0.688, Validation F1: 0.709
-2024-07-30 17:20:15,491 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:20:18,126 - INFO - Performing regression task on rank 0..
-2024-07-30 17:20:27,246 - INFO - Training R2: 0.449, Validation R2: 0.461
-2024-07-30 17:20:27,639 - INFO - Rank 0: Validation done at iteration 3200. Pretraining continues.
-2024-07-30 17:20:27,640 - INFO - [iter:  3200] [loss: 0.006] [masks: 13.4, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.3 ms)
-2024-07-30 17:20:27,641 - INFO - Batch Iterations: 3200/1000000
-2024-07-30 17:20:27,641 - INFO - Losses:
-2024-07-30 17:20:27,641 - INFO - Training Dataset
-2024-07-30 17:20:27,641 - INFO -   Total Loss: 0.006
-2024-07-30 17:20:27,641 - INFO -   Validation Dataset
-2024-07-30 17:20:27,641 - INFO -   Total Loss: 0.036
-2024-07-30 17:20:27,641 - INFO - Linear Probing Results:
-2024-07-30 17:20:27,641 - INFO - Classification Accuracy:
-2024-07-30 17:20:27,641 - INFO -   Training: 0.725, Validation: 0.736
-2024-07-30 17:20:27,641 - INFO - Classification Precision:
-2024-07-30 17:20:27,641 - INFO -   Training: 0.739, Validation: 0.742
-2024-07-30 17:20:27,641 - INFO - Classification Recall:
-2024-07-30 17:20:27,641 - INFO -   Training: 0.725, Validation: 0.736
-2024-07-30 17:20:27,641 - INFO - Classification F1:
-2024-07-30 17:20:27,641 - INFO -   Training: 0.725, Validation: 0.735
-2024-07-30 17:20:27,641 - INFO - Regression R2
-2024-07-30 17:20:27,641 - INFO -  Training: 0.499, Validation: 0.496
-2024-07-30 17:20:27,641 - INFO - iter: [ 3200] grad_stats: [2.91e-05 6.28e-06] (2.37e-06, 5.10e-05)
-2024-07-30 17:20:33,511 - INFO - Iter: 3220: avg. loss 0.006225
-2024-07-30 17:20:39,458 - INFO - Iter: 3240: avg. loss 0.006210
-2024-07-30 17:20:45,490 - INFO - Iter: 3260: avg. loss 0.006193
-2024-07-30 17:20:51,468 - INFO - Iter: 3280: avg. loss 0.006165
-2024-07-30 17:21:02,311 - INFO - Iter: 3300: avg. loss 0.006136
-2024-07-30 17:21:02,361 - INFO - Rank 0: performing validation at iteration 3300
-2024-07-30 17:21:10,583 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:21:18,255 - INFO - Performing classification task on rank 0...
-2024-07-30 17:21:20,449 - INFO - Training Accuracy: 0.689, Validation Accuracy: 0.718
-2024-07-30 17:21:20,449 - INFO - Training Precision: 0.713, Validation Precision: 0.728
-2024-07-30 17:21:20,449 - INFO - Training Recall: 0.689, Validation Recall: 0.718
-2024-07-30 17:21:20,449 - INFO - Training F1: 0.690, Validation F1: 0.716
-2024-07-30 17:21:20,450 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:21:23,079 - INFO - Performing regression task on rank 0..
-2024-07-30 17:21:32,893 - INFO - Training R2: 0.472, Validation R2: 0.481
-2024-07-30 17:21:33,340 - INFO - Rank 0: Validation done at iteration 3300. Pretraining continues.
-2024-07-30 17:21:33,341 - INFO - [iter:  3300] [loss: 0.006] [masks: 13.5, 10.6] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.2 ms)
-2024-07-30 17:21:33,342 - INFO - Batch Iterations: 3300/1000000
-2024-07-30 17:21:33,342 - INFO - Losses:
-2024-07-30 17:21:33,342 - INFO - Training Dataset
-2024-07-30 17:21:33,342 - INFO -   Total Loss: 0.006
-2024-07-30 17:21:33,342 - INFO -   Validation Dataset
-2024-07-30 17:21:33,342 - INFO -   Total Loss: 0.035
-2024-07-30 17:21:33,342 - INFO - Linear Probing Results:
-2024-07-30 17:21:33,342 - INFO - Classification Accuracy:
-2024-07-30 17:21:33,342 - INFO -   Training: 0.724, Validation: 0.736
-2024-07-30 17:21:33,343 - INFO - Classification Precision:
-2024-07-30 17:21:33,343 - INFO -   Training: 0.739, Validation: 0.741
-2024-07-30 17:21:33,343 - INFO - Classification Recall:
-2024-07-30 17:21:33,343 - INFO -   Training: 0.724, Validation: 0.736
-2024-07-30 17:21:33,343 - INFO - Classification F1:
-2024-07-30 17:21:33,343 - INFO -   Training: 0.724, Validation: 0.735
-2024-07-30 17:21:33,343 - INFO - Regression R2
-2024-07-30 17:21:33,343 - INFO -  Training: 0.498, Validation: 0.495
-2024-07-30 17:21:33,343 - INFO - iter: [ 3300] grad_stats: [4.29e-05 1.29e-05] (9.03e-06, 1.87e-04)
-2024-07-30 17:21:39,325 - INFO - Iter: 3320: avg. loss 0.006109
-2024-07-30 17:21:45,745 - INFO - Iter: 3340: avg. loss 0.006078
-2024-07-30 17:21:51,962 - INFO - Iter: 3360: avg. loss 0.006050
-2024-07-30 17:22:00,348 - INFO - Iter: 3380: avg. loss 0.006021
-2024-07-30 17:22:05,703 - INFO - Iter: 3400: avg. loss 0.005991
-2024-07-30 17:22:05,749 - INFO - Rank 0: performing validation at iteration 3400
-2024-07-30 17:22:14,177 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:22:21,967 - INFO - Performing classification task on rank 0...
-2024-07-30 17:22:24,188 - INFO - Training Accuracy: 0.708, Validation Accuracy: 0.716
-2024-07-30 17:22:24,188 - INFO - Training Precision: 0.725, Validation Precision: 0.721
-2024-07-30 17:22:24,189 - INFO - Training Recall: 0.708, Validation Recall: 0.716
-2024-07-30 17:22:24,189 - INFO - Training F1: 0.708, Validation F1: 0.714
-2024-07-30 17:22:24,190 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:22:26,878 - INFO - Performing regression task on rank 0..
-2024-07-30 17:22:36,977 - INFO - Training R2: 0.494, Validation R2: 0.484
-2024-07-30 17:22:37,366 - INFO - Rank 0: Validation done at iteration 3400. Pretraining continues.
-2024-07-30 17:22:37,367 - INFO - [iter:  3400] [loss: 0.006] [masks: 13.4, 10.6] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.2 ms)
-2024-07-30 17:22:37,368 - INFO - Batch Iterations: 3400/1000000
-2024-07-30 17:22:37,368 - INFO - Losses:
-2024-07-30 17:22:37,368 - INFO - Training Dataset
-2024-07-30 17:22:37,368 - INFO -   Total Loss: 0.006
-2024-07-30 17:22:37,368 - INFO -   Validation Dataset
-2024-07-30 17:22:37,368 - INFO -   Total Loss: 0.034
-2024-07-30 17:22:37,368 - INFO - Linear Probing Results:
-2024-07-30 17:22:37,368 - INFO - Classification Accuracy:
-2024-07-30 17:22:37,368 - INFO -   Training: 0.724, Validation: 0.735
-2024-07-30 17:22:37,368 - INFO - Classification Precision:
-2024-07-30 17:22:37,369 - INFO -   Training: 0.738, Validation: 0.741
-2024-07-30 17:22:37,369 - INFO - Classification Recall:
-2024-07-30 17:22:37,369 - INFO -   Training: 0.724, Validation: 0.735
-2024-07-30 17:22:37,369 - INFO - Classification F1:
-2024-07-30 17:22:37,369 - INFO -   Training: 0.723, Validation: 0.734
-2024-07-30 17:22:37,369 - INFO - Regression R2
-2024-07-30 17:22:37,369 - INFO -  Training: 0.498, Validation: 0.495
-2024-07-30 17:22:37,369 - INFO - iter: [ 3400] grad_stats: [4.86e-05 1.02e-05] (5.10e-06, 1.16e-04)
-2024-07-30 17:22:43,394 - INFO - Iter: 3420: avg. loss 0.005964
-2024-07-30 17:22:49,614 - INFO - Iter: 3440: avg. loss 0.005933
-2024-07-30 17:23:00,475 - INFO - Iter: 3460: avg. loss 0.005902
-2024-07-30 17:23:06,373 - INFO - Iter: 3480: avg. loss 0.005872
-2024-07-30 17:23:11,485 - INFO - Saving checkpoint at iteration 3500 after 10.0 minutes of training.
-2024-07-30 17:23:12,001 - INFO - Iter: 3500: avg. loss 0.005842
-2024-07-30 17:23:12,048 - INFO - Rank 0: performing validation at iteration 3500
-2024-07-30 17:23:20,392 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:23:28,104 - INFO - Performing classification task on rank 0...
-2024-07-30 17:23:30,389 - INFO - Training Accuracy: 0.719, Validation Accuracy: 0.734
-2024-07-30 17:23:30,389 - INFO - Training Precision: 0.732, Validation Precision: 0.737
-2024-07-30 17:23:30,389 - INFO - Training Recall: 0.719, Validation Recall: 0.734
-2024-07-30 17:23:30,389 - INFO - Training F1: 0.718, Validation F1: 0.732
-2024-07-30 17:23:30,390 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:23:32,986 - INFO - Performing regression task on rank 0..
-2024-07-30 17:23:42,347 - INFO - Training R2: 0.495, Validation R2: 0.516
-2024-07-30 17:23:42,737 - INFO - Rank 0: Validation done at iteration 3500. Pretraining continues.
-2024-07-30 17:23:42,739 - INFO - [iter:  3500] [loss: 0.006] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.2 ms)
-2024-07-30 17:23:42,740 - INFO - Batch Iterations: 3500/1000000
-2024-07-30 17:23:42,740 - INFO - Losses:
-2024-07-30 17:23:42,740 - INFO - Training Dataset
-2024-07-30 17:23:42,740 - INFO -   Total Loss: 0.006
-2024-07-30 17:23:42,740 - INFO -   Validation Dataset
-2024-07-30 17:23:42,740 - INFO -   Total Loss: 0.033
-2024-07-30 17:23:42,740 - INFO - Linear Probing Results:
-2024-07-30 17:23:42,740 - INFO - Classification Accuracy:
-2024-07-30 17:23:42,740 - INFO -   Training: 0.724, Validation: 0.735
-2024-07-30 17:23:42,740 - INFO - Classification Precision:
-2024-07-30 17:23:42,740 - INFO -   Training: 0.738, Validation: 0.741
-2024-07-30 17:23:42,740 - INFO - Classification Recall:
-2024-07-30 17:23:42,740 - INFO -   Training: 0.724, Validation: 0.735
-2024-07-30 17:23:42,740 - INFO - Classification F1:
-2024-07-30 17:23:42,740 - INFO -   Training: 0.723, Validation: 0.734
-2024-07-30 17:23:42,740 - INFO - Regression R2
-2024-07-30 17:23:42,740 - INFO -  Training: 0.498, Validation: 0.495
-2024-07-30 17:23:42,740 - INFO - iter: [ 3500] grad_stats: [2.80e-05 3.29e-06] (1.63e-06, 4.95e-05)
-2024-07-30 17:23:48,721 - INFO - Iter: 3520: avg. loss 0.005812
-2024-07-30 17:23:57,563 - INFO - Iter: 3540: avg. loss 0.005784
-2024-07-30 17:24:02,845 - INFO - Iter: 3560: avg. loss 0.005755
-2024-07-30 17:24:08,745 - INFO - Iter: 3580: avg. loss 0.005727
-2024-07-30 17:24:15,032 - INFO - Iter: 3600: avg. loss 0.005704
-2024-07-30 17:24:19,954 - INFO - Rank 0: performing validation at iteration 3600
-2024-07-30 17:24:28,566 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:24:36,845 - INFO - Performing classification task on rank 0...
-2024-07-30 17:24:39,170 - INFO - Training Accuracy: 0.714, Validation Accuracy: 0.728
-2024-07-30 17:24:39,170 - INFO - Training Precision: 0.727, Validation Precision: 0.730
-2024-07-30 17:24:39,170 - INFO - Training Recall: 0.714, Validation Recall: 0.728
-2024-07-30 17:24:39,170 - INFO - Training F1: 0.712, Validation F1: 0.725
-2024-07-30 17:24:39,171 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:24:41,919 - INFO - Performing regression task on rank 0..
-2024-07-30 17:24:51,361 - INFO - Training R2: 0.495, Validation R2: 0.514
-2024-07-30 17:24:52,067 - INFO - Rank 0: Validation done at iteration 3600. Pretraining continues.
-2024-07-30 17:24:52,070 - INFO - [iter:  3600] [loss: 0.006] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.2 ms)
-2024-07-30 17:24:52,071 - INFO - Batch Iterations: 3600/1000000
-2024-07-30 17:24:52,071 - INFO - Losses:
-2024-07-30 17:24:52,071 - INFO - Training Dataset
-2024-07-30 17:24:52,071 - INFO -   Total Loss: 0.006
-2024-07-30 17:24:52,071 - INFO -   Validation Dataset
-2024-07-30 17:24:52,071 - INFO -   Total Loss: 0.032
-2024-07-30 17:24:52,071 - INFO - Linear Probing Results:
-2024-07-30 17:24:52,071 - INFO - Classification Accuracy:
-2024-07-30 17:24:52,071 - INFO -   Training: 0.723, Validation: 0.735
-2024-07-30 17:24:52,071 - INFO - Classification Precision:
-2024-07-30 17:24:52,071 - INFO -   Training: 0.738, Validation: 0.740
-2024-07-30 17:24:52,071 - INFO - Classification Recall:
-2024-07-30 17:24:52,071 - INFO -   Training: 0.723, Validation: 0.735
-2024-07-30 17:24:52,071 - INFO - Classification F1:
-2024-07-30 17:24:52,071 - INFO -   Training: 0.723, Validation: 0.734
-2024-07-30 17:24:52,071 - INFO - Regression R2
-2024-07-30 17:24:52,071 - INFO -  Training: 0.497, Validation: 0.496
-2024-07-30 17:24:52,071 - INFO - iter: [ 3600] grad_stats: [6.92e-05 8.01e-07] (5.35e-07, 6.92e-05)
-2024-07-30 17:24:59,091 - INFO - Iter: 3620: avg. loss 0.005676
-2024-07-30 17:25:05,096 - INFO - Iter: 3640: avg. loss 0.005649
-2024-07-30 17:25:11,252 - INFO - Iter: 3660: avg. loss 0.005623
-2024-07-30 17:25:17,260 - INFO - Iter: 3680: avg. loss 0.005599
-2024-07-30 17:25:28,318 - INFO - Iter: 3700: avg. loss 0.005575
-2024-07-30 17:25:28,364 - INFO - Rank 0: performing validation at iteration 3700
-2024-07-30 17:25:36,732 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:25:44,354 - INFO - Performing classification task on rank 0...
-2024-07-30 17:25:47,082 - INFO - Training Accuracy: 0.708, Validation Accuracy: 0.727
-2024-07-30 17:25:47,082 - INFO - Training Precision: 0.721, Validation Precision: 0.729
-2024-07-30 17:25:47,082 - INFO - Training Recall: 0.708, Validation Recall: 0.727
-2024-07-30 17:25:47,082 - INFO - Training F1: 0.707, Validation F1: 0.724
-2024-07-30 17:25:47,083 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:25:49,650 - INFO - Performing regression task on rank 0..
-2024-07-30 17:26:00,256 - INFO - Training R2: 0.492, Validation R2: 0.502
-2024-07-30 17:26:00,650 - INFO - Rank 0: Validation done at iteration 3700. Pretraining continues.
-2024-07-30 17:26:00,652 - INFO - [iter:  3700] [loss: 0.006] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.1 ms)
-2024-07-30 17:26:00,653 - INFO - Batch Iterations: 3700/1000000
-2024-07-30 17:26:00,653 - INFO - Losses:
-2024-07-30 17:26:00,653 - INFO - Training Dataset
-2024-07-30 17:26:00,653 - INFO -   Total Loss: 0.006
-2024-07-30 17:26:00,653 - INFO -   Validation Dataset
-2024-07-30 17:26:00,653 - INFO -   Total Loss: 0.032
-2024-07-30 17:26:00,653 - INFO - Linear Probing Results:
-2024-07-30 17:26:00,653 - INFO - Classification Accuracy:
-2024-07-30 17:26:00,653 - INFO -   Training: 0.723, Validation: 0.735
-2024-07-30 17:26:00,653 - INFO - Classification Precision:
-2024-07-30 17:26:00,653 - INFO -   Training: 0.737, Validation: 0.740
-2024-07-30 17:26:00,653 - INFO - Classification Recall:
-2024-07-30 17:26:00,653 - INFO -   Training: 0.723, Validation: 0.735
-2024-07-30 17:26:00,653 - INFO - Classification F1:
-2024-07-30 17:26:00,653 - INFO -   Training: 0.722, Validation: 0.733
-2024-07-30 17:26:00,653 - INFO - Regression R2
-2024-07-30 17:26:00,653 - INFO -  Training: 0.497, Validation: 0.496
-2024-07-30 17:26:00,653 - INFO - iter: [ 3700] grad_stats: [2.99e-04 5.29e-05] (2.01e-05, 5.13e-04)
-2024-07-30 17:26:06,773 - INFO - Iter: 3720: avg. loss 0.005553
-2024-07-30 17:26:12,903 - INFO - Iter: 3740: avg. loss 0.005536
-2024-07-30 17:26:18,973 - INFO - Iter: 3760: avg. loss 0.005513
-2024-07-30 17:26:29,734 - INFO - Iter: 3780: avg. loss 0.005497
-2024-07-30 17:26:36,529 - INFO - Iter: 3800: avg. loss 0.005485
-2024-07-30 17:26:36,578 - INFO - Rank 0: performing validation at iteration 3800
-2024-07-30 17:26:44,953 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:26:52,516 - INFO - Performing classification task on rank 0...
-2024-07-30 17:26:55,064 - INFO - Training Accuracy: 0.721, Validation Accuracy: 0.719
-2024-07-30 17:26:55,064 - INFO - Training Precision: 0.729, Validation Precision: 0.722
-2024-07-30 17:26:55,064 - INFO - Training Recall: 0.721, Validation Recall: 0.719
-2024-07-30 17:26:55,064 - INFO - Training F1: 0.722, Validation F1: 0.720
-2024-07-30 17:26:55,065 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:26:57,670 - INFO - Performing regression task on rank 0..
-2024-07-30 17:27:06,984 - INFO - Training R2: 0.506, Validation R2: 0.500
-2024-07-30 17:27:07,374 - INFO - Rank 0: Validation done at iteration 3800. Pretraining continues.
-2024-07-30 17:27:07,376 - INFO - [iter:  3800] [loss: 0.005] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.1 ms)
-2024-07-30 17:27:07,377 - INFO - Batch Iterations: 3800/1000000
-2024-07-30 17:27:07,377 - INFO - Losses:
-2024-07-30 17:27:07,377 - INFO - Training Dataset
-2024-07-30 17:27:07,377 - INFO -   Total Loss: 0.005
-2024-07-30 17:27:07,378 - INFO -   Validation Dataset
-2024-07-30 17:27:07,378 - INFO -   Total Loss: 0.031
-2024-07-30 17:27:07,378 - INFO - Linear Probing Results:
-2024-07-30 17:27:07,378 - INFO - Classification Accuracy:
-2024-07-30 17:27:07,378 - INFO -   Training: 0.723, Validation: 0.734
-2024-07-30 17:27:07,378 - INFO - Classification Precision:
-2024-07-30 17:27:07,378 - INFO -   Training: 0.737, Validation: 0.740
-2024-07-30 17:27:07,378 - INFO - Classification Recall:
-2024-07-30 17:27:07,378 - INFO -   Training: 0.723, Validation: 0.734
-2024-07-30 17:27:07,378 - INFO - Classification F1:
-2024-07-30 17:27:07,378 - INFO -   Training: 0.722, Validation: 0.733
-2024-07-30 17:27:07,378 - INFO - Regression R2
-2024-07-30 17:27:07,378 - INFO -  Training: 0.498, Validation: 0.496
-2024-07-30 17:27:07,378 - INFO - iter: [ 3800] grad_stats: [1.05e-03 9.81e-05] (4.51e-05, 1.81e-03)
-2024-07-30 17:27:13,271 - INFO - Iter: 3820: avg. loss 0.005470
-2024-07-30 17:27:16,954 - INFO - Iter: 3840: avg. loss 0.005447
-2024-07-30 17:27:27,823 - INFO - Iter: 3860: avg. loss 0.005427
-2024-07-30 17:27:32,297 - INFO - Iter: 3880: avg. loss 0.005416
-2024-07-30 17:27:38,211 - INFO - Iter: 3900: avg. loss 0.005394
-2024-07-30 17:27:38,259 - INFO - Rank 0: performing validation at iteration 3900
-2024-07-30 17:27:46,677 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:27:54,334 - INFO - Performing classification task on rank 0...
-2024-07-30 17:27:57,101 - INFO - Training Accuracy: 0.711, Validation Accuracy: 0.738
-2024-07-30 17:27:57,101 - INFO - Training Precision: 0.719, Validation Precision: 0.738
-2024-07-30 17:27:57,102 - INFO - Training Recall: 0.711, Validation Recall: 0.738
-2024-07-30 17:27:57,102 - INFO - Training F1: 0.710, Validation F1: 0.736
-2024-07-30 17:27:57,103 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:27:59,709 - INFO - Performing regression task on rank 0..
-2024-07-30 17:28:09,304 - INFO - Training R2: 0.491, Validation R2: 0.433
-2024-07-30 17:28:10,135 - INFO - Rank 0: Validation done at iteration 3900. Pretraining continues.
-2024-07-30 17:28:10,142 - INFO - [iter:  3900] [loss: 0.005] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.1 ms)
-2024-07-30 17:28:10,143 - INFO - Batch Iterations: 3900/1000000
-2024-07-30 17:28:10,143 - INFO - Losses:
-2024-07-30 17:28:10,143 - INFO - Training Dataset
-2024-07-30 17:28:10,143 - INFO -   Total Loss: 0.005
-2024-07-30 17:28:10,143 - INFO -   Validation Dataset
-2024-07-30 17:28:10,143 - INFO -   Total Loss: 0.030
-2024-07-30 17:28:10,143 - INFO - Linear Probing Results:
-2024-07-30 17:28:10,143 - INFO - Classification Accuracy:
-2024-07-30 17:28:10,143 - INFO -   Training: 0.723, Validation: 0.734
-2024-07-30 17:28:10,144 - INFO - Classification Precision:
-2024-07-30 17:28:10,144 - INFO -   Training: 0.737, Validation: 0.740
-2024-07-30 17:28:10,144 - INFO - Classification Recall:
-2024-07-30 17:28:10,144 - INFO -   Training: 0.723, Validation: 0.734
-2024-07-30 17:28:10,144 - INFO - Classification F1:
-2024-07-30 17:28:10,144 - INFO -   Training: 0.722, Validation: 0.733
-2024-07-30 17:28:10,144 - INFO - Regression R2
-2024-07-30 17:28:10,144 - INFO -  Training: 0.497, Validation: 0.495
-2024-07-30 17:28:10,144 - INFO - iter: [ 3900] grad_stats: [8.61e-04 8.02e-05] (4.23e-05, 1.43e-03)
-2024-07-30 17:28:21,055 - INFO - Iter: 3920: avg. loss 0.005377
-2024-07-30 17:28:27,230 - INFO - Iter: 3940: avg. loss 0.005358
-2024-07-30 17:28:33,288 - INFO - Iter: 3960: avg. loss 0.005335
-2024-07-30 17:28:39,351 - INFO - Iter: 3980: avg. loss 0.005313
-2024-07-30 17:28:43,605 - INFO - Saving checkpoint at iteration 4000 after 10.0 minutes of training.
-2024-07-30 17:28:44,174 - INFO - Iter: 4000: avg. loss 0.005309
-2024-07-30 17:28:48,660 - INFO - Rank 0: Iter: 4000; learning rate: 0.00100; wd: 0.04001
-2024-07-30 17:28:48,708 - INFO - Rank 0: performing validation at iteration 4000
-2024-07-30 17:28:57,370 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:29:05,003 - INFO - Performing classification task on rank 0...
-2024-07-30 17:29:07,518 - INFO - Training Accuracy: 0.708, Validation Accuracy: 0.730
-2024-07-30 17:29:07,519 - INFO - Training Precision: 0.717, Validation Precision: 0.731
-2024-07-30 17:29:07,519 - INFO - Training Recall: 0.708, Validation Recall: 0.730
-2024-07-30 17:29:07,519 - INFO - Training F1: 0.707, Validation F1: 0.729
-2024-07-30 17:29:07,541 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:29:10,100 - INFO - Performing regression task on rank 0..
-2024-07-30 17:29:19,722 - INFO - Training R2: 0.476, Validation R2: 0.327
-2024-07-30 17:29:20,151 - INFO - Rank 0: Validation done at iteration 4000. Pretraining continues.
-2024-07-30 17:29:20,153 - INFO - [iter:  4000] [loss: 0.005] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.1 ms)
-2024-07-30 17:29:20,154 - INFO - Batch Iterations: 4000/1000000
-2024-07-30 17:29:20,154 - INFO - Losses:
-2024-07-30 17:29:20,154 - INFO - Training Dataset
-2024-07-30 17:29:20,154 - INFO -   Total Loss: 0.005
-2024-07-30 17:29:20,154 - INFO -   Validation Dataset
-2024-07-30 17:29:20,154 - INFO -   Total Loss: 0.030
-2024-07-30 17:29:20,154 - INFO - Linear Probing Results:
-2024-07-30 17:29:20,154 - INFO - Classification Accuracy:
-2024-07-30 17:29:20,154 - INFO -   Training: 0.722, Validation: 0.734
-2024-07-30 17:29:20,154 - INFO - Classification Precision:
-2024-07-30 17:29:20,154 - INFO -   Training: 0.736, Validation: 0.739
-2024-07-30 17:29:20,154 - INFO - Classification Recall:
-2024-07-30 17:29:20,154 - INFO -   Training: 0.722, Validation: 0.734
-2024-07-30 17:29:20,154 - INFO - Classification F1:
-2024-07-30 17:29:20,154 - INFO -   Training: 0.722, Validation: 0.733
-2024-07-30 17:29:20,154 - INFO - Regression R2
-2024-07-30 17:29:20,154 - INFO -  Training: 0.497, Validation: 0.490
-2024-07-30 17:29:20,154 - INFO - iter: [ 4000] grad_stats: [1.86e-03 1.37e-04] (5.15e-05, 2.35e-03)
-2024-07-30 17:29:26,163 - INFO - Iter: 4020: avg. loss 0.005294
-2024-07-30 17:29:32,340 - INFO - Iter: 4040: avg. loss 0.005279
-2024-07-30 17:29:38,279 - INFO - Iter: 4060: avg. loss 0.005262
-2024-07-30 17:29:44,091 - INFO - Iter: 4080: avg. loss 0.005259
-2024-07-30 17:29:55,294 - INFO - Iter: 4100: avg. loss 0.005252
-2024-07-30 17:29:55,349 - INFO - Rank 0: performing validation at iteration 4100
-2024-07-30 17:30:04,735 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:30:12,689 - INFO - Performing classification task on rank 0...
-2024-07-30 17:30:15,318 - INFO - Training Accuracy: 0.702, Validation Accuracy: 0.722
-2024-07-30 17:30:15,319 - INFO - Training Precision: 0.712, Validation Precision: 0.723
-2024-07-30 17:30:15,319 - INFO - Training Recall: 0.702, Validation Recall: 0.722
-2024-07-30 17:30:15,319 - INFO - Training F1: 0.701, Validation F1: 0.720
-2024-07-30 17:30:15,324 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:30:17,890 - INFO - Performing regression task on rank 0..
-2024-07-30 17:30:28,202 - INFO - Training R2: 0.467, Validation R2: 0.283
-2024-07-30 17:30:28,877 - INFO - Rank 0: Validation done at iteration 4100. Pretraining continues.
-2024-07-30 17:30:28,887 - INFO - [iter:  4100] [loss: 0.005] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.1 ms)
-2024-07-30 17:30:28,888 - INFO - Batch Iterations: 4100/1000000
-2024-07-30 17:30:28,888 - INFO - Losses:
-2024-07-30 17:30:28,888 - INFO - Training Dataset
-2024-07-30 17:30:28,888 - INFO -   Total Loss: 0.005
-2024-07-30 17:30:28,888 - INFO -   Validation Dataset
-2024-07-30 17:30:28,888 - INFO -   Total Loss: 0.029
-2024-07-30 17:30:28,888 - INFO - Linear Probing Results:
-2024-07-30 17:30:28,888 - INFO - Classification Accuracy:
-2024-07-30 17:30:28,888 - INFO -   Training: 0.722, Validation: 0.734
-2024-07-30 17:30:28,888 - INFO - Classification Precision:
-2024-07-30 17:30:28,888 - INFO -   Training: 0.735, Validation: 0.739
-2024-07-30 17:30:28,888 - INFO - Classification Recall:
-2024-07-30 17:30:28,888 - INFO -   Training: 0.722, Validation: 0.734
-2024-07-30 17:30:28,888 - INFO - Classification F1:
-2024-07-30 17:30:28,888 - INFO -   Training: 0.721, Validation: 0.733
-2024-07-30 17:30:28,888 - INFO - Regression R2
-2024-07-30 17:30:28,888 - INFO -  Training: 0.496, Validation: 0.485
-2024-07-30 17:30:28,888 - INFO - iter: [ 4100] grad_stats: [2.76e-03 2.99e-04] (6.52e-05, 3.61e-03)
-2024-07-30 17:30:32,116 - INFO - Iter: 4120: avg. loss 0.005279
-2024-07-30 17:30:38,295 - INFO - Iter: 4140: avg. loss 0.005309
-2024-07-30 17:30:44,409 - INFO - Iter: 4160: avg. loss 0.005303
-2024-07-30 17:30:53,412 - INFO - Iter: 4180: avg. loss 0.005324
-2024-07-30 17:30:59,532 - INFO - Iter: 4200: avg. loss 0.005319
-2024-07-30 17:30:59,578 - INFO - Rank 0: performing validation at iteration 4200
-2024-07-30 17:31:07,895 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:31:15,660 - INFO - Performing classification task on rank 0...
-2024-07-30 17:31:18,236 - INFO - Training Accuracy: 0.694, Validation Accuracy: 0.715
-2024-07-30 17:31:18,236 - INFO - Training Precision: 0.707, Validation Precision: 0.717
-2024-07-30 17:31:18,236 - INFO - Training Recall: 0.694, Validation Recall: 0.715
-2024-07-30 17:31:18,237 - INFO - Training F1: 0.693, Validation F1: 0.713
-2024-07-30 17:31:18,238 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:31:20,864 - INFO - Performing regression task on rank 0..
-2024-07-30 17:31:30,634 - INFO - Training R2: 0.451, Validation R2: 0.383
-2024-07-30 17:31:31,055 - INFO - Rank 0: Validation done at iteration 4200. Pretraining continues.
-2024-07-30 17:31:31,057 - INFO - [iter:  4200] [loss: 0.005] [masks: 13.5, 10.6] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.1 ms)
-2024-07-30 17:31:31,058 - INFO - Batch Iterations: 4200/1000000
-2024-07-30 17:31:31,058 - INFO - Losses:
-2024-07-30 17:31:31,058 - INFO - Training Dataset
-2024-07-30 17:31:31,058 - INFO -   Total Loss: 0.005
-2024-07-30 17:31:31,058 - INFO -   Validation Dataset
-2024-07-30 17:31:31,058 - INFO -   Total Loss: 0.029
-2024-07-30 17:31:31,058 - INFO - Linear Probing Results:
-2024-07-30 17:31:31,058 - INFO - Classification Accuracy:
-2024-07-30 17:31:31,058 - INFO -   Training: 0.721, Validation: 0.733
-2024-07-30 17:31:31,058 - INFO - Classification Precision:
-2024-07-30 17:31:31,058 - INFO -   Training: 0.735, Validation: 0.738
-2024-07-30 17:31:31,058 - INFO - Classification Recall:
-2024-07-30 17:31:31,058 - INFO -   Training: 0.721, Validation: 0.733
-2024-07-30 17:31:31,059 - INFO - Classification F1:
-2024-07-30 17:31:31,059 - INFO -   Training: 0.721, Validation: 0.732
-2024-07-30 17:31:31,059 - INFO - Regression R2
-2024-07-30 17:31:31,059 - INFO -  Training: 0.495, Validation: 0.483
-2024-07-30 17:31:31,059 - INFO - iter: [ 4200] grad_stats: [5.62e-04 1.58e-05] (4.99e-06, 7.84e-04)
-2024-07-30 17:31:37,094 - INFO - Iter: 4220: avg. loss 0.005303
-2024-07-30 17:31:42,944 - INFO - Iter: 4240: avg. loss 0.005284
-2024-07-30 17:31:54,107 - INFO - Iter: 4260: avg. loss 0.005267
-2024-07-30 17:32:00,102 - INFO - Iter: 4280: avg. loss 0.005257
-2024-07-30 17:32:06,265 - INFO - Iter: 4300: avg. loss 0.005251
-2024-07-30 17:32:06,311 - INFO - Rank 0: performing validation at iteration 4300
-2024-07-30 17:32:14,647 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:32:22,554 - INFO - Performing classification task on rank 0...
-2024-07-30 17:32:25,240 - INFO - Training Accuracy: 0.683, Validation Accuracy: 0.700
-2024-07-30 17:32:25,240 - INFO - Training Precision: 0.701, Validation Precision: 0.705
-2024-07-30 17:32:25,240 - INFO - Training Recall: 0.683, Validation Recall: 0.700
-2024-07-30 17:32:25,240 - INFO - Training F1: 0.680, Validation F1: 0.696
-2024-07-30 17:32:25,246 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:32:27,891 - INFO - Performing regression task on rank 0..
-2024-07-30 17:32:36,746 - INFO - Training R2: 0.450, Validation R2: 0.418
-2024-07-30 17:32:37,190 - INFO - Rank 0: Validation done at iteration 4300. Pretraining continues.
-2024-07-30 17:32:37,195 - INFO - [iter:  4300] [loss: 0.005] [masks: 13.5, 10.6] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.0 ms)
-2024-07-30 17:32:37,196 - INFO - Batch Iterations: 4300/1000000
-2024-07-30 17:32:37,197 - INFO - Losses:
-2024-07-30 17:32:37,197 - INFO - Training Dataset
-2024-07-30 17:32:37,197 - INFO -   Total Loss: 0.005
-2024-07-30 17:32:37,197 - INFO -   Validation Dataset
-2024-07-30 17:32:37,197 - INFO -   Total Loss: 0.029
-2024-07-30 17:32:37,197 - INFO - Linear Probing Results:
-2024-07-30 17:32:37,197 - INFO - Classification Accuracy:
-2024-07-30 17:32:37,197 - INFO -   Training: 0.720, Validation: 0.733
-2024-07-30 17:32:37,197 - INFO - Classification Precision:
-2024-07-30 17:32:37,197 - INFO -   Training: 0.734, Validation: 0.738
-2024-07-30 17:32:37,197 - INFO - Classification Recall:
-2024-07-30 17:32:37,197 - INFO -   Training: 0.720, Validation: 0.733
-2024-07-30 17:32:37,197 - INFO - Classification F1:
-2024-07-30 17:32:37,197 - INFO -   Training: 0.720, Validation: 0.731
-2024-07-30 17:32:37,197 - INFO - Regression R2
-2024-07-30 17:32:37,197 - INFO -  Training: 0.494, Validation: 0.481
-2024-07-30 17:32:37,197 - INFO - iter: [ 4300] grad_stats: [2.07e-03 2.18e-04] (3.45e-05, 2.22e-03)
-2024-07-30 17:32:43,209 - INFO - Iter: 4320: avg. loss 0.005240
-2024-07-30 17:32:51,530 - INFO - Iter: 4340: avg. loss 0.005224
-2024-07-30 17:32:57,059 - INFO - Iter: 4360: avg. loss 0.005214
-2024-07-30 17:33:03,643 - INFO - Iter: 4380: avg. loss 0.005209
-2024-07-30 17:33:09,744 - INFO - Iter: 4400: avg. loss 0.005194
-2024-07-30 17:33:09,790 - INFO - Rank 0: performing validation at iteration 4400
-2024-07-30 17:33:20,019 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:33:27,614 - INFO - Performing classification task on rank 0...
-2024-07-30 17:33:30,146 - INFO - Training Accuracy: 0.681, Validation Accuracy: 0.709
-2024-07-30 17:33:30,147 - INFO - Training Precision: 0.697, Validation Precision: 0.711
-2024-07-30 17:33:30,147 - INFO - Training Recall: 0.681, Validation Recall: 0.709
-2024-07-30 17:33:30,147 - INFO - Training F1: 0.679, Validation F1: 0.707
-2024-07-30 17:33:30,148 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:33:32,752 - INFO - Performing regression task on rank 0..
-2024-07-30 17:33:41,457 - INFO - Training R2: 0.436, Validation R2: 0.397
-2024-07-30 17:33:41,878 - INFO - Rank 0: Validation done at iteration 4400. Pretraining continues.
-2024-07-30 17:33:41,886 - INFO - [iter:  4400] [loss: 0.005] [masks: 13.4, 10.6] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.0 ms)
-2024-07-30 17:33:41,887 - INFO - Batch Iterations: 4400/1000000
-2024-07-30 17:33:41,887 - INFO - Losses:
-2024-07-30 17:33:41,887 - INFO - Training Dataset
-2024-07-30 17:33:41,887 - INFO -   Total Loss: 0.005
-2024-07-30 17:33:41,887 - INFO -   Validation Dataset
-2024-07-30 17:33:41,887 - INFO -   Total Loss: 0.028
-2024-07-30 17:33:41,887 - INFO - Linear Probing Results:
-2024-07-30 17:33:41,887 - INFO - Classification Accuracy:
-2024-07-30 17:33:41,887 - INFO -   Training: 0.719, Validation: 0.732
-2024-07-30 17:33:41,887 - INFO - Classification Precision:
-2024-07-30 17:33:41,887 - INFO -   Training: 0.733, Validation: 0.737
-2024-07-30 17:33:41,887 - INFO - Classification Recall:
-2024-07-30 17:33:41,887 - INFO -   Training: 0.719, Validation: 0.732
-2024-07-30 17:33:41,887 - INFO - Classification F1:
-2024-07-30 17:33:41,887 - INFO -   Training: 0.719, Validation: 0.731
-2024-07-30 17:33:41,887 - INFO - Regression R2
-2024-07-30 17:33:41,887 - INFO -  Training: 0.493, Validation: 0.480
-2024-07-30 17:33:41,887 - INFO - iter: [ 4400] grad_stats: [1.66e-03 1.30e-04] (1.66e-05, 1.80e-03)
-2024-07-30 17:33:45,563 - INFO - Iter: 4420: avg. loss 0.005186
-2024-07-30 17:33:51,556 - INFO - Iter: 4440: avg. loss 0.005192
-2024-07-30 17:33:57,775 - INFO - Iter: 4460: avg. loss 0.005189
-2024-07-30 17:34:03,745 - INFO - Iter: 4480: avg. loss 0.005189
-2024-07-30 17:34:15,108 - INFO - Saving checkpoint at iteration 4500 after 10.0 minutes of training.
-2024-07-30 17:34:15,713 - INFO - Iter: 4500: avg. loss 0.005178
-2024-07-30 17:34:15,760 - INFO - Rank 0: performing validation at iteration 4500
-2024-07-30 17:34:23,977 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:34:31,532 - INFO - Performing classification task on rank 0...
-2024-07-30 17:34:34,130 - INFO - Training Accuracy: 0.688, Validation Accuracy: 0.707
-2024-07-30 17:34:34,130 - INFO - Training Precision: 0.702, Validation Precision: 0.708
-2024-07-30 17:34:34,130 - INFO - Training Recall: 0.688, Validation Recall: 0.707
-2024-07-30 17:34:34,131 - INFO - Training F1: 0.688, Validation F1: 0.705
-2024-07-30 17:34:34,132 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:34:36,790 - INFO - Performing regression task on rank 0..
-2024-07-30 17:34:46,087 - INFO - Training R2: 0.430, Validation R2: 0.426
-2024-07-30 17:34:46,508 - INFO - Rank 0: Validation done at iteration 4500. Pretraining continues.
-2024-07-30 17:34:46,522 - INFO - [iter:  4500] [loss: 0.005] [masks: 13.4, 10.6] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.0 ms)
-2024-07-30 17:34:46,523 - INFO - Batch Iterations: 4500/1000000
-2024-07-30 17:34:46,523 - INFO - Losses:
-2024-07-30 17:34:46,523 - INFO - Training Dataset
-2024-07-30 17:34:46,523 - INFO -   Total Loss: 0.005
-2024-07-30 17:34:46,523 - INFO -   Validation Dataset
-2024-07-30 17:34:46,523 - INFO -   Total Loss: 0.028
-2024-07-30 17:34:46,523 - INFO - Linear Probing Results:
-2024-07-30 17:34:46,523 - INFO - Classification Accuracy:
-2024-07-30 17:34:46,523 - INFO -   Training: 0.719, Validation: 0.732
-2024-07-30 17:34:46,523 - INFO - Classification Precision:
-2024-07-30 17:34:46,523 - INFO -   Training: 0.732, Validation: 0.736
-2024-07-30 17:34:46,523 - INFO - Classification Recall:
-2024-07-30 17:34:46,523 - INFO -   Training: 0.719, Validation: 0.732
-2024-07-30 17:34:46,523 - INFO - Classification F1:
-2024-07-30 17:34:46,523 - INFO -   Training: 0.718, Validation: 0.730
-2024-07-30 17:34:46,523 - INFO - Regression R2
-2024-07-30 17:34:46,523 - INFO -  Training: 0.491, Validation: 0.478
-2024-07-30 17:34:46,523 - INFO - iter: [ 4500] grad_stats: [1.79e-03 1.44e-04] (1.27e-05, 1.79e-03)
-2024-07-30 17:34:52,745 - INFO - Iter: 4520: avg. loss 0.005166
-2024-07-30 17:34:58,915 - INFO - Iter: 4540: avg. loss 0.005151
-2024-07-30 17:35:10,176 - INFO - Iter: 4560: avg. loss 0.005137
-2024-07-30 17:35:15,502 - INFO - Iter: 4580: avg. loss 0.005129
-2024-07-30 17:35:21,615 - INFO - Iter: 4600: avg. loss 0.005133
-2024-07-30 17:35:21,661 - INFO - Rank 0: performing validation at iteration 4600
-2024-07-30 17:35:30,075 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:35:37,911 - INFO - Performing classification task on rank 0...
-2024-07-30 17:35:40,586 - INFO - Training Accuracy: 0.683, Validation Accuracy: 0.698
-2024-07-30 17:35:40,586 - INFO - Training Precision: 0.697, Validation Precision: 0.699
-2024-07-30 17:35:40,586 - INFO - Training Recall: 0.683, Validation Recall: 0.698
-2024-07-30 17:35:40,586 - INFO - Training F1: 0.682, Validation F1: 0.696
-2024-07-30 17:35:40,587 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:35:43,245 - INFO - Performing regression task on rank 0..
-2024-07-30 17:35:53,084 - INFO - Training R2: 0.421, Validation R2: 0.421
-2024-07-30 17:35:53,792 - INFO - Rank 0: Validation done at iteration 4600. Pretraining continues.
-2024-07-30 17:35:53,794 - INFO - [iter:  4600] [loss: 0.005] [masks: 13.5, 10.6] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.0 ms)
-2024-07-30 17:35:53,795 - INFO - Batch Iterations: 4600/1000000
-2024-07-30 17:35:53,795 - INFO - Losses:
-2024-07-30 17:35:53,795 - INFO - Training Dataset
-2024-07-30 17:35:53,795 - INFO -   Total Loss: 0.005
-2024-07-30 17:35:53,796 - INFO -   Validation Dataset
-2024-07-30 17:35:53,796 - INFO -   Total Loss: 0.027
-2024-07-30 17:35:53,796 - INFO - Linear Probing Results:
-2024-07-30 17:35:53,796 - INFO - Classification Accuracy:
-2024-07-30 17:35:53,796 - INFO -   Training: 0.718, Validation: 0.731
-2024-07-30 17:35:53,796 - INFO - Classification Precision:
-2024-07-30 17:35:53,796 - INFO -   Training: 0.732, Validation: 0.736
-2024-07-30 17:35:53,796 - INFO - Classification Recall:
-2024-07-30 17:35:53,796 - INFO -   Training: 0.718, Validation: 0.731
-2024-07-30 17:35:53,796 - INFO - Classification F1:
-2024-07-30 17:35:53,796 - INFO -   Training: 0.717, Validation: 0.730
-2024-07-30 17:35:53,796 - INFO - Regression R2
-2024-07-30 17:35:53,796 - INFO -  Training: 0.490, Validation: 0.477
-2024-07-30 17:35:53,796 - INFO - iter: [ 4600] grad_stats: [1.17e-03 6.25e-05] (5.05e-06, 1.17e-03)
-2024-07-30 17:35:59,942 - INFO - Iter: 4620: avg. loss 0.005122
-2024-07-30 17:36:03,252 - INFO - Iter: 4640: avg. loss 0.005116
-2024-07-30 17:36:12,752 - INFO - Iter: 4660: avg. loss 0.005117
-2024-07-30 17:36:18,946 - INFO - Iter: 4680: avg. loss 0.005154
-2024-07-30 17:36:25,285 - INFO - Iter: 4700: avg. loss 0.005149
-2024-07-30 17:36:25,331 - INFO - Rank 0: performing validation at iteration 4700
-2024-07-30 17:36:33,637 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:36:41,248 - INFO - Performing classification task on rank 0...
-2024-07-30 17:36:43,806 - INFO - Training Accuracy: 0.683, Validation Accuracy: 0.695
-2024-07-30 17:36:43,806 - INFO - Training Precision: 0.699, Validation Precision: 0.698
-2024-07-30 17:36:43,806 - INFO - Training Recall: 0.683, Validation Recall: 0.695
-2024-07-30 17:36:43,806 - INFO - Training F1: 0.681, Validation F1: 0.694
-2024-07-30 17:36:43,807 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:36:46,397 - INFO - Performing regression task on rank 0..
-2024-07-30 17:36:55,658 - INFO - Training R2: 0.445, Validation R2: 0.453
-2024-07-30 17:36:56,080 - INFO - Rank 0: Validation done at iteration 4700. Pretraining continues.
-2024-07-30 17:36:56,111 - INFO - [iter:  4700] [loss: 0.005] [masks: 13.5, 10.6] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (49.0 ms)
-2024-07-30 17:36:56,112 - INFO - Batch Iterations: 4700/1000000
-2024-07-30 17:36:56,112 - INFO - Losses:
-2024-07-30 17:36:56,112 - INFO - Training Dataset
-2024-07-30 17:36:56,112 - INFO -   Total Loss: 0.005
-2024-07-30 17:36:56,112 - INFO -   Validation Dataset
-2024-07-30 17:36:56,112 - INFO -   Total Loss: 0.027
-2024-07-30 17:36:56,112 - INFO - Linear Probing Results:
-2024-07-30 17:36:56,112 - INFO - Classification Accuracy:
-2024-07-30 17:36:56,112 - INFO -   Training: 0.717, Validation: 0.730
-2024-07-30 17:36:56,112 - INFO - Classification Precision:
-2024-07-30 17:36:56,112 - INFO -   Training: 0.731, Validation: 0.735
-2024-07-30 17:36:56,112 - INFO - Classification Recall:
-2024-07-30 17:36:56,112 - INFO -   Training: 0.717, Validation: 0.730
-2024-07-30 17:36:56,112 - INFO - Classification F1:
-2024-07-30 17:36:56,112 - INFO -   Training: 0.716, Validation: 0.729
-2024-07-30 17:36:56,112 - INFO - Regression R2
-2024-07-30 17:36:56,112 - INFO -  Training: 0.489, Validation: 0.477
-2024-07-30 17:36:56,112 - INFO - iter: [ 4700] grad_stats: [1.80e-03 1.19e-04] (8.72e-06, 1.80e-03)
-2024-07-30 17:37:01,888 - INFO - Iter: 4720: avg. loss 0.005157
-2024-07-30 17:37:02,121 - INFO - Rank 0 handles indices from 0 to 294
-2024-07-30 17:37:03,241 - INFO - Iter: 4740: avg. loss 0.005163
-2024-07-30 17:37:04,269 - INFO - Iter: 4760: avg. loss 0.005170
-2024-07-30 17:37:05,323 - INFO - Iter: 4780: avg. loss 0.005177
-2024-07-30 17:37:06,452 - INFO - Iter: 4800: avg. loss 0.005186
-2024-07-30 17:37:06,501 - INFO - Rank 0: performing validation at iteration 4800
-2024-07-30 17:37:14,816 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:37:22,260 - INFO - Performing classification task on rank 0...
-2024-07-30 17:37:24,867 - INFO - Training Accuracy: 0.691, Validation Accuracy: 0.704
-2024-07-30 17:37:24,867 - INFO - Training Precision: 0.707, Validation Precision: 0.709
-2024-07-30 17:37:24,867 - INFO - Training Recall: 0.691, Validation Recall: 0.704
-2024-07-30 17:37:24,867 - INFO - Training F1: 0.690, Validation F1: 0.702
-2024-07-30 17:37:24,868 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:37:27,425 - INFO - Performing regression task on rank 0..
-2024-07-30 17:37:36,382 - INFO - Training R2: 0.437, Validation R2: 0.420
-2024-07-30 17:37:36,757 - INFO - Rank 0: Validation done at iteration 4800. Pretraining continues.
-2024-07-30 17:37:36,764 - INFO - [iter:  4800] [loss: 0.005] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (48.9 ms)
-2024-07-30 17:37:36,766 - INFO - Batch Iterations: 4800/1000000
-2024-07-30 17:37:36,766 - INFO - Losses:
-2024-07-30 17:37:36,766 - INFO - Training Dataset
-2024-07-30 17:37:36,766 - INFO -   Total Loss: 0.005
-2024-07-30 17:37:36,766 - INFO -   Validation Dataset
-2024-07-30 17:37:36,766 - INFO -   Total Loss: 0.027
-2024-07-30 17:37:36,766 - INFO - Linear Probing Results:
-2024-07-30 17:37:36,766 - INFO - Classification Accuracy:
-2024-07-30 17:37:36,766 - INFO -   Training: 0.717, Validation: 0.730
-2024-07-30 17:37:36,766 - INFO - Classification Precision:
-2024-07-30 17:37:36,766 - INFO -   Training: 0.730, Validation: 0.734
-2024-07-30 17:37:36,766 - INFO - Classification Recall:
-2024-07-30 17:37:36,766 - INFO -   Training: 0.717, Validation: 0.730
-2024-07-30 17:37:36,766 - INFO - Classification F1:
-2024-07-30 17:37:36,766 - INFO -   Training: 0.716, Validation: 0.728
-2024-07-30 17:37:36,766 - INFO - Regression R2
-2024-07-30 17:37:36,766 - INFO -  Training: 0.488, Validation: 0.475
-2024-07-30 17:37:36,766 - INFO - iter: [ 4800] grad_stats: [1.71e-03 8.21e-05] (4.35e-06, 2.71e-03)
-2024-07-30 17:37:37,729 - INFO - Iter: 4820: avg. loss 0.005196
-2024-07-30 17:37:38,818 - INFO - Iter: 4840: avg. loss 0.005207
-2024-07-30 17:37:39,878 - INFO - Iter: 4860: avg. loss 0.005212
-2024-07-30 17:37:40,945 - INFO - Iter: 4880: avg. loss 0.005219
-2024-07-30 17:37:42,009 - INFO - Iter: 4900: avg. loss 0.005226
-2024-07-30 17:37:42,062 - INFO - Rank 0: performing validation at iteration 4900
-2024-07-30 17:37:50,397 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:37:57,811 - INFO - Performing classification task on rank 0...
-2024-07-30 17:38:00,358 - INFO - Training Accuracy: 0.700, Validation Accuracy: 0.702
-2024-07-30 17:38:00,359 - INFO - Training Precision: 0.709, Validation Precision: 0.708
-2024-07-30 17:38:00,359 - INFO - Training Recall: 0.700, Validation Recall: 0.702
-2024-07-30 17:38:00,359 - INFO - Training F1: 0.700, Validation F1: 0.703
-2024-07-30 17:38:00,360 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:38:02,844 - INFO - Performing regression task on rank 0..
-2024-07-30 17:38:11,746 - INFO - Training R2: 0.458, Validation R2: 0.423
-2024-07-30 17:38:12,109 - INFO - Rank 0: Validation done at iteration 4900. Pretraining continues.
-2024-07-30 17:38:12,111 - INFO - [iter:  4900] [loss: 0.005] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (48.9 ms)
-2024-07-30 17:38:12,112 - INFO - Batch Iterations: 4900/1000000
-2024-07-30 17:38:12,112 - INFO - Losses:
-2024-07-30 17:38:12,112 - INFO - Training Dataset
-2024-07-30 17:38:12,112 - INFO -   Total Loss: 0.005
-2024-07-30 17:38:12,112 - INFO -   Validation Dataset
-2024-07-30 17:38:12,112 - INFO -   Total Loss: 0.027
-2024-07-30 17:38:12,112 - INFO - Linear Probing Results:
-2024-07-30 17:38:12,112 - INFO - Classification Accuracy:
-2024-07-30 17:38:12,112 - INFO -   Training: 0.716, Validation: 0.729
-2024-07-30 17:38:12,112 - INFO - Classification Precision:
-2024-07-30 17:38:12,112 - INFO -   Training: 0.730, Validation: 0.734
-2024-07-30 17:38:12,112 - INFO - Classification Recall:
-2024-07-30 17:38:12,112 - INFO -   Training: 0.716, Validation: 0.729
-2024-07-30 17:38:12,112 - INFO - Classification F1:
-2024-07-30 17:38:12,112 - INFO -   Training: 0.716, Validation: 0.728
-2024-07-30 17:38:12,112 - INFO - Regression R2
-2024-07-30 17:38:12,112 - INFO -  Training: 0.487, Validation: 0.474
-2024-07-30 17:38:12,112 - INFO - iter: [ 4900] grad_stats: [1.59e-03 7.74e-05] (2.88e-06, 3.25e-03)
-2024-07-30 17:38:13,112 - INFO - Iter: 4920: avg. loss 0.005232
-2024-07-30 17:38:14,219 - INFO - Iter: 4940: avg. loss 0.005241
-2024-07-30 17:38:15,320 - INFO - Iter: 4960: avg. loss 0.005247
-2024-07-30 17:38:16,425 - INFO - Iter: 4980: avg. loss 0.005257
-2024-07-30 17:38:17,550 - INFO - Saving checkpoint at iteration 5000 after 10.0 minutes of training.
-2024-07-30 17:38:18,059 - INFO - Iter: 5000: avg. loss 0.005269
-2024-07-30 17:38:18,061 - INFO - Rank 0: Iter: 5000; learning rate: 0.00100; wd: 0.04002
-2024-07-30 17:38:18,106 - INFO - Rank 0: performing validation at iteration 5000
-2024-07-30 17:38:26,478 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:38:33,950 - INFO - Performing classification task on rank 0...
-2024-07-30 17:38:36,487 - INFO - Training Accuracy: 0.704, Validation Accuracy: 0.721
-2024-07-30 17:38:36,487 - INFO - Training Precision: 0.713, Validation Precision: 0.723
-2024-07-30 17:38:36,487 - INFO - Training Recall: 0.704, Validation Recall: 0.721
-2024-07-30 17:38:36,487 - INFO - Training F1: 0.705, Validation F1: 0.721
-2024-07-30 17:38:36,488 - INFO - Rank 0: encoding 94 batches...
-2024-07-30 17:38:38,980 - INFO - Performing regression task on rank 0..
-2024-07-30 17:38:48,119 - INFO - Training R2: 0.456, Validation R2: 0.444
-2024-07-30 17:38:48,480 - INFO - Rank 0: Validation done at iteration 5000. Pretraining continues.
-2024-07-30 17:38:48,483 - INFO - [iter:  5000] [loss: 0.005] [masks: 13.5, 10.5] [wd: 4.00e-02] [lr: 1.00e-03] [mem: 2.24e+03] (48.9 ms)
-2024-07-30 17:38:48,484 - INFO - Batch Iterations: 5000/1000000
-2024-07-30 17:38:48,485 - INFO - Losses:
-2024-07-30 17:38:48,485 - INFO - Training Dataset
-2024-07-30 17:38:48,485 - INFO -   Total Loss: 0.005
-2024-07-30 17:38:48,485 - INFO -   Validation Dataset
-2024-07-30 17:38:48,485 - INFO -   Total Loss: 0.026
-2024-07-30 17:38:48,485 - INFO - Linear Probing Results:
-2024-07-30 17:38:48,485 - INFO - Classification Accuracy:
-2024-07-30 17:38:48,485 - INFO -   Training: 0.716, Validation: 0.729
-2024-07-30 17:38:48,485 - INFO - Classification Precision:
-2024-07-30 17:38:48,485 - INFO -   Training: 0.730, Validation: 0.734
-2024-07-30 17:38:48,485 - INFO - Classification Recall:
-2024-07-30 17:38:48,485 - INFO -   Training: 0.716, Validation: 0.729
-2024-07-30 17:38:48,485 - INFO - Classification F1:
-2024-07-30 17:38:48,485 - INFO -   Training: 0.715, Validation: 0.728
-2024-07-30 17:38:48,485 - INFO - Regression R2
-2024-07-30 17:38:48,485 - INFO -  Training: 0.487, Validation: 0.474
-2024-07-30 17:38:48,485 - INFO - iter: [ 5000] grad_stats: [1.86e-03 8.82e-05] (4.42e-06, 3.77e-03)
-2024-07-30 17:38:49,424 - INFO - Iter: 5020: avg. loss 0.005282
-2024-07-30 17:38:50,594 - INFO - Iter: 5040: avg. loss 0.005295
-2024-07-30 17:38:51,733 - INFO - Iter: 5060: avg. loss 0.005306
-2024-07-30 17:38:52,853 - INFO - Iter: 5080: avg. loss 0.005320
-2024-07-30 17:38:53,994 - INFO - Iter: 5100: avg. loss 0.005335
-2024-07-30 17:38:54,039 - INFO - Rank 0: performing validation at iteration 5100
-2024-07-30 17:39:02,414 - INFO - Rank 0: encoding 94 batches...
+2024-08-01 00:37:00,926 - INFO - Note: NumExpr detected 48 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+2024-08-01 00:37:00,926 - INFO - NumExpr defaulting to 8 threads.
+2024-08-01 00:37:02,804 - INFO - Rank 0/1: initializing process group..
+2024-08-01 00:37:03,372 - INFO - Rank 1/1: distributed training available: True and initialized: True
+2024-08-01 00:37:03,372 - INFO - Rank 1/1: world size: 2; rank: 1; local rank: 1
+2024-08-01 00:37:03,373 - INFO - Rank 1: CUDA_VISIBLE_DEVICES: 1
+2024-08-01 00:37:03,373 - INFO - Rank 1: number of GPUs visible: 1
+2024-08-01 00:37:06,011 - INFO - Rank 1/1: initializing models..
+2024-08-01 00:37:06,624 - INFO - Rank 1/1: models initialized.
+2024-08-01 00:37:06,739 - INFO - Rank 1: initialized train dataloader with 302080 cutouts.
+2024-08-01 00:37:06,820 - INFO - Rank 1: initialized validation dataloader with 6400 cutouts.
+2024-08-01 00:37:07,936 - INFO - Rank 1 handles indices from 148 to 294
+2024-08-01 00:40:34,515 - INFO - Rank 1: performing validation at iteration 500
+2024-08-01 00:40:37,445 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 00:40:41,697 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 00:40:47,959 - INFO - Rank 1: Validation done at iteration 500. Pretraining continues.
+2024-08-01 00:44:15,326 - INFO - Rank 1: Iter: 1000; learning rate: 0.00120; wd: 0.04000
+2024-08-01 00:44:15,446 - INFO - Rank 1: performing validation at iteration 1000
+2024-08-01 00:44:18,355 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 00:44:22,475 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 00:44:28,731 - INFO - Rank 1: Validation done at iteration 1000. Pretraining continues.
+2024-08-01 00:47:11,677 - INFO - Saving checkpoint at iteration 1378. 10.080946222941082 minutes of training since last checkpoint.
+2024-08-01 00:47:58,559 - INFO - Rank 1: performing validation at iteration 1500
+2024-08-01 00:48:01,674 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 00:48:05,921 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 00:48:12,790 - INFO - Rank 1: Validation done at iteration 1500. Pretraining continues.
+2024-08-01 00:51:50,623 - INFO - Rank 1: Iter: 2000; learning rate: 0.00200; wd: 0.04000
+2024-08-01 00:51:50,731 - INFO - Rank 1: performing validation at iteration 2000
+2024-08-01 00:51:54,198 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 00:51:59,751 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 00:52:06,322 - INFO - Rank 1: Validation done at iteration 2000. Pretraining continues.
+2024-08-01 01:04:38,660 - INFO - Cleaning up distributed training..
+2024-08-01 01:04:38,932 - INFO - Closing H5 file: /localscratch/heesters.32317955.0/HSC_dud_galaxy_GIRYZ7610_64_new.h5
+2024-08-01 01:04:38,933 - INFO - Cleaning up shared memory..
+masks: 1
+2024-08-01 00:37:03,206 - INFO -   num_pred_masks: 6
+2024-08-01 00:37:03,206 - INFO -   enc_mask_scale: [0.85, 1.0]
+2024-08-01 00:37:03,206 - INFO -   pred_mask_scale: [0.07, 0.1]
+2024-08-01 00:37:03,206 - INFO -   max_mask_ratio: 0.9
+2024-08-01 00:37:03,206 - INFO -   mask_ratio: 0.75
+2024-08-01 00:37:03,206 - INFO - ARCHITECTURE
+2024-08-01 00:37:03,206 - INFO -   num_channels: 5
+2024-08-01 00:37:03,206 - INFO -   patch_size: 4
+2024-08-01 00:37:03,206 - INFO -   model_type: jepa_vit_small
+2024-08-01 00:37:03,206 - INFO -   pred_depth: 4
+2024-08-01 00:37:03,206 - INFO -   pred_emb_dim: 192
+2024-08-01 00:37:03,206 - INFO -   attn_pool: False
+2024-08-01 00:37:03,206 - INFO -   ra_dec: True
+2024-08-01 00:37:03,206 - INFO -   embed_dim: 1024
+2024-08-01 00:37:03,206 - INFO - LOGGING
+2024-08-01 00:37:03,206 - INFO -   level: DEBUG
+2024-08-01 00:37:03,206 - INFO - Notes
+2024-08-01 00:37:03,206 - INFO -   comment: Initial I-JEPA training.
+2024-08-01 00:37:05,963 - INFO - Using AdamW
+2024-08-01 00:37:05,966 - INFO - Starting fresh model to train...
+2024-08-01 00:37:06,010 - INFO - Rank 0/1: initializing models..
+2024-08-01 00:37:06,624 - INFO - Rank 0/1: models initialized.
+2024-08-01 00:37:06,720 - INFO - Found 295 patches with at least 5 of the ['G', 'I', 'R', 'Y', 'Z'] bands.
+2024-08-01 00:37:06,739 - INFO - Rank 0: initialized train dataloader with 302080 cutouts.
+2024-08-01 00:37:06,820 - INFO - Rank 0: initialized validation dataloader with 6400 cutouts.
+2024-08-01 00:37:06,820 - INFO - Training the network with a batch size of 64 per GPU ...
+2024-08-01 00:37:06,820 - INFO - Progress will be displayed every 500 batch iterations and the model will be saved every 10.0 minutes.
+2024-08-01 00:37:06,820 - INFO - Starting training loop...
+2024-08-01 00:37:07,936 - INFO - Rank 0 handles indices from 0 to 147
+2024-08-01 00:37:52,636 - INFO - Iter: 100: avg. loss 0.051515
+2024-08-01 00:38:32,108 - INFO - Iter: 200: avg. loss 0.026233
+2024-08-01 00:39:11,272 - INFO - Iter: 300: avg. loss 0.017628
+2024-08-01 00:39:49,876 - INFO - Iter: 400: avg. loss 0.013311
+2024-08-01 00:40:34,405 - INFO - Iter: 500: avg. loss 0.010851
+2024-08-01 00:40:34,505 - INFO - Rank 0: performing validation at iteration 500
+2024-08-01 00:40:37,445 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 00:40:41,693 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 00:40:42,195 - INFO - Performing classification task on rank 0...
+2024-08-01 00:40:44,975 - INFO - Training Accuracy: 0.486, Validation Accuracy: 0.463
+2024-08-01 00:40:44,976 - INFO - Training Precision: 0.489, Validation Precision: 0.457
+2024-08-01 00:40:44,976 - INFO - Training Recall: 0.486, Validation Recall: 0.463
+2024-08-01 00:40:44,976 - INFO - Training F1: 0.479, Validation F1: 0.453
+2024-08-01 00:40:44,977 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 00:40:47,957 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 00:40:48,342 - INFO - Performing regression task on rank 0..
+2024-08-01 00:40:56,975 - INFO - Training R2: 0.030, Validation R2: -0.017
+2024-08-01 00:40:56,976 - INFO - Rank 0: Validation done at iteration 500. Pretraining continues.
+2024-08-01 00:40:56,978 - INFO - [iter:   500] [loss: 0.011] [masks: 110.4, 20.8] [wd: 4.00e-02] [lr: 8.00e-04] [mem: 6.18e+03] (117.8 ms)
+2024-08-01 00:40:56,978 - INFO - Batch Iterations: 500/1000000
+2024-08-01 00:40:56,978 - INFO - Losses:
+2024-08-01 00:40:56,978 - INFO - Training Dataset
+2024-08-01 00:40:56,978 - INFO -   Total Loss: 0.011
+2024-08-01 00:40:56,979 - INFO -   Validation Dataset
+2024-08-01 00:40:56,979 - INFO -   Total Loss: 0.008
+2024-08-01 00:40:56,979 - INFO - Linear Probing Results:
+2024-08-01 00:40:56,979 - INFO - Classification Accuracy:
+2024-08-01 00:40:56,979 - INFO -   Training: 0.486, Validation: 0.463
+2024-08-01 00:40:56,979 - INFO - Classification Precision:
+2024-08-01 00:40:56,979 - INFO -   Training: 0.489, Validation: 0.457
+2024-08-01 00:40:56,979 - INFO - Classification Recall:
+2024-08-01 00:40:56,979 - INFO -   Training: 0.486, Validation: 0.463
+2024-08-01 00:40:56,979 - INFO - Classification F1:
+2024-08-01 00:40:56,979 - INFO -   Training: 0.479, Validation: 0.453
+2024-08-01 00:40:56,979 - INFO - Regression R2
+2024-08-01 00:40:56,979 - INFO -  Training: 0.030, Validation: -0.017
+2024-08-01 00:40:56,979 - INFO - iter: [  500] grad_stats: [1.09e-04 3.52e-05] (3.49e-05, 1.42e-04)
+2024-08-01 00:41:37,048 - INFO - Iter: 600: avg. loss 0.009293
+2024-08-01 00:42:14,535 - INFO - Iter: 700: avg. loss 0.008227
+2024-08-01 00:42:52,389 - INFO - Iter: 800: avg. loss 0.007768
+2024-08-01 00:43:36,495 - INFO - Iter: 900: avg. loss 0.007256
+2024-08-01 00:44:15,325 - INFO - Iter: 1000: avg. loss 0.006751
+2024-08-01 00:44:15,327 - INFO - Rank 0: Iter: 1000; learning rate: 0.00120; wd: 0.04000
+2024-08-01 00:44:15,436 - INFO - Rank 0: performing validation at iteration 1000
+2024-08-01 00:44:18,347 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 00:44:22,466 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 00:44:22,882 - INFO - Performing classification task on rank 0...
+2024-08-01 00:44:25,741 - INFO - Training Accuracy: 0.473, Validation Accuracy: 0.465
+2024-08-01 00:44:25,741 - INFO - Training Precision: 0.478, Validation Precision: 0.460
+2024-08-01 00:44:25,741 - INFO - Training Recall: 0.473, Validation Recall: 0.465
+2024-08-01 00:44:25,741 - INFO - Training F1: 0.456, Validation F1: 0.444
+2024-08-01 00:44:25,742 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 00:44:28,731 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 00:44:29,115 - INFO - Performing regression task on rank 0..
+2024-08-01 00:44:38,554 - INFO - Training R2: 0.021, Validation R2: -0.011
+2024-08-01 00:44:38,556 - INFO - Rank 0: Validation done at iteration 1000. Pretraining continues.
+2024-08-01 00:44:38,630 - INFO - [iter:  1000] [loss: 0.007] [masks: 110.2, 20.7] [wd: 4.00e-02] [lr: 1.20e-03] [mem: 6.18e+03] (124.7 ms)
+2024-08-01 00:44:38,631 - INFO - Batch Iterations: 1000/1000000
+2024-08-01 00:44:38,631 - INFO - Losses:
+2024-08-01 00:44:38,631 - INFO - Training Dataset
+2024-08-01 00:44:38,631 - INFO -   Total Loss: 0.007
+2024-08-01 00:44:38,631 - INFO -   Validation Dataset
+2024-08-01 00:44:38,631 - INFO -   Total Loss: 0.010
+2024-08-01 00:44:38,631 - INFO - Linear Probing Results:
+2024-08-01 00:44:38,631 - INFO - Classification Accuracy:
+2024-08-01 00:44:38,631 - INFO -   Training: 0.479, Validation: 0.464
+2024-08-01 00:44:38,631 - INFO - Classification Precision:
+2024-08-01 00:44:38,631 - INFO -   Training: 0.483, Validation: 0.458
+2024-08-01 00:44:38,631 - INFO - Classification Recall:
+2024-08-01 00:44:38,631 - INFO -   Training: 0.479, Validation: 0.464
+2024-08-01 00:44:38,631 - INFO - Classification F1:
+2024-08-01 00:44:38,631 - INFO -   Training: 0.467, Validation: 0.448
+2024-08-01 00:44:38,631 - INFO - Regression R2
+2024-08-01 00:44:38,631 - INFO -  Training: 0.025, Validation: -0.014
+2024-08-01 00:44:38,631 - INFO - iter: [ 1000] grad_stats: [5.21e-05 2.64e-05] (4.21e-06, 6.72e-05)
+2024-08-01 00:45:18,414 - INFO - Iter: 1100: avg. loss 0.006355
+2024-08-01 00:45:58,004 - INFO - Iter: 1200: avg. loss 0.006137
+2024-08-01 00:46:38,466 - INFO - Iter: 1300: avg. loss 0.005872
+2024-08-01 00:47:11,677 - INFO - Saving checkpoint at iteration 1378. 10.080946830908458 minutes of training since last checkpoint.
+2024-08-01 00:47:19,240 - INFO - Iter: 1400: avg. loss 0.005793
+2024-08-01 00:47:58,475 - INFO - Iter: 1500: avg. loss 0.006247
+2024-08-01 00:47:58,568 - INFO - Rank 0: performing validation at iteration 1500
+2024-08-01 00:48:01,674 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 00:48:05,918 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 00:48:07,024 - INFO - Performing classification task on rank 0...
+2024-08-01 00:48:09,796 - INFO - Training Accuracy: 0.482, Validation Accuracy: 0.459
+2024-08-01 00:48:09,796 - INFO - Training Precision: 0.488, Validation Precision: 0.454
+2024-08-01 00:48:09,796 - INFO - Training Recall: 0.482, Validation Recall: 0.459
+2024-08-01 00:48:09,796 - INFO - Training F1: 0.465, Validation F1: 0.443
+2024-08-01 00:48:09,798 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 00:48:12,790 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 00:48:13,885 - INFO - Performing regression task on rank 0..
+2024-08-01 00:48:24,913 - INFO - Training R2: 0.035, Validation R2: -0.018
+2024-08-01 00:48:28,564 - INFO - Plotting mask examples..
+2024-08-01 00:48:30,351 - INFO - Rank 0: Validation done at iteration 1500. Pretraining continues.
+2024-08-01 00:48:30,358 - INFO - [iter:  1500] [loss: 0.006] [masks: 110.1, 20.8] [wd: 4.00e-02] [lr: 1.60e-03] [mem: 6.18e+03] (122.1 ms)
+2024-08-01 00:48:30,358 - INFO - Batch Iterations: 1500/1000000
+2024-08-01 00:48:30,358 - INFO - Losses:
+2024-08-01 00:48:30,358 - INFO - Training Dataset
+2024-08-01 00:48:30,358 - INFO -   Total Loss: 0.006
+2024-08-01 00:48:30,358 - INFO -   Validation Dataset
+2024-08-01 00:48:30,358 - INFO -   Total Loss: 0.049
+2024-08-01 00:48:30,358 - INFO - Linear Probing Results:
+2024-08-01 00:48:30,358 - INFO - Classification Accuracy:
+2024-08-01 00:48:30,358 - INFO -   Training: 0.480, Validation: 0.462
+2024-08-01 00:48:30,358 - INFO - Classification Precision:
+2024-08-01 00:48:30,358 - INFO -   Training: 0.485, Validation: 0.457
+2024-08-01 00:48:30,358 - INFO - Classification Recall:
+2024-08-01 00:48:30,358 - INFO -   Training: 0.480, Validation: 0.462
+2024-08-01 00:48:30,358 - INFO - Classification F1:
+2024-08-01 00:48:30,358 - INFO -   Training: 0.467, Validation: 0.447
+2024-08-01 00:48:30,358 - INFO - Regression R2
+2024-08-01 00:48:30,359 - INFO -  Training: 0.029, Validation: -0.015
+2024-08-01 00:48:30,359 - INFO - iter: [ 1500] grad_stats: [5.10e-08 1.03e-08] (1.03e-08, 1.37e-07)
+2024-08-01 00:49:11,218 - INFO - Iter: 1600: avg. loss 0.006856
+2024-08-01 00:49:52,544 - INFO - Iter: 1700: avg. loss 0.006459
+2024-08-01 00:50:32,310 - INFO - Iter: 1800: avg. loss 0.006103
+2024-08-01 00:51:11,458 - INFO - Iter: 1900: avg. loss 0.005783
+2024-08-01 00:51:50,622 - INFO - Iter: 2000: avg. loss 0.005495
+2024-08-01 00:51:50,623 - INFO - Rank 0: Iter: 2000; learning rate: 0.00200; wd: 0.04000
+2024-08-01 00:51:50,731 - INFO - Rank 0: performing validation at iteration 2000
+2024-08-01 00:51:54,194 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 00:51:59,746 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 00:52:00,675 - INFO - Performing classification task on rank 0...
+2024-08-01 00:52:03,333 - INFO - Training Accuracy: 0.471, Validation Accuracy: 0.468
+2024-08-01 00:52:03,333 - INFO - Training Precision: 0.481, Validation Precision: 0.466
+2024-08-01 00:52:03,333 - INFO - Training Recall: 0.471, Validation Recall: 0.468
+2024-08-01 00:52:03,333 - INFO - Training F1: 0.450, Validation F1: 0.446
+2024-08-01 00:52:03,334 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 00:52:06,328 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 00:52:07,230 - INFO - Performing regression task on rank 0..
+2024-08-01 00:52:15,448 - INFO - Training R2: 0.022, Validation R2: -0.010
+2024-08-01 00:52:16,420 - INFO - Plotting mask examples..
+2024-08-01 00:52:17,881 - INFO - Rank 0: Validation done at iteration 2000. Pretraining continues.
+2024-08-01 00:52:17,901 - INFO - [iter:  2000] [loss: 0.005] [masks: 110.2, 20.8] [wd: 4.00e-02] [lr: 2.00e-03] [mem: 6.18e+03] (121.9 ms)
+2024-08-01 00:52:17,901 - INFO - Batch Iterations: 2000/1000000
+2024-08-01 00:52:17,901 - INFO - Losses:
+2024-08-01 00:52:17,901 - INFO - Training Dataset
+2024-08-01 00:52:17,901 - INFO -   Total Loss: 0.005
+2024-08-01 00:52:17,901 - INFO -   Validation Dataset
+2024-08-01 00:52:17,901 - INFO -   Total Loss: 0.037
+2024-08-01 00:52:17,901 - INFO - Linear Probing Results:
+2024-08-01 00:52:17,901 - INFO - Classification Accuracy:
+2024-08-01 00:52:17,901 - INFO -   Training: 0.478, Validation: 0.464
+2024-08-01 00:52:17,901 - INFO - Classification Precision:
+2024-08-01 00:52:17,901 - INFO -   Training: 0.484, Validation: 0.459
+2024-08-01 00:52:17,901 - INFO - Classification Recall:
+2024-08-01 00:52:17,901 - INFO -   Training: 0.478, Validation: 0.464
+2024-08-01 00:52:17,901 - INFO - Classification F1:
+2024-08-01 00:52:17,901 - INFO -   Training: 0.462, Validation: 0.446
+2024-08-01 00:52:17,901 - INFO - Regression R2
+2024-08-01 00:52:17,901 - INFO -  Training: 0.027, Validation: -0.014
+2024-08-01 00:52:17,901 - INFO - iter: [ 2000] grad_stats: [2.29e-09 1.79e-09] (1.07e-09, 2.58e-08)
+2024-08-01 00:52:56,706 - INFO - Iter: 2100: avg. loss 0.005234
+2024-08-01 00:53:38,979 - INFO - Iter: 2200: avg. loss 0.004997
+2024-08-01 00:54:17,965 - INFO - Iter: 2300: avg. loss 0.004782
+2024-08-01 01:04:43,333 - INFO - Cleaning up distributed training..
+2024-08-01 01:04:43,373 - INFO - Closing H5 file: /localscratch/heesters.32317955.0/HSC_dud_galaxy_GIRYZ7610_64_new.h5
+2024-08-01 01:04:43,373 - INFO - Cleaning up shared memory..

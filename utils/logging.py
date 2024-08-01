@@ -50,9 +50,9 @@ class CSVLogger(object):
         self.types = []
         self.mode = mode
         # Append to existing file or overwrite
-        file_mode = '+a' if mode == 'append' else 'w'
+        self.file_mode = '+a' if mode == 'append' else 'w'
         # -- print headers
-        with open(self.fname, file_mode) as f:
+        with open(self.fname, self.file_mode) as f:
             for i, v in enumerate(argv, 1):
                 self.types.append(v[0])
                 if i < len(argv):
@@ -61,7 +61,7 @@ class CSVLogger(object):
                     print(v[1], end='\n', file=f)
 
     def log(self, *argv):
-        with open(self.fname, '+a') as f:
+        with open(self.fname, 'a+') as f:
             for i, tv in enumerate(zip(self.types, argv), 1):
                 end = ',' if i < len(argv) else '\n'
                 print(tv[0] % tv[1], end=end, file=f)

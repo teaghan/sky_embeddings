@@ -32,11 +32,10 @@ import numpy as np  # noqa: E402
 import torch  # noqa: E402
 import torch.distributed as dist  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
-from torch.nn.parallel import DistributedDataParallel as DDP  # noqa: E402
 
 from utils.cuda_init import cuda_setup  # noqa: E402
 from utils.dataloaders import build_fits_dataloader, build_h5_dataloader  # noqa: E402
-from utils.distributed import AllReduce, distributed_env  # noqa: E402
+from utils.distributed import AllReduce, distributed_env, model_to_ddp, sync_barrier  # noqa: E402
 from utils.eval_fns import mae_predict  # noqa: E402
 from utils.jepa_masking import apply_masks  # noqa: E402
 from utils.jepa_masking import jepa_mask_generator as jepa_mask_gen  # noqa: E402
@@ -57,7 +56,7 @@ from utils.pretrain_fns import (  # noqa: E402
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
-_GLOBAL_SEED = 0
+_GLOBAL_SEED = int(time.time() * 1000) % 2**32
 np.random.seed(_GLOBAL_SEED)
 torch.manual_seed(_GLOBAL_SEED)
 torch.backends.cudnn.benchmark = True
@@ -107,7 +106,7 @@ def main(args):
         # Initalize CSV logger
         csv_logger = CSVLogger(
             ('%d', 'iter'),
-            ('%.5f', 'loss'),
+            ('%.5f', 'train_loss'),
             ('%.5f', 'mask-enc'),
             ('%.5f', 'mask-pred'),
             ('%d', 'time (ms)'),
@@ -152,17 +151,13 @@ def main(args):
         # Masking parameters
         max_mask_ratio = float(config['MASK']['max_mask_ratio'])
         mask_ratio = float(config['MASK']['mask_ratio'])
-        allow_overlap = ast.literal_eval(
-            config['MASK']['allow_overlap']
-        )  # overlap context/target blocks
+        allow_overlap = ast.literal_eval(config['MASK']['allow_overlap'])  # overlap context/target blocks
         num_enc_masks = int(config['MASK']['num_enc_masks'])  # number of context blocks
         num_pred_masks = int(config['MASK']['num_pred_masks'])  # number of target blocks
         min_keep = int(config['MASK']['min_keep'])  # min number of patches in context block
         enc_mask_scale = ast.literal_eval(config['MASK']['enc_mask_scale'])  # scale of context blocks
         pred_mask_scale = ast.literal_eval(config['MASK']['pred_mask_scale'])  # scale of target blocks
-        aspect_ratio_targets = ast.literal_eval(
-            config['MASK']['aspect_ratio_targets']
-        )  # ar of target blocks
+        aspect_ratio_targets = ast.literal_eval(config['MASK']['aspect_ratio_targets'])  # ar of target blocks
 
         # Display model configuration
         if rank == 0:
@@ -181,7 +176,7 @@ def main(args):
         save_path = os.path.join(model_dir, model_name + '_iter_{current_iter}.pth.tar')
 
         model, losses, cur_iter, optimizer, lr_scheduler, wd_scheduler, scaler = build_model(  # type: ignore
-            config, model_path, current_device, build_optimizer=True
+            config, model_path, current_device, rank, build_optimizer=True
         )
 
         if 'jepa' in model_type and isinstance(model, tuple):
@@ -202,14 +197,18 @@ def main(args):
             encoder, predictor = model
             target_encoder = copy.deepcopy(encoder)
 
-            # Distributed training
-            logger.info(f'Rank {rank}/{world_size-1}: initializing models..')
-            encoder = DDP(encoder, static_graph=False, device_ids=[current_device])
-            predictor = DDP(predictor, static_graph=False, device_ids=[current_device])
-            target_encoder = DDP(target_encoder, device_ids=[current_device])
-            logger.info(f'Rank {rank}/{world_size-1}: models initialized.')
+            if dist.is_available() and dist.is_initialized():
+                # Convert model to DistributedDataParallel if multiple GPUs are available
+                encoder, predictor, target_encoder = model_to_ddp(
+                    encoder=encoder,
+                    predictor=predictor,
+                    target_encoder=target_encoder,
+                    world_size=world_size,
+                    rank=rank,
+                    current_device=current_device,
+                )
 
-            dist.barrier()
+            sync_barrier()
             logger.debug(f'Rank {rank}/{world_size-1} passed the synchronization barrier.')
 
             # Target encoder is not trained through backprop
@@ -244,6 +243,7 @@ def main(args):
                 img_size=crop_size,
                 num_patches=get_num_patches(model),
                 shuffle=True,
+                rank=rank,
             )
             logger.info(f'The training set consists of {len(dataloader_train.dataset)} cutouts.')
             train_nested_batches = False
@@ -332,6 +332,7 @@ def main(args):
                 lp_regress_data_file=lp_regress_data_file,
                 lp_combine=lp_combine,
                 patch_size=patch_size,
+                num_channels=num_channels,
                 bands=bands,
             )
 
@@ -403,12 +404,11 @@ def train_network_jepa(
     lp_regress_data_file,
     lp_combine,
     patch_size,
+    num_channels,
     bands,
 ):
     if rank == 0:
-        logger.info(
-            f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ...'
-        )
+        logger.info(f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ...')
         logger.info(
             f'Progress will be displayed every {verbose_iters} batch iterations and the model will be saved every {cp_time} minutes.'
         )
@@ -448,245 +448,250 @@ def train_network_jepa(
         # Iterate through training dataset
         if cur_iter % 250 == 0:
             logger.debug(f'Rank {rank}: iter: {cur_iter}')
-        for data, metadata, masks_enc, masks_pred in dataloader_train:
+        try:
+            for data, metadata, masks_enc, masks_pred in dataloader_train:
 
-            def to_device(data, metadata, masks_enc, masks_pred):
-                images = data.to(current_device, non_blocking=True)
-                meta = metadata.to(current_device, non_blocking=True)
-                masks_encoder = [mask.to(current_device, non_blocking=True) for mask in masks_enc]
-                masks_predictor = [mask.to(current_device, non_blocking=True) for mask in masks_pred]
-                return images, meta, masks_encoder, masks_predictor
+                def to_device(data, metadata, masks_enc, masks_pred):
+                    images = data.to(current_device, non_blocking=True)
+                    meta = metadata.to(current_device, non_blocking=True)
+                    masks_encoder = [mask.to(current_device, non_blocking=True) for mask in masks_enc]
+                    masks_predictor = [mask.to(current_device, non_blocking=True) for mask in masks_pred]
+                    return images, meta, masks_encoder, masks_predictor
 
-            images, meta, masks_enc, masks_pred = to_device(data, metadata, masks_enc, masks_pred)
-            mask_enc_meter.update(len(masks_enc[0][0]))
-            mask_pred_meter.update(len(masks_pred[0][0]))
+                images, meta, masks_enc, masks_pred = to_device(data, metadata, masks_enc, masks_pred)
+                mask_enc_meter.update(len(masks_enc[0][0]))
+                mask_pred_meter.update(len(masks_pred[0][0]))
 
-            def train_step():
-                encoder.train()
-                predictor.train()
-                target_encoder.eval()  # target encoder is not trained through backprop
+                def train_step():
+                    encoder.train()
+                    predictor.train()
+                    target_encoder.eval()  # target encoder is not trained through backprop
 
-                _new_lr = lr_scheduler.step()
-                _new_wd = wd_scheduler.step()
+                    _new_lr = lr_scheduler.step()
+                    _new_wd = wd_scheduler.step()
 
-                if cur_iter % 1000 == 0:
-                    logger.info(
-                        f'Rank {rank}: Iter: {cur_iter}; learning rate: {_new_lr:.5f}; wd: {_new_wd:.5f}'
-                    )
+                    if cur_iter % 1000 == 0:
+                        logger.info(
+                            f'Rank {rank}: Iter: {cur_iter}; learning rate: {_new_lr:.5f}; wd: {_new_wd:.5f}'
+                        )
 
-                def forward_target():
+                    def forward_target():
+                        with torch.no_grad():
+                            h = target_encoder(images)
+                            h = F.layer_norm(h, (h.size(-1),))  # normalize over feature dimension
+                            B = len(h)
+                            # create target representations
+                            h = apply_masks(h, masks_pred)
+                            h = repeat_interleave_batch(h, B, repeat=len(masks_enc))  # type: ignore
+                            return h
+
+                    def forward_context():
+                        z = encoder(images, masks_enc)
+                        z = predictor(z, masks_enc, masks_pred)
+                        return z
+
+                    def compute_loss(z, h):
+                        loss = F.smooth_l1_loss(z, h)
+                        loss = AllReduce.apply(loss)
+                        return loss
+
+                    # Forward pass
+                    with torch.cuda.amp.autocast(dtype=torch.bfloat16, enabled=use_bfloat16):
+                        h = forward_target()
+                        z = forward_context()
+                        loss = compute_loss(z, h)
+
+                    # Backward pass + step
+                    if use_bfloat16:
+                        scaler.scale(loss).backward()
+                        scaler.step(optimizer)
+                        scaler.update()
+                    else:
+                        loss.backward()  # type: ignore
+                        optimizer.step()
+                    grad_stats = grad_logger(encoder.named_parameters())
+                    optimizer.zero_grad()
+
+                    # Momentum update of target encoder
                     with torch.no_grad():
-                        h = target_encoder(images)
-                        h = F.layer_norm(h, (h.size(-1),))  # normalize over feature dimension
-                        B = len(h)
-                        # create target representations
-                        h = apply_masks(h, masks_pred)
-                        h = repeat_interleave_batch(h, B, repeat=len(masks_enc))  # type: ignore
-                        return h
+                        m = next(momentum_scheduler)
+                        for param_q, param_k in zip(encoder.parameters(), target_encoder.parameters()):
+                            param_k.data.mul_(m).add_((1.0 - m) * param_q.detach().data)
 
-                def forward_context():
-                    z = encoder(images, masks_enc)
-                    z = predictor(z, masks_enc, masks_pred)
-                    return z
+                    return loss, _new_lr, _new_wd, grad_stats  # type: ignore
 
-                def compute_loss(z, h):
-                    loss = F.smooth_l1_loss(z, h)
-                    loss = AllReduce.apply(loss)
-                    return loss
+                (loss, _new_lr, _new_wd, grad_stats), etime = gpu_timer(train_step)
 
-                # Forward pass
-                with torch.cuda.amp.autocast(dtype=torch.bfloat16, enabled=use_bfloat16):
-                    h = forward_target()
-                    z = forward_context()
-                    loss = compute_loss(z, h)
+                losses_cp['train_loss'].append(loss.item())  # type: ignore
+                loss = float(loss)  # type: ignore
+                loss_meter.update(loss)
+                time_meter.update(etime)
 
-                # Backward pass + step
-                if use_bfloat16:
-                    scaler.scale(loss).backward()
-                    scaler.step(optimizer)
-                    scaler.update()
-                else:
-                    loss.backward()  # type: ignore
-                    optimizer.step()
-                grad_stats = grad_logger(encoder.named_parameters())
-                optimizer.zero_grad()
-
-                # Momentum update of target encoder
-                with torch.no_grad():
-                    m = next(momentum_scheduler)
-                    for param_q, param_k in zip(encoder.parameters(), target_encoder.parameters()):
-                        param_k.data.mul_(m).add_((1.0 - m) * param_q.detach().data)
-
-                return loss, _new_lr, _new_wd, grad_stats  # type: ignore
-
-            (loss, _new_lr, _new_wd, grad_stats), etime = gpu_timer(train_step)
-
-            losses_cp['train_loss'].append(loss.item())  # type: ignore
-            loss = float(loss)  # type: ignore
-            loss_meter.update(loss)
-            time_meter.update(etime)
-
-            def log_stats(losses_cp):
-                csv_logger.log(cur_iter, loss, mask_enc_meter.val, mask_pred_meter.val, etime)
-                if rank == 0 and ((cur_iter % verbose_iters == 0) or np.isnan(loss) or np.isinf(loss)):  # type: ignore
-                    logger.info(
-                        f'[iter: {cur_iter:5d}] [loss: {loss_meter.avg:.3f}] '
-                        f'[masks: {mask_enc_meter.avg:.1f}, {mask_pred_meter.avg:.1f}] '
-                        f'[wd: {_new_wd:.2e}] [lr: {_new_lr:.2e}] '
-                        f'[mem: {torch.cuda.max_memory_allocated() / 1024.0**2:.2e}] '
-                        f'({time_meter.avg:.1f} ms)'
-                    )
-
-                    # This might be redundant, leaving here for now
-                    for k in losses_cp.keys():
-                        losses[k].append(np.mean(np.array(losses_cp[k]), axis=0))
-                    losses['batch_iters'].append(cur_iter)
-
-                    log_current_status(
-                        cur_iter, total_batch_iters, losses, lp_class_data_file, lp_regress_data_file
-                    )
-
-                    # Reset checkpoint loss dictionary
-                    losses_cp = defaultdict(list)
-
-                    if grad_stats is not None:
+                def log_stats(losses_cp):
+                    csv_logger.log(cur_iter, loss, mask_enc_meter.val, mask_pred_meter.val, etime)
+                    if rank == 0 and ((cur_iter % verbose_iters == 0) or np.isnan(loss) or np.isinf(loss)):  # type: ignore
                         logger.info(
-                            'iter: [%5d] grad_stats: [%.2e %.2e] (%.2e, %.2e)'
-                            % (
-                                cur_iter,
-                                grad_stats.first_layer,  # type: ignore
-                                grad_stats.last_layer,  # type: ignore
-                                grad_stats.min,
-                                grad_stats.max,
+                            f'[iter: {cur_iter:5d}] [loss: {loss_meter.avg:.3f}] '
+                            f'[masks: {mask_enc_meter.avg:.1f}, {mask_pred_meter.avg:.1f}] '
+                            f'[wd: {_new_wd:.2e}] [lr: {_new_lr:.2e}] '
+                            f'[mem: {torch.cuda.max_memory_allocated() / 1024.0**2:.2e}] '
+                            f'({time_meter.avg:.1f} ms)'
+                        )
+
+                        # This might be redundant, leaving here for now
+                        for k in losses_cp.keys():
+                            losses[k].append(np.mean(np.array(losses_cp[k]), axis=0))
+                        losses['batch_iters'].append(cur_iter)
+
+                        log_current_status(
+                            cur_iter, total_batch_iters, losses, lp_class_data_file, lp_regress_data_file
+                        )
+
+                        # Reset checkpoint loss dictionary
+                        losses_cp = defaultdict(list)
+
+                        if grad_stats is not None:
+                            logger.info(
+                                'iter: [%5d] grad_stats: [%.2e %.2e] (%.2e, %.2e)'
+                                % (
+                                    cur_iter,
+                                    grad_stats.first_layer,  # type: ignore
+                                    grad_stats.last_layer,  # type: ignore
+                                    grad_stats.min,
+                                    grad_stats.max,
+                                )
                             )
-                        )
 
-            def validate():
-                encoder.eval()
-                predictor.eval()
-                target_encoder.eval()
-                with torch.no_grad():
-                    images_plot = []
-                    meta_plot = []
-                    masks_enc_plot = []
-                    masks_pred_plot = []
-                    plot_idx = random.randint(0, len(dataloader_val) - 1)
-                    for i, (data, metadata, masks_enc, masks_pred) in enumerate(dataloader_val):
-                        images, meta, masks_encoder, masks_predictor = to_device(
-                            data, metadata, masks_enc, masks_pred
-                        )
-
-                        if i == plot_idx:
-                            images_plot.append(images)
-                            meta_plot.append(meta)
-                            masks_enc_plot.append(masks_encoder)
-                            masks_pred_plot.append(masks_predictor)
-
-                        loss = val_iter(
-                            encoder,
-                            predictor,
-                            target_encoder,
-                            images,
-                            masks_encoder,
-                            masks_predictor,
-                            use_bfloat16,
-                        )
-                        losses_cp['val_loss'].append(loss.item())  # type: ignore
-
-                    logger.debug(
-                        f'Rank {rank}: Validation done at iteration {cur_iter}. Continuing with classifier and regressor.'
-                    )
-
-                    dist.barrier()
-                    logger.debug(f'Rank {rank}: passed barrier after initial validation.')
-
-                    if lp_class_data_file or lp_regress_data_file:
-                        # Run Linear Probing tests
-                        distributed_linear_probe(
-                            model=target_encoder,
-                            losses_cp=losses_cp,
-                            device=current_device,
-                            dataloader_template=dataloader_val,
-                            model_type='jepa',
-                            class_data_path=lp_class_data_file,
-                            regress_data_path=lp_regress_data_file,
-                            combine=lp_combine,
-                            world_size=world_size,
-                            rank=rank,
-                        )
-                    if rank == 0:
-                        if len(losses['batch_iters']) > 1:
-                            # Plot progress
-                            plot_progress(
-                                losses,
-                                y_lims=[(0, 0.7), (0.8, 1.0), (0.6, 1.0)],
-                                savename=os.path.join(fig_dir, f'{model_name}_progress.png'),
+                def validate():
+                    encoder.eval()
+                    predictor.eval()
+                    target_encoder.eval()
+                    with torch.no_grad():
+                        images_plot = []
+                        meta_plot = []
+                        masks_enc_plot = []
+                        masks_pred_plot = []
+                        plot_idx = random.randint(0, len(dataloader_val) - 1)
+                        for i, (data, metadata, masks_enc, masks_pred) in enumerate(dataloader_val):
+                            images, meta, masks_encoder, masks_predictor = to_device(
+                                data, metadata, masks_enc, masks_pred
                             )
-                            # Plot 5 sample masks
-                            visualize_masks(
-                                images=images_plot,
-                                masks_enc=masks_enc_plot,
-                                masks_pred=masks_pred_plot,
+
+                            if i == plot_idx:
+                                images_plot.append(images)
+                                meta_plot.append(meta)
+                                masks_enc_plot.append(masks_encoder)
+                                masks_pred_plot.append(masks_predictor)
+
+                            loss = val_iter(
+                                encoder,
+                                predictor,
+                                target_encoder,
+                                images,
+                                masks_encoder,
+                                masks_predictor,
+                                use_bfloat16,
+                            )
+                            losses_cp['val_loss'].append(loss.item())  # type: ignore
+
+                        logger.debug(
+                            f'Rank {rank}: Validation done at iteration {cur_iter}. Continuing with classifier and regressor.'
+                        )
+
+                        sync_barrier()
+                        logger.debug(f'Rank {rank}: passed barrier after initial validation.')
+
+                        if lp_class_data_file or lp_regress_data_file:
+                            # Run Linear Probing tests
+                            distributed_linear_probe(
+                                model=target_encoder,
                                 patch_size=patch_size,
-                                bands=bands,
-                                alpha_grid=0.5,
-                                num_samples=5,
-                                savename=os.path.join(fig_dir, f'{model_name}_mask_examples.png'),
+                                num_channels=num_channels,
+                                losses_cp=losses_cp,
+                                device=current_device,
+                                dataloader_template=dataloader_val,
+                                model_type='jepa',
+                                class_data_path=lp_class_data_file,
+                                regress_data_path=lp_regress_data_file,
+                                combine=lp_combine,
+                                world_size=world_size,
+                                rank=rank,
                             )
+                        if rank == 0:
+                            if len(losses['batch_iters']) > 1:
+                                # Plot progress
+                                plot_progress(
+                                    losses,
+                                    y_lims=[(0, 0.7), (0.8, 1.0), (0.6, 1.0)],
+                                    savename=os.path.join(fig_dir, f'{model_name}_progress.png'),
+                                )
+                                # Plot 5 sample masks
+                                visualize_masks(
+                                    images=images_plot[0],
+                                    masks_enc=masks_enc_plot[0],
+                                    masks_pred=masks_pred_plot[0],
+                                    patch_size=patch_size,
+                                    bands=bands,
+                                    alpha_grid=0.5,
+                                    num_samples=5,
+                                    savename=os.path.join(fig_dir, f'{model_name}_mask_examples.png'),
+                                )
 
-            # Perform validation every 5000 iterations
-            if cur_iter % verbose_iters == 0:
-                if dist.is_initialized():
-                    dist.barrier()
-                    logger.info(f'Rank {rank}: performing validation at iteration {cur_iter}')
-                    try:
-                        validate()
-                        logger.info(
-                            f'Rank {rank}: Validation done at iteration {cur_iter}. Pretraining continues.'
-                        )
-                    except Exception as e:
-                        logger.error(f'Rank {rank}: Validation failed at iteration {cur_iter}: {e}')
+                # Perform validation every 5000 iterations
+                if cur_iter % verbose_iters == 0:
+                    if dist.is_initialized():
+                        sync_barrier()
+                        logger.info(f'Rank {rank}: performing validation at iteration {cur_iter}')
+                        try:
+                            validate()
+                            logger.info(
+                                f'Rank {rank}: Validation done at iteration {cur_iter}. Pretraining continues.'
+                            )
+                        except Exception as e:
+                            logger.error(f'Rank {rank}: Validation failed at iteration {cur_iter}: {e}')
 
-                    # Synchronize all processes after validation
-                    dist.barrier()
-                    logger.debug(f'Rank {rank}: passed barrier after final validation step.')
-                else:
-                    logger.info(f'Rank {rank}: distributed environment not initialized at validation.')
-                    logger.info(f'Rank {rank}: performing validation at iteration {cur_iter}')
-                    try:
-                        validate()
-                        logger.info(
-                            f'Rank {rank}: Validation done at iteration {cur_iter}. Continuing training.'
-                        )
-                    except Exception as e:
-                        logger.error(f'Rank {rank}: Validation failed at iteration {cur_iter}: {e}')
+                        # Synchronize all processes after validation
+                        sync_barrier()
+                        logger.debug(f'Rank {rank}: passed barrier after final validation step.')
+                    else:
+                        logger.debug(f'Rank {rank}: distributed environment not initialized at validation.')
+                        logger.info(f'Rank {rank}: performing validation at iteration {cur_iter}')
+                        try:
+                            validate()
+                            logger.info(
+                                f'Rank {rank}: Validation done at iteration {cur_iter}. Continuing training.'
+                            )
+                        except Exception as e:
+                            logger.error(f'Rank {rank}: Validation failed at iteration {cur_iter}: {e}')
 
-            log_stats(losses_cp)
+                log_stats(losses_cp)
 
-            assert not np.isnan(loss), 'loss is nan'
-            assert not np.isinf(loss), 'loss is inf'
+                assert not np.isnan(loss), 'loss is nan'
+                assert not np.isinf(loss), 'loss is inf'
 
-            # Increase the iteration
-            cur_iter += 1
+                # Increase the iteration
+                cur_iter += 1
 
-            # Save Checkpoint
-            # after every cp_time minutes or
-            # after every checkpoint_freq iterations or
-            # at the end of training
-            cur_time = time.time() - cp_start_time
-            if (
-                (cur_time >= cp_time * 60)
-                or (cur_iter % cp_freq == 0)
-                or (cur_iter == total_batch_iters)
-            ):
-                logger.info(
-                    f'Saving checkpoint at iteration {cur_iter} after {cur_time} minutes of training.'
-                )
-                save_checkpoint(cur_iter)
-                cp_start_time = time.time()
+                # Save Checkpoint
+                # after every cp_time minutes or
+                # after every checkpoint_freq iterations or
+                # at the end of training
+                cur_time = time.time() - cp_start_time
+                if (
+                    (cur_time >= cp_time * 60)
+                    or ((cur_iter + 1) % cp_freq == 0)
+                    or (cur_iter == total_batch_iters)
+                ):
+                    logger.info(
+                        f'Saving checkpoint at iteration {cur_iter}. {cur_time/60.} minutes of training since last checkpoint.'
+                    )
+                    save_checkpoint(cur_iter)
+                    cp_start_time = time.time()
 
-            if rank == 0 and cur_iter % 100 == 0:
-                logger.info(f'Iter: {cur_iter}: avg. loss {loss_meter.avg:3f}')
+                if rank == 0 and cur_iter % 100 == 0:
+                    logger.info(f'Iter: {cur_iter}: avg. loss {loss_meter.avg:3f}')
+        except StopIteration:
+            logger.info(f'Rank {rank}: dataloader exhausted. Stopping training.')
 
 
 def train_network(

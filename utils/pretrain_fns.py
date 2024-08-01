@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from utils.dataloaders import build_h5_dataloader
-from utils.distributed import AllReduce
+from utils.distributed import AllGather, AllReduce
 from utils.eval_fns import mae_latent
 from utils.jepa_masking import apply_masks
 from utils.jepa_tensors import repeat_interleave_batch
@@ -142,6 +142,7 @@ def linear_probe(
         train_recall = recall_score(y_train, y_pred_train, average='weighted')
         train_f1 = f1_score(y_train, y_pred_train, average='weighted')
 
+        # Update losses_cp
         losses_cp['train_lp_acc'].append(float(train_accuracy))
         losses_cp['train_lp_precision'].append(float(train_precision))
         losses_cp['train_lp_recall'].append(float(train_recall))
@@ -208,8 +209,10 @@ def get_embeddings(
         num_workers=dataloader_template.num_workers,
         img_size=dataloader_template.dataset.img_size,
         num_patches=dataloader_template.dataset.num_patches,
-        patch_size=model.module.patch_embed.patch_size,
-        num_channels=model.module.in_chans,
+        patch_size=model.module.patch_embed.patch_size
+        if hasattr(model, 'module')
+        else model.patch_embed.patch_size,
+        num_channels=model.module.in_chans if hasattr(model, 'module') else model.in_chans,
         max_mask_ratio=None,
         shuffle=False,
         world_size=world_size,
@@ -257,6 +260,8 @@ def get_embeddings(
 
 def distributed_linear_probe(
     model,
+    patch_size,
+    num_channels,
     losses_cp,
     device,
     dataloader_template,
@@ -277,8 +282,8 @@ def distributed_linear_probe(
             bands=dataloader_template.dataset.bands,
             num_workers=dataloader_template.num_workers,
             img_size=dataloader_template.dataset.img_size,
-            patch_size=model.module.patch_embed.patch_size,
-            num_channels=model.module.in_chans,
+            patch_size=patch_size,
+            num_channels=num_channels,
             max_mask_ratio=None,
             shuffle=False,
             model_type=model_type,
@@ -297,26 +302,43 @@ def distributed_linear_probe(
                 world_size=world_size,
                 rank=rank,
             )
+            if isinstance(latent_features, tuple):
+                latent_features = latent_features[0]
+
         except Exception as e:
             logger.error(f'Error in generating embeddings: {e}')
 
-        # Gather embeddings from all ranks
-        gathered_features = [torch.zeros_like(latent_features) for _ in range(world_size)]
-        try:
-            dist.all_gather(gathered_features, latent_features)
-        except Exception as e:
-            logger.error(f'Error in gathering embeddings: {e}')
+        # if dist.is_available() and dist.is_initialized():
+        #     # Gather embeddings from all ranks
+        #     gathered_features = [torch.zeros_like(latent_features) for _ in range(world_size)]
+        #     try:
+        #         dist.all_gather(gathered_features, latent_features)
+        #     except Exception as e:
+        #         logger.error(f'Error in gathering embeddings: {e}')
+        # else:
+        #     pass
+
+        gathered_features = AllGather.apply(latent_features)
 
         if rank == 0:
             # Combine gathered features
-            latent_features = torch.cat(gathered_features, dim=0).cpu().numpy()
+            if dist.is_available() and dist.is_initialized():
+                # latent_features = torch.cat(gathered_features, dim=0)
+                logger.info(f'latent_features shape: {gathered_features.shape} in distributed case.')
+            else:
+                logger.info(f'latent_features shape: {gathered_features.shape} in non-distributed case.')  # type: ignore
+
+            latent_features = gathered_features.cpu().numpy()  # type: ignore
 
             # Load labels (assuming they're stored in the same order as the data)
             with h5py.File(data_path, 'r') as f:
                 y = f[y_label][:]
 
             # Process features
-            x = process_features(model, model_type, latent_features, combine)
+            try:
+                x = process_features(model, model_type, latent_features, combine)
+            except Exception as e:
+                logger.error(f'Error in processing features: {e}')
 
             return x, y
         else:

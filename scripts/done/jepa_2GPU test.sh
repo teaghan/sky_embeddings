@@ -2,10 +2,10 @@
 #SBATCH --nodes 1             # 1 node
 #SBATCH --gres=gpu:2          # 2 GPUs
 #SBATCH --account=rrg-kyi     # Priority account
-#SBATCH --tasks-per-node=2    # 1 process per GPU.
+#SBATCH --tasks-per-node=2    # 2 processes per GPU.
 #SBATCH --cpus-per-task=2     # 2 CPUs per GPU for dataloading.
-#SBATCH --mem-per-cpu=8G      # 16GB of memory per CPU.
-#SBATCH --time=0-01:00        # x hours # DD-HH:MM
+#SBATCH --mem-per-cpu=16G     # 16GB of memory per CPU.
+#SBATCH --time=0-03:00        # x hours # DD-HH:MM
 #SBATCH --output=%N-%j.out    # Output file
 
 module load StdEnv/2023

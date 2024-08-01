@@ -276,6 +276,7 @@ def build_h5_dataloader(
             pixel_max=None,
             indices=indices,
             seed=seed,
+            rank=rank,
             num_batches=num_batches,
         )
         sampler = torch.utils.data.distributed.DistributedSampler(  # type: ignore
@@ -555,6 +556,7 @@ class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
         indices=None,
         num_batches=None,
         seed=42,
+        rank=0,
     ):
         self.data_file = data_file
         self.transform = transform
@@ -566,12 +568,13 @@ class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
         self.pixel_max = pixel_max
         self.indices = indices
         self.num_batches = num_batches
+        self.rank = rank
 
         try:
             self.h5_file = h5py.File(self.data_file, 'r', libver='latest')
             H5FileRegistry.register(self.h5_file)
         except IOError as e:
-            logger.error(f'Rank {dist.get_rank()}: error opening file {self.data_file}: {e}')
+            logger.error(f'Rank {rank}: error opening file {self.data_file}: {e}')
             raise
 
         total_samples = len(self.h5_file['cutouts'])  # type: ignore
@@ -648,7 +651,7 @@ class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
             self.h5_file.close()
 
 
-def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True):
+def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True, rank=0):
     """
     Searches for HSC (Hyper Suprime-Cam) survey FITS files across specified paths and returns a nested list of filenames
     that contain at least a minimum number of color bands per sky patch. Optimized to minimize filesystem operations and
@@ -696,7 +699,7 @@ def find_HSC_bands(fits_paths, bands, min_bands=2, verbose=1, use_calexp=True):
         if len([f for f in current_patch_files if f != 'None']) >= min_bands:
             filenames.append(current_patch_files)
 
-    if verbose and dist.get_rank() == 0:
+    if verbose and rank == 0:
         logger.info(
             f'Found {len(filenames)// len(bands)} patches with at least {min_bands} of the {bands} bands.'
         )
@@ -855,6 +858,7 @@ class FitsDataset(torch.utils.data.Dataset):  # type: ignore
         pixel_min=-3.0,
         pixel_max=None,
         use_calexp=True,
+        rank=0,
     ):
         self.fits_paths = fits_paths
         self.img_size = img_size
@@ -865,9 +869,12 @@ class FitsDataset(torch.utils.data.Dataset):  # type: ignore
         self.pixel_min = pixel_min
         self.pixel_max = pixel_max
         self.use_calexp = use_calexp
+        self.rank = rank
 
         # Find names of patch fits files
-        self.band_filenames = find_HSC_bands(fits_paths, bands, min_bands, use_calexp=use_calexp)
+        self.band_filenames = find_HSC_bands(
+            fits_paths, bands, min_bands, use_calexp=use_calexp, rank=self.rank
+        )
 
         if max_mask_ratio is not None:
             num_channels = len(bands)
@@ -988,8 +995,11 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
         self.pixel_max = pixel_max
         self.use_calexp = use_calexp
         self.num_bands = len(bands)
+        self.rank = rank
         # Find names of patch fits files
-        self.band_filenames = find_HSC_bands(fits_paths, bands, min_bands, use_calexp=use_calexp)
+        self.band_filenames = find_HSC_bands(
+            fits_paths, bands, min_bands, use_calexp=use_calexp, rank=self.rank
+        )
         self.num_tiles = len(self.band_filenames) // self.num_bands
         self.current_tile_index = -1
         # Initialize shared memory and locks
@@ -1000,7 +1010,7 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
         self.shared_mem = None
         self.cutout_shape = (cutouts_per_tile, len(bands), img_size, img_size)
         self.cutout_size = np.prod(self.cutout_shape) * 4  # Assuming float32
-        self.rank = rank
+
         SharedMemoryRegistry.register(self)
 
         # atexit.register(self.cleanup)
@@ -1140,7 +1150,8 @@ class TileDistributedSampler(torch.utils.data.Sampler):  # type: ignore
             # Ensure the indices tensor is on the correct device before broadcasting
             indices = indices.to(self.current_device)
             # Broadcast the shuffled or unshuffled indices tensor
-            dist.broadcast(indices, src=0)
+            if dist.is_available() and dist.is_initialized():
+                dist.broadcast(indices, src=0)
 
         # Calculate start and end indices for this replica
         start_idx = self.rank * self.num_tiles_per_replica
@@ -1179,7 +1190,7 @@ def extract_center(array, n):
     return array[:, start_row : start_row + n, start_col : start_col + n]
 
 
-def get_band_indices(bands, bands_rgb):
+def get_band_indices(bands, bands_rgb=['I', 'R', 'G']):
     bands_full = ['G', 'I', 'R', 'Y', 'Z', 'NB0387', 'NB0816', 'NB0921', 'NB1010']
     band_idx = sorted([bands_full.index(band) for band in bands])
     band_idx_rgb = sorted([bands.index(band) for band in bands_rgb])

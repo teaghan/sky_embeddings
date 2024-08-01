@@ -1,3 +1,4 @@
+import logging
 import math
 import os
 import warnings
@@ -15,9 +16,9 @@ from sklearn.metrics import confusion_matrix
 
 from utils.dataloaders import get_band_indices
 
-plt.rcParams.update(
-    {'text.usetex': True, 'font.family': 'serif', 'font.serif': ['Times'], 'font.size': 10}
-)
+logger = logging.getLogger()
+
+plt.rcParams.update({'text.usetex': True, 'font.family': 'serif', 'font.serif': ['Times'], 'font.size': 10})
 
 
 def plot_progress(losses, y_lims=[(0, 1)], x_lim=None, lp=False, fontsize=18, savename=None):
@@ -575,9 +576,7 @@ def evaluate_z(
     savename=None,
 ):
     # Calculate metrics on entire dataset
-    full_resid, full_bias, full_mad, full_frac_out = photoz_prediction_metrics(
-        z_pred, z_true, threshold=0.15
-    )
+    full_resid, full_bias, full_mad, full_frac_out = photoz_prediction_metrics(z_pred, z_true, threshold=0.15)
 
     # Split z into bins and calculate metrics
     bins = np.linspace(z_range[0], z_range[1], n_bins + 1)
@@ -590,9 +589,7 @@ def evaluate_z(
     # Each bin should have the same number of samples
     n_samples = min([len(b) for b in bin_indices])
     print(f'Using {n_samples} from each bin')
-    sample_indices = [
-        np.random.choice(np.arange(len(b)), size=n_samples, replace=False) for b in bin_indices
-    ]  # noqa: F841
+    sample_indices = [np.random.choice(np.arange(len(b)), size=n_samples, replace=False) for b in bin_indices]  # noqa: F841
     # bin_indices = [b[b_i] for b, b_i in zip(bin_indices,sample_indices)]
 
     # Calculate metrics for each bin
@@ -682,9 +679,7 @@ def snr_plots(
     # Each bin should have the same number of samples
     n_samples = min([len(b) for b in bin_indices])
     print(f'Using {n_samples} from each bin')
-    sample_indices = [
-        np.random.choice(np.arange(len(b)), size=n_samples, replace=False) for b in bin_indices
-    ]  # noqa: F841
+    sample_indices = [np.random.choice(np.arange(len(b)), size=n_samples, replace=False) for b in bin_indices]  # noqa: F841
     # bin_indices = [b[b_i] for b, b_i in zip(bin_indices,sample_indices)]
 
     # Calculate metrics for each bin
@@ -808,6 +803,7 @@ def visualize_masks(
     savename=None,
     show_plot=False,
 ):
+    logger.info('Plotting mask examples..')
     height, width = images.shape[2] // patch_size, images.shape[3] // patch_size
     images = images[:num_samples]
     masks_enc = masks_enc[0][:num_samples]
@@ -826,7 +822,8 @@ def visualize_masks(
 
         axs[i, 0].set_xlim(0, img.shape[0])
         axs[i, 0].set_ylim(img.shape[1], 0)
-        axs[i, 0].set_title('Original Image')
+        if i == 0:
+            axs[i, 0].set_title('Original Image', fontsize=20)
         axs[i, 0].axis('off')
 
         if patch_grid:
@@ -882,10 +879,9 @@ def visualize_masks(
         alpha = 0.6  # transparency level
 
         axs[i, 1].imshow(masked_img)
-        axs[i, 1].imshow(
-            np.ma.masked_where(full_mask == 1, full_mask), cmap='cool', vmin=-1, alpha=alpha
-        )
-        axs[i, 1].set_title('Final context mask')
+        axs[i, 1].imshow(np.ma.masked_where(full_mask == 1, full_mask), cmap='cool', vmin=-1, alpha=alpha)
+        if i == 0:
+            axs[i, 1].set_title('Final context mask', fontsize=20)
         axs[i, 1].axis('off')
 
         masked_img_p = img.copy()
@@ -910,8 +906,11 @@ def visualize_masks(
             alpha=alpha,
             interpolation='none',
         )
-        axs[i, 2].set_title('Target masks')
+        if i == 0:
+            axs[i, 2].set_title('Target masks', fontsize=20)
         axs[i, 2].axis('off')
+
+    plt.tight_layout()
 
     if savename is not None:
         plt.savefig(
@@ -961,17 +960,13 @@ def cutout_rgb(cutout, bands, bands_rgb):
         np.array([percentile_red, percentile_green, percentile_blue]) > saturation_percentile_threshold
     ):
         # If any band is highly saturated choose a lower percentile target to bring out more lsb features
-        if np.any(
-            np.array([percentile_red, percentile_green, percentile_blue]) > high_saturation_threshold
-        ):
+        if np.any(np.array([percentile_red, percentile_green, percentile_blue]) > high_saturation_threshold):
             percentile_target = 200.0
         else:
             percentile_target = 1000.0
 
         # Find individual saturation percentiles for each band
-        percentiles = find_percentile_from_target(
-            [cutout_red, cutout_green, cutout_blue], percentile_target
-        )
+        percentiles = find_percentile_from_target([cutout_red, cutout_green, cutout_blue], percentile_target)
         cutout_red_desat, _ = desaturate(
             cutout_red,
             saturation_percentile=percentiles['R'],  # type: ignore

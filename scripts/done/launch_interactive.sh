@@ -11,6 +11,7 @@ source /home/heesters/projects/def-sfabbro/heesters/envs/ssl_env/bin/activate
 # Set environment variables
 export TORCH_NCCL_BLOCKING_WAIT=1
 export MASTER_ADDR=$(hostname)  # Capture and use the hostname as the master address
+export MASTER_PORT=3456 # Store the master node’s port number in the MASTER_PORT environment variable.
 
 # Echo the master address and node ID
 echo "$SLURM_NODEID master: $MASTER_ADDR"
