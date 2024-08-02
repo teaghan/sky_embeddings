@@ -172,7 +172,6 @@ def plot_batch_orig_pred(orig_imgs, pred_imgs,
                          n_samples=5, savename=None):
     
     # Normalize the batch between 0 and 1
-    print(orig_imgs.shape, pred_imgs.shape)
     orig_imgs = normalize_images(np.concatenate((orig_imgs, pred_imgs)))
     b = pred_imgs.shape[0]
     pred_imgs = orig_imgs[b:b*2]
