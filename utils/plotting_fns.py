@@ -184,12 +184,12 @@ def plot_batch_orig_pred(orig_imgs, pred_imgs,
     for i in range(n_samples):
         if i==0:
             axes[i,0].set_title('Target', fontsize=12)
-            axes[i,2].set_title('Generated', fontsize=12)
+            axes[i,1].set_title('Generated', fontsize=12)
         vmin = np.min(orig_imgs[i])
         vmax = np.max(orig_imgs[i])
         axes[i,0].imshow(orig_imgs[i,0], vmin=vmin, vmax=vmax)
         axes[i,1].imshow(pred_imgs[i,0], vmin=vmin, vmax=vmax)
-        for j in range(3):
+        for j in range(2):
             axes[i,j].axis('off')  # Hide the axes
 
     plt.tight_layout()
