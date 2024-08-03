@@ -95,16 +95,18 @@ def mae_latent(
 
     latents = []
     images = []
+    indices = []
 
     # Conditional application of augmentations
     augmentations = get_augmentations() if apply_augmentations else None
 
     with torch.no_grad():
         # Loop through spectra in dataset
-        for batch_idx, (samples, ra_decs) in enumerate(dataloader):
+        for batch_idx, (samples, ra_decs, index) in enumerate(dataloader):
             # Apply augmentations if enabled
             augmented_samples = []
             augmented_ra_decs = []  # Prepare to hold duplicated ra_decs
+            augmented_indices = []  # Prepare to hold duplicated indices
             if apply_augmentations and augmentations is not None:
                 for idx, sample in enumerate(samples):
                     # Add the original sample
@@ -112,6 +114,7 @@ def mae_latent(
                     augmented_ra_decs.append(
                         ra_decs[idx].unsqueeze(0)
                     )  # Duplicate ra_dec for the original sample
+                    augmented_indices.append(index[idx].unsqueeze(0))
 
                     # Generate augmented versions of the sample
                     for _ in range(num_augmentations):
@@ -120,16 +123,19 @@ def mae_latent(
                         augmented_ra_decs.append(
                             ra_decs[idx].unsqueeze(0)
                         )  # Duplicate ra_dec for each augmented sample
+                        augmented_indices.append(index[idx].unsqueeze(0))
 
                 # Concatenate all augmented samples along the batch dimension
                 samples = torch.cat(augmented_samples, dim=0)
                 ra_decs = torch.cat(augmented_ra_decs, dim=0)  # Concatenate duplicated ra_decs
+                index = torch.cat(augmented_indices, dim=0)  # Concatenate duplicated indices
 
             logger.debug(f'Shape of samples: {samples.shape}.')
 
             # Switch to GPU if available
             samples = samples.to(device, non_blocking=True)
             ra_decs = ra_decs.to(device, non_blocking=True)
+            index = index.to(device, non_blocking=True)
 
             if 'jepa' in model_type:
                 # model is target_encoder in JEPA
@@ -160,6 +166,7 @@ def mae_latent(
             try:
                 # Keep on GPU
                 latents.append(latent)
+                indices.append(index)
             except Exception as e:
                 logger.error(f'Rank {rank}: error appending latent representation to list: {e}')
             if return_images:
@@ -168,9 +175,9 @@ def mae_latent(
                 break
 
     if return_images:
-        return torch.cat(latents), torch.cat(images)
+        return torch.cat(latents), torch.cat(indices), torch.cat(images)
     else:
-        return torch.cat(latents)
+        return torch.cat(latents), torch.cat(indices)
 
 
 def ft_predict(model, dataloader, device, num_batches=None, return_images=False, use_label_errs=False):

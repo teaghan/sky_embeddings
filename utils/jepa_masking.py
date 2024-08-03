@@ -118,6 +118,10 @@ class jepa_mask_generator(object):
         if len(collated_batch) == 2:
             collated_images = collated_batch[0]
             collated_metadata = collated_batch[1]
+        elif len(collated_batch) == 3:
+            collated_images = collated_batch[0]
+            collated_metadata = collated_batch[1]
+            collated_idxs = collated_batch[2]
         else:
             collated_images = collated_batch
             collated_metadata = torch.zeros(len(collated_batch))
@@ -168,7 +172,7 @@ class jepa_mask_generator(object):
         collated_masks_enc = [[cm[:min_keep_enc] for cm in cm_list] for cm_list in collated_masks_enc]
         collated_masks_enc = torch.utils.data.default_collate(collated_masks_enc)  # type: ignore
 
-        return collated_images, collated_metadata, collated_masks_enc, collated_masks_pred
+        return collated_images, collated_metadata, collated_idxs, collated_masks_enc, collated_masks_pred
 
 
 def apply_masks(x, masks):

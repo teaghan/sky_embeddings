@@ -584,11 +584,12 @@ class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
             self.num_samples = total_samples
 
         # Use a seeded random number generator
-        rng = np.random.default_rng(seed)
-        self.idxs = rng.choice(total_samples, self.num_samples, replace=False)
+        # rng = np.random.default_rng(seed)
+        # self.idxs = rng.choice(total_samples, self.num_samples, replace=False)
+        self.idxs = list(range(self.num_samples))
 
         # Sort indices to ensure consistent ordering across ranks
-        self.idxs.sort()
+        # self.idxs.sort()
 
     def __len__(self):
         if self.indices is not None:

@@ -1,223 +1,841 @@
-2024-08-01 00:37:00,926 - INFO - Note: NumExpr detected 48 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
-2024-08-01 00:37:00,926 - INFO - NumExpr defaulting to 8 threads.
-2024-08-01 00:37:02,804 - INFO - Rank 0/1: initializing process group..
-2024-08-01 00:37:03,372 - INFO - Rank 1/1: distributed training available: True and initialized: True
-2024-08-01 00:37:03,372 - INFO - Rank 1/1: world size: 2; rank: 1; local rank: 1
-2024-08-01 00:37:03,373 - INFO - Rank 1: CUDA_VISIBLE_DEVICES: 1
-2024-08-01 00:37:03,373 - INFO - Rank 1: number of GPUs visible: 1
-2024-08-01 00:37:06,011 - INFO - Rank 1/1: initializing models..
-2024-08-01 00:37:06,624 - INFO - Rank 1/1: models initialized.
-2024-08-01 00:37:06,739 - INFO - Rank 1: initialized train dataloader with 302080 cutouts.
-2024-08-01 00:37:06,820 - INFO - Rank 1: initialized validation dataloader with 6400 cutouts.
-2024-08-01 00:37:07,936 - INFO - Rank 1 handles indices from 148 to 294
-2024-08-01 00:40:34,515 - INFO - Rank 1: performing validation at iteration 500
-2024-08-01 00:40:37,445 - INFO - Rank 1: encoding 47 batches...
-2024-08-01 00:40:41,697 - INFO - Rank 1: encoding 47 batches...
-2024-08-01 00:40:47,959 - INFO - Rank 1: Validation done at iteration 500. Pretraining continues.
-2024-08-01 00:44:15,326 - INFO - Rank 1: Iter: 1000; learning rate: 0.00120; wd: 0.04000
-2024-08-01 00:44:15,446 - INFO - Rank 1: performing validation at iteration 1000
-2024-08-01 00:44:18,355 - INFO - Rank 1: encoding 47 batches...
-2024-08-01 00:44:22,475 - INFO - Rank 1: encoding 47 batches...
-2024-08-01 00:44:28,731 - INFO - Rank 1: Validation done at iteration 1000. Pretraining continues.
-2024-08-01 00:47:11,677 - INFO - Saving checkpoint at iteration 1378. 10.080946222941082 minutes of training since last checkpoint.
-2024-08-01 00:47:58,559 - INFO - Rank 1: performing validation at iteration 1500
-2024-08-01 00:48:01,674 - INFO - Rank 1: encoding 47 batches...
-2024-08-01 00:48:05,921 - INFO - Rank 1: encoding 47 batches...
-2024-08-01 00:48:12,790 - INFO - Rank 1: Validation done at iteration 1500. Pretraining continues.
-2024-08-01 00:51:50,623 - INFO - Rank 1: Iter: 2000; learning rate: 0.00200; wd: 0.04000
-2024-08-01 00:51:50,731 - INFO - Rank 1: performing validation at iteration 2000
-2024-08-01 00:51:54,198 - INFO - Rank 1: encoding 47 batches...
-2024-08-01 00:51:59,751 - INFO - Rank 1: encoding 47 batches...
-2024-08-01 00:52:06,322 - INFO - Rank 1: Validation done at iteration 2000. Pretraining continues.
-2024-08-01 01:04:38,660 - INFO - Cleaning up distributed training..
-2024-08-01 01:04:38,932 - INFO - Closing H5 file: /localscratch/heesters.32317955.0/HSC_dud_galaxy_GIRYZ7610_64_new.h5
-2024-08-01 01:04:38,933 - INFO - Cleaning up shared memory..
-masks: 1
-2024-08-01 00:37:03,206 - INFO -   num_pred_masks: 6
-2024-08-01 00:37:03,206 - INFO -   enc_mask_scale: [0.85, 1.0]
-2024-08-01 00:37:03,206 - INFO -   pred_mask_scale: [0.07, 0.1]
-2024-08-01 00:37:03,206 - INFO -   max_mask_ratio: 0.9
-2024-08-01 00:37:03,206 - INFO -   mask_ratio: 0.75
-2024-08-01 00:37:03,206 - INFO - ARCHITECTURE
-2024-08-01 00:37:03,206 - INFO -   num_channels: 5
-2024-08-01 00:37:03,206 - INFO -   patch_size: 4
-2024-08-01 00:37:03,206 - INFO -   model_type: jepa_vit_small
-2024-08-01 00:37:03,206 - INFO -   pred_depth: 4
-2024-08-01 00:37:03,206 - INFO -   pred_emb_dim: 192
-2024-08-01 00:37:03,206 - INFO -   attn_pool: False
-2024-08-01 00:37:03,206 - INFO -   ra_dec: True
-2024-08-01 00:37:03,206 - INFO -   embed_dim: 1024
-2024-08-01 00:37:03,206 - INFO - LOGGING
-2024-08-01 00:37:03,206 - INFO -   level: DEBUG
-2024-08-01 00:37:03,206 - INFO - Notes
-2024-08-01 00:37:03,206 - INFO -   comment: Initial I-JEPA training.
-2024-08-01 00:37:05,963 - INFO - Using AdamW
-2024-08-01 00:37:05,966 - INFO - Starting fresh model to train...
-2024-08-01 00:37:06,010 - INFO - Rank 0/1: initializing models..
-2024-08-01 00:37:06,624 - INFO - Rank 0/1: models initialized.
-2024-08-01 00:37:06,720 - INFO - Found 295 patches with at least 5 of the ['G', 'I', 'R', 'Y', 'Z'] bands.
-2024-08-01 00:37:06,739 - INFO - Rank 0: initialized train dataloader with 302080 cutouts.
-2024-08-01 00:37:06,820 - INFO - Rank 0: initialized validation dataloader with 6400 cutouts.
-2024-08-01 00:37:06,820 - INFO - Training the network with a batch size of 64 per GPU ...
-2024-08-01 00:37:06,820 - INFO - Progress will be displayed every 500 batch iterations and the model will be saved every 10.0 minutes.
-2024-08-01 00:37:06,820 - INFO - Starting training loop...
-2024-08-01 00:37:07,936 - INFO - Rank 0 handles indices from 0 to 147
-2024-08-01 00:37:52,636 - INFO - Iter: 100: avg. loss 0.051515
-2024-08-01 00:38:32,108 - INFO - Iter: 200: avg. loss 0.026233
-2024-08-01 00:39:11,272 - INFO - Iter: 300: avg. loss 0.017628
-2024-08-01 00:39:49,876 - INFO - Iter: 400: avg. loss 0.013311
-2024-08-01 00:40:34,405 - INFO - Iter: 500: avg. loss 0.010851
-2024-08-01 00:40:34,505 - INFO - Rank 0: performing validation at iteration 500
-2024-08-01 00:40:37,445 - INFO - Rank 0: encoding 47 batches...
-2024-08-01 00:40:41,693 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
-2024-08-01 00:40:42,195 - INFO - Performing classification task on rank 0...
-2024-08-01 00:40:44,975 - INFO - Training Accuracy: 0.486, Validation Accuracy: 0.463
-2024-08-01 00:40:44,976 - INFO - Training Precision: 0.489, Validation Precision: 0.457
-2024-08-01 00:40:44,976 - INFO - Training Recall: 0.486, Validation Recall: 0.463
-2024-08-01 00:40:44,976 - INFO - Training F1: 0.479, Validation F1: 0.453
-2024-08-01 00:40:44,977 - INFO - Rank 0: encoding 47 batches...
-2024-08-01 00:40:47,957 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
-2024-08-01 00:40:48,342 - INFO - Performing regression task on rank 0..
-2024-08-01 00:40:56,975 - INFO - Training R2: 0.030, Validation R2: -0.017
-2024-08-01 00:40:56,976 - INFO - Rank 0: Validation done at iteration 500. Pretraining continues.
-2024-08-01 00:40:56,978 - INFO - [iter:   500] [loss: 0.011] [masks: 110.4, 20.8] [wd: 4.00e-02] [lr: 8.00e-04] [mem: 6.18e+03] (117.8 ms)
-2024-08-01 00:40:56,978 - INFO - Batch Iterations: 500/1000000
-2024-08-01 00:40:56,978 - INFO - Losses:
-2024-08-01 00:40:56,978 - INFO - Training Dataset
-2024-08-01 00:40:56,978 - INFO -   Total Loss: 0.011
-2024-08-01 00:40:56,979 - INFO -   Validation Dataset
-2024-08-01 00:40:56,979 - INFO -   Total Loss: 0.008
-2024-08-01 00:40:56,979 - INFO - Linear Probing Results:
-2024-08-01 00:40:56,979 - INFO - Classification Accuracy:
-2024-08-01 00:40:56,979 - INFO -   Training: 0.486, Validation: 0.463
-2024-08-01 00:40:56,979 - INFO - Classification Precision:
-2024-08-01 00:40:56,979 - INFO -   Training: 0.489, Validation: 0.457
-2024-08-01 00:40:56,979 - INFO - Classification Recall:
-2024-08-01 00:40:56,979 - INFO -   Training: 0.486, Validation: 0.463
-2024-08-01 00:40:56,979 - INFO - Classification F1:
-2024-08-01 00:40:56,979 - INFO -   Training: 0.479, Validation: 0.453
-2024-08-01 00:40:56,979 - INFO - Regression R2
-2024-08-01 00:40:56,979 - INFO -  Training: 0.030, Validation: -0.017
-2024-08-01 00:40:56,979 - INFO - iter: [  500] grad_stats: [1.09e-04 3.52e-05] (3.49e-05, 1.42e-04)
-2024-08-01 00:41:37,048 - INFO - Iter: 600: avg. loss 0.009293
-2024-08-01 00:42:14,535 - INFO - Iter: 700: avg. loss 0.008227
-2024-08-01 00:42:52,389 - INFO - Iter: 800: avg. loss 0.007768
-2024-08-01 00:43:36,495 - INFO - Iter: 900: avg. loss 0.007256
-2024-08-01 00:44:15,325 - INFO - Iter: 1000: avg. loss 0.006751
-2024-08-01 00:44:15,327 - INFO - Rank 0: Iter: 1000; learning rate: 0.00120; wd: 0.04000
-2024-08-01 00:44:15,436 - INFO - Rank 0: performing validation at iteration 1000
-2024-08-01 00:44:18,347 - INFO - Rank 0: encoding 47 batches...
-2024-08-01 00:44:22,466 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
-2024-08-01 00:44:22,882 - INFO - Performing classification task on rank 0...
-2024-08-01 00:44:25,741 - INFO - Training Accuracy: 0.473, Validation Accuracy: 0.465
-2024-08-01 00:44:25,741 - INFO - Training Precision: 0.478, Validation Precision: 0.460
-2024-08-01 00:44:25,741 - INFO - Training Recall: 0.473, Validation Recall: 0.465
-2024-08-01 00:44:25,741 - INFO - Training F1: 0.456, Validation F1: 0.444
-2024-08-01 00:44:25,742 - INFO - Rank 0: encoding 47 batches...
-2024-08-01 00:44:28,731 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
-2024-08-01 00:44:29,115 - INFO - Performing regression task on rank 0..
-2024-08-01 00:44:38,554 - INFO - Training R2: 0.021, Validation R2: -0.011
-2024-08-01 00:44:38,556 - INFO - Rank 0: Validation done at iteration 1000. Pretraining continues.
-2024-08-01 00:44:38,630 - INFO - [iter:  1000] [loss: 0.007] [masks: 110.2, 20.7] [wd: 4.00e-02] [lr: 1.20e-03] [mem: 6.18e+03] (124.7 ms)
-2024-08-01 00:44:38,631 - INFO - Batch Iterations: 1000/1000000
-2024-08-01 00:44:38,631 - INFO - Losses:
-2024-08-01 00:44:38,631 - INFO - Training Dataset
-2024-08-01 00:44:38,631 - INFO -   Total Loss: 0.007
-2024-08-01 00:44:38,631 - INFO -   Validation Dataset
-2024-08-01 00:44:38,631 - INFO -   Total Loss: 0.010
-2024-08-01 00:44:38,631 - INFO - Linear Probing Results:
-2024-08-01 00:44:38,631 - INFO - Classification Accuracy:
-2024-08-01 00:44:38,631 - INFO -   Training: 0.479, Validation: 0.464
-2024-08-01 00:44:38,631 - INFO - Classification Precision:
-2024-08-01 00:44:38,631 - INFO -   Training: 0.483, Validation: 0.458
-2024-08-01 00:44:38,631 - INFO - Classification Recall:
-2024-08-01 00:44:38,631 - INFO -   Training: 0.479, Validation: 0.464
-2024-08-01 00:44:38,631 - INFO - Classification F1:
-2024-08-01 00:44:38,631 - INFO -   Training: 0.467, Validation: 0.448
-2024-08-01 00:44:38,631 - INFO - Regression R2
-2024-08-01 00:44:38,631 - INFO -  Training: 0.025, Validation: -0.014
-2024-08-01 00:44:38,631 - INFO - iter: [ 1000] grad_stats: [5.21e-05 2.64e-05] (4.21e-06, 6.72e-05)
-2024-08-01 00:45:18,414 - INFO - Iter: 1100: avg. loss 0.006355
-2024-08-01 00:45:58,004 - INFO - Iter: 1200: avg. loss 0.006137
-2024-08-01 00:46:38,466 - INFO - Iter: 1300: avg. loss 0.005872
-2024-08-01 00:47:11,677 - INFO - Saving checkpoint at iteration 1378. 10.080946830908458 minutes of training since last checkpoint.
-2024-08-01 00:47:19,240 - INFO - Iter: 1400: avg. loss 0.005793
-2024-08-01 00:47:58,475 - INFO - Iter: 1500: avg. loss 0.006247
-2024-08-01 00:47:58,568 - INFO - Rank 0: performing validation at iteration 1500
-2024-08-01 00:48:01,674 - INFO - Rank 0: encoding 47 batches...
-2024-08-01 00:48:05,918 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
-2024-08-01 00:48:07,024 - INFO - Performing classification task on rank 0...
-2024-08-01 00:48:09,796 - INFO - Training Accuracy: 0.482, Validation Accuracy: 0.459
-2024-08-01 00:48:09,796 - INFO - Training Precision: 0.488, Validation Precision: 0.454
-2024-08-01 00:48:09,796 - INFO - Training Recall: 0.482, Validation Recall: 0.459
-2024-08-01 00:48:09,796 - INFO - Training F1: 0.465, Validation F1: 0.443
-2024-08-01 00:48:09,798 - INFO - Rank 0: encoding 47 batches...
-2024-08-01 00:48:12,790 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
-2024-08-01 00:48:13,885 - INFO - Performing regression task on rank 0..
-2024-08-01 00:48:24,913 - INFO - Training R2: 0.035, Validation R2: -0.018
-2024-08-01 00:48:28,564 - INFO - Plotting mask examples..
-2024-08-01 00:48:30,351 - INFO - Rank 0: Validation done at iteration 1500. Pretraining continues.
-2024-08-01 00:48:30,358 - INFO - [iter:  1500] [loss: 0.006] [masks: 110.1, 20.8] [wd: 4.00e-02] [lr: 1.60e-03] [mem: 6.18e+03] (122.1 ms)
-2024-08-01 00:48:30,358 - INFO - Batch Iterations: 1500/1000000
-2024-08-01 00:48:30,358 - INFO - Losses:
-2024-08-01 00:48:30,358 - INFO - Training Dataset
-2024-08-01 00:48:30,358 - INFO -   Total Loss: 0.006
-2024-08-01 00:48:30,358 - INFO -   Validation Dataset
-2024-08-01 00:48:30,358 - INFO -   Total Loss: 0.049
-2024-08-01 00:48:30,358 - INFO - Linear Probing Results:
-2024-08-01 00:48:30,358 - INFO - Classification Accuracy:
-2024-08-01 00:48:30,358 - INFO -   Training: 0.480, Validation: 0.462
-2024-08-01 00:48:30,358 - INFO - Classification Precision:
-2024-08-01 00:48:30,358 - INFO -   Training: 0.485, Validation: 0.457
-2024-08-01 00:48:30,358 - INFO - Classification Recall:
-2024-08-01 00:48:30,358 - INFO -   Training: 0.480, Validation: 0.462
-2024-08-01 00:48:30,358 - INFO - Classification F1:
-2024-08-01 00:48:30,358 - INFO -   Training: 0.467, Validation: 0.447
-2024-08-01 00:48:30,358 - INFO - Regression R2
-2024-08-01 00:48:30,359 - INFO -  Training: 0.029, Validation: -0.015
-2024-08-01 00:48:30,359 - INFO - iter: [ 1500] grad_stats: [5.10e-08 1.03e-08] (1.03e-08, 1.37e-07)
-2024-08-01 00:49:11,218 - INFO - Iter: 1600: avg. loss 0.006856
-2024-08-01 00:49:52,544 - INFO - Iter: 1700: avg. loss 0.006459
-2024-08-01 00:50:32,310 - INFO - Iter: 1800: avg. loss 0.006103
-2024-08-01 00:51:11,458 - INFO - Iter: 1900: avg. loss 0.005783
-2024-08-01 00:51:50,622 - INFO - Iter: 2000: avg. loss 0.005495
-2024-08-01 00:51:50,623 - INFO - Rank 0: Iter: 2000; learning rate: 0.00200; wd: 0.04000
-2024-08-01 00:51:50,731 - INFO - Rank 0: performing validation at iteration 2000
-2024-08-01 00:51:54,194 - INFO - Rank 0: encoding 47 batches...
-2024-08-01 00:51:59,746 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
-2024-08-01 00:52:00,675 - INFO - Performing classification task on rank 0...
-2024-08-01 00:52:03,333 - INFO - Training Accuracy: 0.471, Validation Accuracy: 0.468
-2024-08-01 00:52:03,333 - INFO - Training Precision: 0.481, Validation Precision: 0.466
-2024-08-01 00:52:03,333 - INFO - Training Recall: 0.471, Validation Recall: 0.468
-2024-08-01 00:52:03,333 - INFO - Training F1: 0.450, Validation F1: 0.446
-2024-08-01 00:52:03,334 - INFO - Rank 0: encoding 47 batches...
-2024-08-01 00:52:06,328 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
-2024-08-01 00:52:07,230 - INFO - Performing regression task on rank 0..
-2024-08-01 00:52:15,448 - INFO - Training R2: 0.022, Validation R2: -0.010
-2024-08-01 00:52:16,420 - INFO - Plotting mask examples..
-2024-08-01 00:52:17,881 - INFO - Rank 0: Validation done at iteration 2000. Pretraining continues.
-2024-08-01 00:52:17,901 - INFO - [iter:  2000] [loss: 0.005] [masks: 110.2, 20.8] [wd: 4.00e-02] [lr: 2.00e-03] [mem: 6.18e+03] (121.9 ms)
-2024-08-01 00:52:17,901 - INFO - Batch Iterations: 2000/1000000
-2024-08-01 00:52:17,901 - INFO - Losses:
-2024-08-01 00:52:17,901 - INFO - Training Dataset
-2024-08-01 00:52:17,901 - INFO -   Total Loss: 0.005
-2024-08-01 00:52:17,901 - INFO -   Validation Dataset
-2024-08-01 00:52:17,901 - INFO -   Total Loss: 0.037
-2024-08-01 00:52:17,901 - INFO - Linear Probing Results:
-2024-08-01 00:52:17,901 - INFO - Classification Accuracy:
-2024-08-01 00:52:17,901 - INFO -   Training: 0.478, Validation: 0.464
-2024-08-01 00:52:17,901 - INFO - Classification Precision:
-2024-08-01 00:52:17,901 - INFO -   Training: 0.484, Validation: 0.459
-2024-08-01 00:52:17,901 - INFO - Classification Recall:
-2024-08-01 00:52:17,901 - INFO -   Training: 0.478, Validation: 0.464
-2024-08-01 00:52:17,901 - INFO - Classification F1:
-2024-08-01 00:52:17,901 - INFO -   Training: 0.462, Validation: 0.446
-2024-08-01 00:52:17,901 - INFO - Regression R2
-2024-08-01 00:52:17,901 - INFO -  Training: 0.027, Validation: -0.014
-2024-08-01 00:52:17,901 - INFO - iter: [ 2000] grad_stats: [2.29e-09 1.79e-09] (1.07e-09, 2.58e-08)
-2024-08-01 00:52:56,706 - INFO - Iter: 2100: avg. loss 0.005234
-2024-08-01 00:53:38,979 - INFO - Iter: 2200: avg. loss 0.004997
-2024-08-01 00:54:17,965 - INFO - Iter: 2300: avg. loss 0.004782
-2024-08-01 01:04:43,333 - INFO - Cleaning up distributed training..
-2024-08-01 01:04:43,373 - INFO - Closing H5 file: /localscratch/heesters.32317955.0/HSC_dud_galaxy_GIRYZ7610_64_new.h5
-2024-08-01 01:04:43,373 - INFO - Cleaning up shared memory..
+2024-08-01 18:31:38,640 - INFO - Note: NumExpr detected 48 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+2024-08-01 18:31:38,641 - INFO - NumExpr defaulting to 8 threads.
+2024-08-01 18:33:13,793 - INFO - Rank 1/1: initializing process group..
+2024-08-01 18:33:15,874 - INFO - Rank 0/1: distributed training available: True and initialized: True
+2024-08-01 18:33:15,874 - INFO - Rank 0/1: world size: 2; rank: 0; local rank: 0
+2024-08-01 18:33:15,874 - INFO - Using Torch version: 2.3.0 with CUDA version 12.2.
+2024-08-01 18:33:15,874 - INFO - Rank 0: CUDA_VI2024-08-01 18:33:20,438 - INFO - Rank 1/1: initializing models..
+2024-08-01 18:33:23,848 - INFO - Rank 1/1: models initialized.
+2024-08-01 18:33:23,955 - INFO - Rank 1: initialized train dataloader with 302080 cutouts.
+2024-08-01 18:33:23,964 - INFO - Rank 1: initialized validation dataloader with 6400 cutouts.
+2024-08-01 18:33:25,049 - INFO - Rank 1 handles indices from 148 to 294
+2024-08-01 18:34:11,086 - INFO - Rank 1: performing validation at iteration 100
+2024-08-01 18:34:14,885 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:34:19,318 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:34:25,867 - INFO - Rank 1: Validation done at iteration 100. Pretraining continues.
+2024-08-01 18:35:15,694 - INFO - Rank 1: performing validation at iteration 200
+2024-08-01 18:35:18,581 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:35:22,794 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:35:29,031 - INFO - Rank 1: Validation done at iteration 200. Pretraining continues.
+2024-08-01 18:36:16,630 - INFO - Rank 1: performing validation at iteration 300
+2024-08-01 18:36:19,539 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:36:23,759 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:36:29,941 - INFO - Rank 1: Validation done at iteration 300. Pretraining continues.
+2024-08-01 18:37:22,090 - INFO - Rank 1: performing validation at iteration 400
+2024-08-01 18:37:25,506 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:37:30,870 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:37:37,175 - INFO - Rank 1: Validation done at iteration 400. Pretraining continues.
+2024-08-01 18:38:27,756 - INFO - Rank 1: performing validation at iteration 500
+2024-08-01 18:38:30,720 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:38:34,988 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:38:41,346 - INFO - Rank 1: Validation done at iteration 500. Pretraining continues.
+2024-08-01 18:39:31,078 - INFO - Rank 1: performing validation at iteration 600
+2024-08-01 18:39:33,980 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:39:38,206 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:39:44,391 - INFO - Rank 1: Validation done at iteration 600. Pretraining continues.
+2024-08-01 18:40:39,923 - INFO - Rank 1: performing validation at iteration 700
+2024-08-01 18:40:43,519 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:40:47,736 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:40:54,109 - INFO - Rank 1: Validation done at iteration 700. Pretraining continues.
+2024-08-01 18:41:45,062 - INFO - Rank 1: performing validation at iteration 800
+2024-08-01 18:41:48,278 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:41:53,775 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:42:00,184 - INFO - Rank 1: Validation done at iteration 800. Pretraining continues.
+2024-08-01 18:42:48,403 - INFO - Rank 1: performing validation at iteration 900
+2024-08-01 18:42:51,382 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:42:55,662 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:43:02,193 - INFO - Rank 1: Validation done at iteration 900. Pretraining continues.
+2024-08-01 18:43:26,541 - INFO - Saving checkpoint at iteration 930. 10.042949759960175 minutes of training since last checkpoint.
+2024-08-01 18:43:53,201 - INFO - Rank 1: Iter: 1000; learning rate: 0.00120; wd: 0.04000
+2024-08-01 18:43:53,310 - INFO - Rank 1: performing validation at iteration 1000
+2024-08-01 18:43:56,232 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:44:00,541 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:44:07,308 - INFO - Rank 1: Validation done at iteration 1000. Pretraining continues.
+2024-08-01 18:44:56,971 - INFO - Rank 1: performing validation at iteration 1100
+2024-08-01 18:44:59,862 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:45:04,226 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:45:10,680 - INFO - Rank 1: Validation done at iteration 1100. Pretraining continues.
+2024-08-01 18:46:00,548 - INFO - Rank 1: performing validation at iteration 1200
+2024-08-01 18:46:03,672 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:46:09,444 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:46:15,840 - INFO - Rank 1: Validation done at iteration 1200. Pretraining continues.
+2024-08-01 18:47:05,455 - INFO - Rank 1: performing validation at iteration 1300
+2024-08-01 18:47:08,385 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:47:12,665 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:47:19,202 - INFO - Rank 1: Validation done at iteration 1300. Pretraining continues.
+2024-08-01 18:48:08,705 - INFO - Rank 1: performing validation at iteration 1400
+2024-08-01 18:48:11,680 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:48:15,844 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:48:22,363 - INFO - Rank 1: Validation done at iteration 1400. Pretraining continues.
+2024-08-01 18:49:12,291 - INFO - Rank 1: performing validation at iteration 1500
+2024-08-01 18:49:15,241 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:49:19,584 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:49:25,721 - INFO - Rank 1: Validation done at iteration 1500. Pretraining continues.
+2024-08-01 18:50:14,230 - INFO - Rank 1: performing validation at iteration 1600
+2024-08-01 18:50:17,853 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:50:22,116 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:50:28,083 - INFO - Rank 1: Validation done at iteration 1600. Pretraining continues.
+2024-08-01 18:51:15,826 - INFO - Rank 1: performing validation at iteration 1700
+2024-08-01 18:51:18,769 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:51:22,908 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:51:29,425 - INFO - Rank 1: Validation done at iteration 1700. Pretraining continues.
+2024-08-01 18:52:20,394 - INFO - Rank 1: performing validation at iteration 1800
+2024-08-01 18:52:23,324 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:52:27,514 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:52:34,008 - INFO - Rank 1: Validation done at iteration 1800. Pretraining continues.
+2024-08-01 18:53:22,132 - INFO - Rank 1: performing validation at iteration 1900
+2024-08-01 18:53:25,423 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:53:29,752 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:53:36,124 - INFO - Rank 1: Validation done at iteration 1900. Pretraining continues.
+2024-08-01 18:53:47,177 - INFO - Saving checkpoint at iteration 1901. 10.343904026349385 minutes of training since last checkpoint.
+2024-08-01 18:54:25,346 - INFO - Rank 1: Iter: 2000; learning rate: 0.00200; wd: 0.04000
+2024-08-01 18:54:25,445 - INFO - Rank 1: performing validation at iteration 2000
+2024-08-01 18:54:28,675 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:54:34,622 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:54:40,922 - INFO - Rank 1: Validation done at iteration 2000. Pretraining continues.
+2024-08-01 18:55:30,391 - INFO - Rank 1: performing validation at iteration 2100
+2024-08-01 18:55:33,432 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:55:37,653 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:55:44,209 - INFO - Rank 1: Validation done at iteration 2100. Pretraining continues.
+2024-08-01 18:56:33,422 - INFO - Rank 1: performing validation at iteration 2200
+2024-08-01 18:56:36,818 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:56:41,081 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:56:48,137 - INFO - Rank 1: Validation done at iteration 2200. Pretraining continues.
+2024-08-01 18:57:41,834 - INFO - Rank 1: performing validation at iteration 2300
+2024-08-01 18:57:44,779 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:57:48,953 - INFO - Rank 1: encoding 47 batches...
+2024-08-01 18:57:55,059 - INFO - Rank 1: Validation done at iteration 2300. Pretraining continues.
+2024-08-01 19:08:25,591 - INFO - Cleaning up distributed training..
+2024-08-01 19:08:26,012 - INFO - Closing H5 file: /localscratch/heesters.32351846.0/HSC_dud_galaxy_GIRYZ7610_64_new.h5
+2024-08-01 19:08:26,013 - INFO - Cleaning up shared memory..
+tion: 0.479
+2024-08-01 18:35:39,275 - INFO - Classification Precision:
+2024-08-01 18:35:39,276 - INFO -   Training: 0.499, Validation: 0.475
+2024-08-01 18:35:39,276 - INFO - Classification Recall:
+2024-08-01 18:35:39,276 - INFO -   Training: 0.495, Validation: 0.479
+2024-08-01 18:35:39,276 - INFO - Classification F1:
+2024-08-01 18:35:39,276 - INFO -   Training: 0.489, Validation: 0.472
+2024-08-01 18:35:39,276 - INFO - Regression R2
+2024-08-01 18:35:39,276 - INFO -  Training: 0.050, Validation: -0.038
+2024-08-01 18:35:39,276 - INFO - iter: [  200] grad_stats: [3.62e-05 4.05e-05] (2.50e-06, 9.02e-05)
+2024-08-01 18:36:16,530 - INFO - Iter: 300: avg. loss 0.017238
+2024-08-01 18:36:16,640 - INFO - Rank 0: performing validation at iteration 300
+2024-08-01 18:36:19,549 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:36:23,762 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:36:24,180 - INFO - Performing classification task on rank 0...
+2024-08-01 18:36:26,946 - INFO - Training Accuracy: 0.497, Validation Accuracy: 0.475
+2024-08-01 18:36:26,946 - INFO - Training Precision: 0.501, Validation Precision: 0.471
+2024-08-01 18:36:26,946 - INFO - Training Recall: 0.497, Validation Recall: 0.475
+2024-08-01 18:36:26,946 - INFO - Training F1: 0.492, Validation F1: 0.469
+2024-08-01 18:36:26,947 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:36:29,946 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:36:30,330 - INFO - Performing regression task on rank 0..
+2024-08-01 18:36:39,482 - INFO - Training R2: 0.042, Validation R2: -0.034
+2024-08-01 18:36:42,120 - INFO - Plotting mask examples..
+2024-08-01 18:36:43,890 - INFO - Rank 0: Validation done at iteration 300. Pretraining continues.
+2024-08-01 18:36:43,896 - INFO - [iter:   300] [loss: 0.017] [masks: 109.9, 20.8] [wd: 4.00e-02] [lr: 6.40e-04] [mem: 6.18e+03] (133.1 ms)
+2024-08-01 18:36:43,896 - INFO - Batch Iterations: 300/1000000
+2024-08-01 18:36:43,896 - INFO - Losses:
+2024-08-01 18:36:43,896 - INFO - Training Dataset
+2024-08-01 18:36:43,896 - INFO -   Total Loss: 0.017
+2024-08-01 18:36:43,896 - INFO -   Validation Dataset
+2024-08-01 18:36:43,896 - INFO -   Total Loss: 0.004
+2024-08-01 18:36:43,896 - INFO - Linear Probing Results:
+2024-08-01 18:36:43,896 - INFO - Classification Accuracy:
+2024-08-01 18:36:43,897 - INFO -   Training: 0.496, Validation: 0.478
+2024-08-01 18:36:43,897 - INFO - Classification Precision:
+2024-08-01 18:36:43,897 - INFO -   Training: 0.500, Validation: 0.473
+2024-08-01 18:36:43,897 - INFO - Classification Recall:
+2024-08-01 18:36:43,897 - INFO -   Training: 0.496, Validation: 0.478
+2024-08-01 18:36:43,897 - INFO - Classification F1:
+2024-08-01 18:36:43,897 - INFO -   Training: 0.490, Validation: 0.471
+2024-08-01 18:36:43,897 - INFO - Regression R2
+2024-08-01 18:36:43,897 - INFO -  Training: 0.047, Validation: -0.037
+2024-08-01 18:36:43,897 - INFO - iter: [  300] grad_stats: [6.61e-05 6.61e-05] (1.06e-05, 1.67e-04)
+2024-08-01 18:37:21,990 - INFO - Iter: 400: avg. loss 0.013001
+2024-08-01 18:37:22,100 - INFO - Rank 0: performing validation at iteration 400
+2024-08-01 18:37:25,499 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:37:30,868 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:37:31,346 - INFO - Performing classification task on rank 0...
+2024-08-01 18:37:34,184 - INFO - Training Accuracy: 0.492, Validation Accuracy: 0.473
+2024-08-01 18:37:34,184 - INFO - Training Precision: 0.494, Validation Precision: 0.469
+2024-08-01 18:37:34,184 - INFO - Training Recall: 0.492, Validation Recall: 0.473
+2024-08-01 18:37:34,184 - INFO - Training F1: 0.487, Validation F1: 0.467
+2024-08-01 18:37:34,185 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:37:37,180 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:37:37,560 - INFO - Performing regression task on rank 0..
+2024-08-01 18:37:46,396 - INFO - Training R2: 0.040, Validation R2: -0.032
+2024-08-01 18:37:47,051 - INFO - Plotting mask examples..
+2024-08-01 18:37:48,439 - INFO - Rank 0: Validation done at iteration 400. Pretraining continues.
+2024-08-01 18:37:48,441 - INFO - [iter:   400] [loss: 0.013] [masks: 110.3, 20.7] [wd: 4.00e-02] [lr: 7.20e-04] [mem: 6.18e+03] (129.3 ms)
+2024-08-01 18:37:48,441 - INFO - Batch Iterations: 400/1000000
+2024-08-01 18:37:48,441 - INFO - Losses:
+2024-08-01 18:37:48,441 - INFO - Training Dataset
+2024-08-01 18:37:48,441 - INFO -   Total Loss: 0.013
+2024-08-01 18:37:48,441 - INFO -   Validation Dataset
+2024-08-01 18:37:48,441 - INFO -   Total Loss: 0.003
+2024-08-01 18:37:48,441 - INFO - Linear Probing Results:
+2024-08-01 18:37:48,441 - INFO - Classification Accuracy:
+2024-08-01 18:37:48,441 - INFO -   Training: 0.495, Validation: 0.476
+2024-08-01 18:37:48,441 - INFO - Classification Precision:
+2024-08-01 18:37:48,441 - INFO -   Training: 0.498, Validation: 0.472
+2024-08-01 18:37:48,441 - INFO - Classification Recall:
+2024-08-01 18:37:48,441 - INFO -   Training: 0.495, Validation: 0.476
+2024-08-01 18:37:48,441 - INFO - Classification F1:
+2024-08-01 18:37:48,441 - INFO -   Training: 0.489, Validation: 0.470
+2024-08-01 18:37:48,441 - INFO - Regression R2
+2024-08-01 18:37:48,441 - INFO -  Training: 0.045, Validation: -0.036
+2024-08-01 18:37:48,441 - INFO - iter: [  400] grad_stats: [2.83e-05 1.98e-05] (5.08e-06, 6.15e-05)
+2024-08-01 18:38:27,659 - INFO - Iter: 500: avg. loss 0.010542
+2024-08-01 18:38:27,766 - INFO - Rank 0: performing validation at iteration 500
+2024-08-01 18:38:30,718 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:38:34,990 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:38:35,407 - INFO - Performing classification task on rank 0...
+2024-08-01 18:38:38,358 - INFO - Training Accuracy: 0.485, Validation Accuracy: 0.476
+2024-08-01 18:38:38,359 - INFO - Training Precision: 0.488, Validation Precision: 0.473
+2024-08-01 18:38:38,359 - INFO - Training Recall: 0.485, Validation Recall: 0.476
+2024-08-01 18:38:38,359 - INFO - Training F1: 0.479, Validation F1: 0.469
+2024-08-01 18:38:38,360 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:38:41,353 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:38:41,735 - INFO - Performing regression task on rank 0..
+2024-08-01 18:38:50,872 - INFO - Training R2: 0.035, Validation R2: -0.024
+2024-08-01 18:38:51,279 - INFO - Plotting mask examples..
+2024-08-01 18:38:52,676 - INFO - Rank 0: Validation done at iteration 500. Pretraining continues.
+2024-08-01 18:38:52,679 - INFO - [iter:   500] [loss: 0.011] [masks: 110.5, 20.7] [wd: 4.00e-02] [lr: 8.00e-04] [mem: 6.18e+03] (128.0 ms)
+2024-08-01 18:38:52,679 - INFO - Batch Iterations: 500/1000000
+2024-08-01 18:38:52,679 - INFO - Losses:
+2024-08-01 18:38:52,679 - INFO - Training Dataset
+2024-08-01 18:38:52,679 - INFO -   Total Loss: 0.011
+2024-08-01 18:38:52,679 - INFO -   Validation Dataset
+2024-08-01 18:38:52,679 - INFO -   Total Loss: 0.004
+2024-08-01 18:38:52,679 - INFO - Linear Probing Results:
+2024-08-01 18:38:52,679 - INFO - Classification Accuracy:
+2024-08-01 18:38:52,679 - INFO -   Training: 0.493, Validation: 0.476
+2024-08-01 18:38:52,679 - INFO - Classification Precision:
+2024-08-01 18:38:52,679 - INFO -   Training: 0.496, Validation: 0.473
+2024-08-01 18:38:52,679 - INFO - Classification Recall:
+2024-08-01 18:38:52,679 - INFO -   Training: 0.493, Validation: 0.476
+2024-08-01 18:38:52,679 - INFO - Classification F1:
+2024-08-01 18:38:52,679 - INFO -   Training: 0.487, Validation: 0.470
+2024-08-01 18:38:52,679 - INFO - Regression R2
+2024-08-01 18:38:52,679 - INFO -  Training: 0.043, Validation: -0.033
+2024-08-01 18:38:52,679 - INFO - iter: [  500] grad_stats: [1.14e-04 3.29e-05] (3.16e-05, 1.52e-04)
+2024-08-01 18:39:30,982 - INFO - Iter: 600: avg. loss 0.009039
+2024-08-01 18:39:31,068 - INFO - Rank 0: performing validation at iteration 600
+2024-08-01 18:39:33,986 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:39:38,198 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:39:38,611 - INFO - Performing classification task on rank 0...
+2024-08-01 18:39:41,376 - INFO - Training Accuracy: 0.487, Validation Accuracy: 0.479
+2024-08-01 18:39:41,376 - INFO - Training Precision: 0.489, Validation Precision: 0.475
+2024-08-01 18:39:41,376 - INFO - Training Recall: 0.487, Validation Recall: 0.479
+2024-08-01 18:39:41,376 - INFO - Training F1: 0.480, Validation F1: 0.469
+2024-08-01 18:39:41,377 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:39:44,389 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:39:44,772 - INFO - Performing regression task on rank 0..
+2024-08-01 18:39:52,779 - INFO - Training R2: 0.025, Validation R2: -0.019
+2024-08-01 18:39:53,229 - INFO - Plotting mask examples..
+2024-08-01 18:39:54,629 - INFO - Rank 0: Validation done at iteration 600. Pretraining continues.
+2024-08-01 18:39:54,631 - INFO - [iter:   600] [loss: 0.009] [masks: 110.1, 20.7] [wd: 4.00e-02] [lr: 8.80e-04] [mem: 6.18e+03] (124.6 ms)
+2024-08-01 18:39:54,631 - INFO - Batch Iterations: 600/1000000
+2024-08-01 18:39:54,631 - INFO - Losses:
+2024-08-01 18:39:54,631 - INFO - Training Dataset
+2024-08-01 18:39:54,631 - INFO -   Total Loss: 0.009
+2024-08-01 18:39:54,632 - INFO -   Validation Dataset
+2024-08-01 18:39:54,632 - INFO -   Total Loss: 0.005
+2024-08-01 18:39:54,632 - INFO - Linear Probing Results:
+2024-08-01 18:39:54,632 - INFO - Classification Accuracy:
+2024-08-01 18:39:54,632 - INFO -   Training: 0.492, Validation: 0.477
+2024-08-01 18:39:54,632 - INFO - Classification Precision:
+2024-08-01 18:39:54,632 - INFO -   Training: 0.495, Validation: 0.473
+2024-08-01 18:39:54,632 - INFO - Classification Recall:
+2024-08-01 18:39:54,632 - INFO -   Training: 0.492, Validation: 0.477
+2024-08-01 18:39:54,632 - INFO - Classification F1:
+2024-08-01 18:39:54,632 - INFO -   Training: 0.486, Validation: 0.470
+2024-08-01 18:39:54,632 - INFO - Regression R2
+2024-08-01 18:39:54,632 - INFO -  Training: 0.040, Validation: -0.031
+2024-08-01 18:39:54,632 - INFO - iter: [  600] grad_stats: [1.53e-04 1.07e-05] (9.12e-06, 1.53e-04)
+2024-08-01 18:40:39,818 - INFO - Iter: 700: avg. loss 0.008042
+2024-08-01 18:40:39,923 - INFO - Rank 0: performing validation at iteration 700
+2024-08-01 18:40:43,519 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:40:47,734 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:40:48,170 - INFO - Performing classification task on rank 0...
+2024-08-01 18:40:51,105 - INFO - Training Accuracy: 0.488, Validation Accuracy: 0.472
+2024-08-01 18:40:51,105 - INFO - Training Precision: 0.491, Validation Precision: 0.463
+2024-08-01 18:40:51,105 - INFO - Training Recall: 0.488, Validation Recall: 0.472
+2024-08-01 18:40:51,105 - INFO - Training F1: 0.480, Validation F1: 0.457
+2024-08-01 18:40:51,107 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:40:54,115 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:40:54,498 - INFO - Performing regression task on rank 0..
+2024-08-01 18:41:04,142 - INFO - Training R2: 0.018, Validation R2: -0.005
+2024-08-01 18:41:04,887 - INFO - Plotting mask examples..
+2024-08-01 18:41:06,356 - INFO - Rank 0: Validation done at iteration 700. Pretraining continues.
+2024-08-01 18:41:06,362 - INFO - [iter:   700] [loss: 0.008] [masks: 110.1, 20.7] [wd: 4.00e-02] [lr: 9.60e-04] [mem: 6.18e+03] (121.3 ms)
+2024-08-01 18:41:06,362 - INFO - Batch Iterations: 700/1000000
+2024-08-01 18:41:06,362 - INFO - Losses:
+2024-08-01 18:41:06,362 - INFO - Training Dataset
+2024-08-01 18:41:06,363 - INFO -   Total Loss: 0.008
+2024-08-01 18:41:06,363 - INFO -   Validation Dataset
+2024-08-01 18:41:06,363 - INFO -   Total Loss: 0.009
+2024-08-01 18:41:06,363 - INFO - Linear Probing Results:
+2024-08-01 18:41:06,363 - INFO - Classification Accuracy:
+2024-08-01 18:41:06,363 - INFO -   Training: 0.491, Validation: 0.476
+2024-08-01 18:41:06,363 - INFO - Classification Precision:
+2024-08-01 18:41:06,363 - INFO -   Training: 0.495, Validation: 0.471
+2024-08-01 18:41:06,363 - INFO - Classification Recall:
+2024-08-01 18:41:06,363 - INFO -   Training: 0.491, Validation: 0.476
+2024-08-01 18:41:06,363 - INFO - Classification F1:
+2024-08-01 18:41:06,363 - INFO -   Training: 0.485, Validation: 0.468
+2024-08-01 18:41:06,363 - INFO - Regression R2
+2024-08-01 18:41:06,363 - INFO -  Training: 0.037, Validation: -0.027
+2024-08-01 18:41:06,363 - INFO - iter: [  700] grad_stats: [1.25e-04 1.27e-05] (1.11e-05, 1.60e-04)
+2024-08-01 18:41:44,958 - INFO - Iter: 800: avg. loss 0.007429
+2024-08-01 18:41:45,053 - INFO - Rank 0: performing validation at iteration 800
+2024-08-01 18:41:48,288 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:41:53,777 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:41:54,237 - INFO - Performing classification task on rank 0...
+2024-08-01 18:41:57,193 - INFO - Training Accuracy: 0.479, Validation Accuracy: 0.458
+2024-08-01 18:41:57,193 - INFO - Training Precision: 0.482, Validation Precision: 0.451
+2024-08-01 18:41:57,193 - INFO - Training Recall: 0.479, Validation Recall: 0.458
+2024-08-01 18:41:57,193 - INFO - Training F1: 0.469, Validation F1: 0.444
+2024-08-01 18:41:57,194 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:42:00,185 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:42:00,568 - INFO - Performing regression task on rank 0..
+2024-08-01 18:42:09,980 - INFO - Training R2: 0.022, Validation R2: -0.007
+2024-08-01 18:42:10,378 - INFO - Plotting mask examples..
+2024-08-01 18:42:11,779 - INFO - Rank 0: Validation done at iteration 800. Pretraining continues.
+2024-08-01 18:42:11,781 - INFO - [iter:   800] [loss: 0.007] [masks: 110.1, 20.8] [wd: 4.00e-02] [lr: 1.04e-03] [mem: 6.18e+03] (118.6 ms)
+2024-08-01 18:42:11,781 - INFO - Batch Iterations: 800/1000000
+2024-08-01 18:42:11,781 - INFO - Losses:
+2024-08-01 18:42:11,781 - INFO - Training Dataset
+2024-08-01 18:42:11,781 - INFO -   Total Loss: 0.007
+2024-08-01 18:42:11,781 - INFO -   Validation Dataset
+2024-08-01 18:42:11,781 - INFO -   Total Loss: 0.011
+2024-08-01 18:42:11,781 - INFO - Linear Probing Results:
+2024-08-01 18:42:11,781 - INFO - Classification Accuracy:
+2024-08-01 18:42:11,781 - INFO -   Training: 0.490, Validation: 0.474
+2024-08-01 18:42:11,781 - INFO - Classification Precision:
+2024-08-01 18:42:11,781 - INFO -   Training: 0.493, Validation: 0.469
+2024-08-01 18:42:11,781 - INFO - Classification Recall:
+2024-08-01 18:42:11,781 - INFO -   Training: 0.490, Validation: 0.474
+2024-08-01 18:42:11,781 - INFO - Classification F1:
+2024-08-01 18:42:11,782 - INFO -   Training: 0.483, Validation: 0.465
+2024-08-01 18:42:11,782 - INFO - Regression R2
+2024-08-01 18:42:11,782 - INFO -  Training: 0.035, Validation: -0.025
+2024-08-01 18:42:11,782 - INFO - iter: [  800] grad_stats: [2.62e-05 3.80e-06] (3.47e-06, 7.71e-05)
+2024-08-01 18:42:48,292 - INFO - Iter: 900: avg. loss 0.006763
+2024-08-01 18:42:48,394 - INFO - Rank 0: performing validation at iteration 900
+2024-08-01 18:42:51,382 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:42:55,661 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:42:56,084 - INFO - Performing classification task on rank 0...
+2024-08-01 18:42:59,175 - INFO - Training Accuracy: 0.481, Validation Accuracy: 0.469
+2024-08-01 18:42:59,175 - INFO - Training Precision: 0.483, Validation Precision: 0.463
+2024-08-01 18:42:59,175 - INFO - Training Recall: 0.481, Validation Recall: 0.469
+2024-08-01 18:42:59,175 - INFO - Training F1: 0.469, Validation F1: 0.453
+2024-08-01 18:42:59,177 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:43:02,194 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:43:02,577 - INFO - Performing regression task on rank 0..
+2024-08-01 18:43:12,166 - INFO - Training R2: 0.017, Validation R2: 0.000
+2024-08-01 18:43:12,588 - INFO - Plotting mask examples..
+2024-08-01 18:43:14,007 - INFO - Rank 0: Validation done at iteration 900. Pretraining continues.
+2024-08-01 18:43:14,009 - INFO - [iter:   900] [loss: 0.007] [masks: 110.2, 20.7] [wd: 4.00e-02] [lr: 1.12e-03] [mem: 6.18e+03] (117.5 ms)
+2024-08-01 18:43:14,009 - INFO - Batch Iterations: 900/1000000
+2024-08-01 18:43:14,009 - INFO - Losses:
+2024-08-01 18:43:14,010 - INFO - Training Dataset
+2024-08-01 18:43:14,010 - INFO -   Total Loss: 0.007
+2024-08-01 18:43:14,010 - INFO -   Validation Dataset
+2024-08-01 18:43:14,010 - INFO -   Total Loss: 0.011
+2024-08-01 18:43:14,010 - INFO - Linear Probing Results:
+2024-08-01 18:43:14,010 - INFO - Classification Accuracy:
+2024-08-01 18:43:14,010 - INFO -   Training: 0.489, Validation: 0.473
+2024-08-01 18:43:14,010 - INFO - Classification Precision:
+2024-08-01 18:43:14,010 - INFO -   Training: 0.492, Validation: 0.468
+2024-08-01 18:43:14,010 - INFO - Classification Recall:
+2024-08-01 18:43:14,010 - INFO -   Training: 0.489, Validation: 0.473
+2024-08-01 18:43:14,010 - INFO - Classification F1:
+2024-08-01 18:43:14,010 - INFO -   Training: 0.482, Validation: 0.463
+2024-08-01 18:43:14,010 - INFO - Regression R2
+2024-08-01 18:43:14,010 - INFO -  Training: 0.033, Validation: -0.022
+2024-08-01 18:43:14,010 - INFO - iter: [  900] grad_stats: [4.22e-06 1.10e-06] (3.44e-07, 1.15e-05)
+2024-08-01 18:43:26,541 - INFO - Saving checkpoint at iteration 930. 10.042932999134063 minutes of training since last checkpoint.
+2024-08-01 18:43:53,201 - INFO - Iter: 1000: avg. loss 0.006208
+2024-08-01 18:43:53,202 - INFO - Rank 0: Iter: 1000; learning rate: 0.00120; wd: 0.04000
+2024-08-01 18:43:53,301 - INFO - Rank 0: performing validation at iteration 1000
+2024-08-01 18:43:56,225 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:44:00,541 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:44:00,967 - INFO - Performing classification task on rank 0...
+2024-08-01 18:44:04,302 - INFO - Training Accuracy: 0.479, Validation Accuracy: 0.466
+2024-08-01 18:44:04,302 - INFO - Training Precision: 0.484, Validation Precision: 0.457
+2024-08-01 18:44:04,302 - INFO - Training Recall: 0.479, Validation Recall: 0.466
+2024-08-01 18:44:04,302 - INFO - Training F1: 0.464, Validation F1: 0.446
+2024-08-01 18:44:04,303 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:44:07,308 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:44:07,690 - INFO - Performing regression task on rank 0..
+2024-08-01 18:44:16,562 - INFO - Training R2: 0.016, Validation R2: -0.004
+2024-08-01 18:44:16,990 - INFO - Plotting mask examples..
+2024-08-01 18:44:18,390 - INFO - Rank 0: Validation done at iteration 1000. Pretraining continues.
+2024-08-01 18:44:18,392 - INFO - [iter:  1000] [loss: 0.006] [masks: 110.1, 20.8] [wd: 4.00e-02] [lr: 1.20e-03] [mem: 6.18e+03] (117.7 ms)
+2024-08-01 18:44:18,392 - INFO - Batch Iterations: 1000/1000000
+2024-08-01 18:44:18,392 - INFO - Losses:
+2024-08-01 18:44:18,392 - INFO - Training Dataset
+2024-08-01 18:44:18,392 - INFO -   Total Loss: 0.006
+2024-08-01 18:44:18,392 - INFO -   Validation Dataset
+2024-08-01 18:44:18,392 - INFO -   Total Loss: 0.011
+2024-08-01 18:44:18,392 - INFO - Linear Probing Results:
+2024-08-01 18:44:18,392 - INFO - Classification Accuracy:
+2024-08-01 18:44:18,393 - INFO -   Training: 0.488, Validation: 0.473
+2024-08-01 18:44:18,393 - INFO - Classification Precision:
+2024-08-01 18:44:18,393 - INFO -   Training: 0.491, Validation: 0.467
+2024-08-01 18:44:18,393 - INFO - Classification Recall:
+2024-08-01 18:44:18,393 - INFO -   Training: 0.488, Validation: 0.473
+2024-08-01 18:44:18,393 - INFO - Classification F1:
+2024-08-01 18:44:18,393 - INFO -   Training: 0.480, Validation: 0.462
+2024-08-01 18:44:18,393 - INFO - Regression R2
+2024-08-01 18:44:18,393 - INFO -  Training: 0.031, Validation: -0.020
+2024-08-01 18:44:18,393 - INFO - iter: [ 1000] grad_stats: [6.75e-06 9.67e-07] (8.19e-07, 1.26e-05)
+2024-08-01 18:44:56,877 - INFO - Iter: 1100: avg. loss 0.005771
+2024-08-01 18:44:56,962 - INFO - Rank 0: performing validation at iteration 1100
+2024-08-01 18:44:59,862 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:45:04,225 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:45:04,641 - INFO - Performing classification task on rank 0...
+2024-08-01 18:45:07,685 - INFO - Training Accuracy: 0.488, Validation Accuracy: 0.471
+2024-08-01 18:45:07,685 - INFO - Training Precision: 0.495, Validation Precision: 0.464
+2024-08-01 18:45:07,685 - INFO - Training Recall: 0.488, Validation Recall: 0.471
+2024-08-01 18:45:07,685 - INFO - Training F1: 0.476, Validation F1: 0.455
+2024-08-01 18:45:07,686 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:45:10,686 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:45:11,067 - INFO - Performing regression task on rank 0..
+2024-08-01 18:45:20,187 - INFO - Training R2: 0.015, Validation R2: -0.007
+2024-08-01 18:45:20,618 - INFO - Plotting mask examples..
+2024-08-01 18:45:22,018 - INFO - Rank 0: Validation done at iteration 1100. Pretraining continues.
+2024-08-01 18:45:22,020 - INFO - [iter:  1100] [loss: 0.006] [masks: 110.0, 20.8] [wd: 4.00e-02] [lr: 1.28e-03] [mem: 6.18e+03] (118.5 ms)
+2024-08-01 18:45:22,020 - INFO - Batch Iterations: 1100/1000000
+2024-08-01 18:45:22,020 - INFO - Losses:
+2024-08-01 18:45:22,020 - INFO - Training Dataset
+2024-08-01 18:45:22,021 - INFO -   Total Loss: 0.006
+2024-08-01 18:45:22,021 - INFO -   Validation Dataset
+2024-08-01 18:45:22,021 - INFO -   Total Loss: 0.011
+2024-08-01 18:45:22,021 - INFO - Linear Probing Results:
+2024-08-01 18:45:22,021 - INFO - Classification Accuracy:
+2024-08-01 18:45:22,021 - INFO -   Training: 0.488, Validation: 0.472
+2024-08-01 18:45:22,021 - INFO - Classification Precision:
+2024-08-01 18:45:22,021 - INFO -   Training: 0.491, Validation: 0.467
+2024-08-01 18:45:22,021 - INFO - Classification Recall:
+2024-08-01 18:45:22,021 - INFO -   Training: 0.488, Validation: 0.472
+2024-08-01 18:45:22,021 - INFO - Classification F1:
+2024-08-01 18:45:22,021 - INFO -   Training: 0.480, Validation: 0.461
+2024-08-01 18:45:22,021 - INFO - Regression R2
+2024-08-01 18:45:22,021 - INFO -  Training: 0.030, Validation: -0.019
+2024-08-01 18:45:22,021 - INFO - iter: [ 1100] grad_stats: [1.25e-05 1.97e-06] (1.60e-06, 2.39e-05)
+2024-08-01 18:46:00,431 - INFO - Iter: 1200: avg. loss 0.005388
+2024-08-01 18:46:00,538 - INFO - Rank 0: performing validation at iteration 1200
+2024-08-01 18:46:03,681 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:46:09,440 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:46:09,853 - INFO - Performing classification task on rank 0...
+2024-08-01 18:46:12,831 - INFO - Training Accuracy: 0.480, Validation Accuracy: 0.472
+2024-08-01 18:46:12,831 - INFO - Training Precision: 0.485, Validation Precision: 0.464
+2024-08-01 18:46:12,831 - INFO - Training Recall: 0.480, Validation Recall: 0.472
+2024-08-01 18:46:12,831 - INFO - Training F1: 0.464, Validation F1: 0.453
+2024-08-01 18:46:12,832 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:46:15,838 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:46:16,221 - INFO - Performing regression task on rank 0..
+2024-08-01 18:46:25,434 - INFO - Training R2: 0.015, Validation R2: -0.006
+2024-08-01 18:46:25,803 - INFO - Plotting mask examples..
+2024-08-01 18:46:27,404 - INFO - Rank 0: Validation done at iteration 1200. Pretraining continues.
+2024-08-01 18:46:27,406 - INFO - [iter:  1200] [loss: 0.005] [masks: 110.0, 20.8] [wd: 4.00e-02] [lr: 1.36e-03] [mem: 6.18e+03] (118.2 ms)
+2024-08-01 18:46:27,406 - INFO - Batch Iterations: 1200/1000000
+2024-08-01 18:46:27,406 - INFO - Losses:
+2024-08-01 18:46:27,407 - INFO - Training Dataset
+2024-08-01 18:46:27,407 - INFO -   Total Loss: 0.005
+2024-08-01 18:46:27,407 - INFO -   Validation Dataset
+2024-08-01 18:46:27,407 - INFO -   Total Loss: 0.011
+2024-08-01 18:46:27,407 - INFO - Linear Probing Results:
+2024-08-01 18:46:27,407 - INFO - Classification Accuracy:
+2024-08-01 18:46:27,407 - INFO -   Training: 0.487, Validation: 0.472
+2024-08-01 18:46:27,407 - INFO - Classification Precision:
+2024-08-01 18:46:27,407 - INFO -   Training: 0.491, Validation: 0.467
+2024-08-01 18:46:27,407 - INFO - Classification Recall:
+2024-08-01 18:46:27,407 - INFO -   Training: 0.487, Validation: 0.472
+2024-08-01 18:46:27,407 - INFO - Classification F1:
+2024-08-01 18:46:27,407 - INFO -   Training: 0.478, Validation: 0.460
+2024-08-01 18:46:27,407 - INFO - Regression R2
+2024-08-01 18:46:27,407 - INFO -  Training: 0.029, Validation: -0.018
+2024-08-01 18:46:27,407 - INFO - iter: [ 1200] grad_stats: [2.30e-04 2.58e-05] (2.07e-05, 3.53e-04)
+2024-08-01 18:47:05,354 - INFO - Iter: 1300: avg. loss 0.005055
+2024-08-01 18:47:05,446 - INFO - Rank 0: performing validation at iteration 1300
+2024-08-01 18:47:08,378 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:47:12,662 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:47:13,081 - INFO - Performing classification task on rank 0...
+2024-08-01 18:47:16,190 - INFO - Training Accuracy: 0.474, Validation Accuracy: 0.468
+2024-08-01 18:47:16,190 - INFO - Training Precision: 0.481, Validation Precision: 0.464
+2024-08-01 18:47:16,190 - INFO - Training Recall: 0.474, Validation Recall: 0.468
+2024-08-01 18:47:16,190 - INFO - Training F1: 0.455, Validation F1: 0.444
+2024-08-01 18:47:16,192 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:47:19,202 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:47:19,582 - INFO - Performing regression task on rank 0..
+2024-08-01 18:47:27,921 - INFO - Training R2: 0.014, Validation R2: -0.009
+2024-08-01 18:47:28,309 - INFO - Plotting mask examples..
+2024-08-01 18:47:29,706 - INFO - Rank 0: Validation done at iteration 1300. Pretraining continues.
+2024-08-01 18:47:29,708 - INFO - [iter:  1300] [loss: 0.005] [masks: 110.1, 20.8] [wd: 4.00e-02] [lr: 1.44e-03] [mem: 6.18e+03] (118.4 ms)
+2024-08-01 18:47:29,708 - INFO - Batch Iterations: 1300/1000000
+2024-08-01 18:47:29,708 - INFO - Losses:
+2024-08-01 18:47:29,708 - INFO - Training Dataset
+2024-08-01 18:47:29,708 - INFO -   Total Loss: 0.005
+2024-08-01 18:47:29,708 - INFO -   Validation Dataset
+2024-08-01 18:47:29,708 - INFO -   Total Loss: 0.010
+2024-08-01 18:47:29,708 - INFO - Linear Probing Results:
+2024-08-01 18:47:29,708 - INFO - Classification Accuracy:
+2024-08-01 18:47:29,708 - INFO -   Training: 0.486, Validation: 0.472
+2024-08-01 18:47:29,708 - INFO - Classification Precision:
+2024-08-01 18:47:29,708 - INFO -   Training: 0.490, Validation: 0.466
+2024-08-01 18:47:29,708 - INFO - Classification Recall:
+2024-08-01 18:47:29,708 - INFO -   Training: 0.486, Validation: 0.472
+2024-08-01 18:47:29,708 - INFO - Classification F1:
+2024-08-01 18:47:29,709 - INFO -   Training: 0.476, Validation: 0.459
+2024-08-01 18:47:29,709 - INFO - Regression R2
+2024-08-01 18:47:29,709 - INFO -  Training: 0.027, Validation: -0.017
+2024-08-01 18:47:29,709 - INFO - iter: [ 1300] grad_stats: [7.67e-06 5.26e-06] (3.23e-06, 2.27e-05)
+2024-08-01 18:48:08,592 - INFO - Iter: 1400: avg. loss 0.004741
+2024-08-01 18:48:08,695 - INFO - Rank 0: performing validation at iteration 1400
+2024-08-01 18:48:11,679 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:48:15,846 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:48:16,258 - INFO - Performing classification task on rank 0...
+2024-08-01 18:48:19,352 - INFO - Training Accuracy: 0.462, Validation Accuracy: 0.484
+2024-08-01 18:48:19,353 - INFO - Training Precision: 0.467, Validation Precision: 0.489
+2024-08-01 18:48:19,353 - INFO - Training Recall: 0.462, Validation Recall: 0.484
+2024-08-01 18:48:19,353 - INFO - Training F1: 0.438, Validation F1: 0.463
+2024-08-01 18:48:19,354 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:48:22,362 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:48:22,744 - INFO - Performing regression task on rank 0..
+2024-08-01 18:48:32,322 - INFO - Training R2: 0.016, Validation R2: -0.014
+2024-08-01 18:48:32,700 - INFO - Plotting mask examples..
+2024-08-01 18:48:34,108 - INFO - Rank 0: Validation done at iteration 1400. Pretraining continues.
+2024-08-01 18:48:34,111 - INFO - [iter:  1400] [loss: 0.005] [masks: 110.2, 20.8] [wd: 4.00e-02] [lr: 1.52e-03] [mem: 6.18e+03] (118.4 ms)
+2024-08-01 18:48:34,111 - INFO - Batch Iterations: 1400/1000000
+2024-08-01 18:48:34,111 - INFO - Losses:
+2024-08-01 18:48:34,111 - INFO - Training Dataset
+2024-08-01 18:48:34,111 - INFO -   Total Loss: 0.005
+2024-08-01 18:48:34,111 - INFO -   Validation Dataset
+2024-08-01 18:48:34,111 - INFO -   Total Loss: 0.010
+2024-08-01 18:48:34,111 - INFO - Linear Probing Results:
+2024-08-01 18:48:34,111 - INFO - Classification Accuracy:
+2024-08-01 18:48:34,111 - INFO -   Training: 0.484, Validation: 0.473
+2024-08-01 18:48:34,111 - INFO - Classification Precision:
+2024-08-01 18:48:34,111 - INFO -   Training: 0.488, Validation: 0.468
+2024-08-01 18:48:34,111 - INFO - Classification Recall:
+2024-08-01 18:48:34,111 - INFO -   Training: 0.484, Validation: 0.473
+2024-08-01 18:48:34,111 - INFO - Classification F1:
+2024-08-01 18:48:34,111 - INFO -   Training: 0.474, Validation: 0.459
+2024-08-01 18:48:34,111 - INFO - Regression R2
+2024-08-01 18:48:34,111 - INFO -  Training: 0.027, Validation: -0.017
+2024-08-01 18:48:34,111 - INFO - iter: [ 1400] grad_stats: [1.11e-04 2.57e-05] (2.18e-05, 1.79e-04)
+2024-08-01 18:49:12,188 - INFO - Iter: 1500: avg. loss 0.004496
+2024-08-01 18:49:12,301 - INFO - Rank 0: performing validation at iteration 1500
+2024-08-01 18:49:15,231 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:49:19,582 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:49:20,005 - INFO - Performing classification task on rank 0...
+2024-08-01 18:49:22,716 - INFO - Training Accuracy: 0.458, Validation Accuracy: 0.482
+2024-08-01 18:49:22,716 - INFO - Training Precision: 0.462, Validation Precision: 0.484
+2024-08-01 18:49:22,717 - INFO - Training Recall: 0.458, Validation Recall: 0.482
+2024-08-01 18:49:22,717 - INFO - Training F1: 0.432, Validation F1: 0.458
+2024-08-01 18:49:22,718 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:49:25,726 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:49:26,110 - INFO - Performing regression task on rank 0..
+2024-08-01 18:49:34,357 - INFO - Training R2: 0.013, Validation R2: -0.010
+2024-08-01 18:49:34,770 - INFO - Plotting mask examples..
+2024-08-01 18:49:36,157 - INFO - Rank 0: Validation done at iteration 1500. Pretraining continues.
+2024-08-01 18:49:36,160 - INFO - [iter:  1500] [loss: 0.004] [masks: 110.2, 20.8] [wd: 4.00e-02] [lr: 1.60e-03] [mem: 6.18e+03] (120.6 ms)
+2024-08-01 18:49:36,161 - INFO - Batch Iterations: 1500/1000000
+2024-08-01 18:49:36,161 - INFO - Losses:
+2024-08-01 18:49:36,161 - INFO - Training Dataset
+2024-08-01 18:49:36,161 - INFO -   Total Loss: 0.004
+2024-08-01 18:49:36,161 - INFO -   Validation Dataset
+2024-08-01 18:49:36,161 - INFO -   Total Loss: 0.009
+2024-08-01 18:49:36,161 - INFO - Linear Probing Results:
+2024-08-01 18:49:36,161 - INFO - Classification Accuracy:
+2024-08-01 18:49:36,161 - INFO -   Training: 0.483, Validation: 0.473
+2024-08-01 18:49:36,161 - INFO - Classification Precision:
+2024-08-01 18:49:36,161 - INFO -   Training: 0.487, Validation: 0.469
+2024-08-01 18:49:36,161 - INFO - Classification Recall:
+2024-08-01 18:49:36,161 - INFO -   Training: 0.483, Validation: 0.473
+2024-08-01 18:49:36,161 - INFO - Classification F1:
+2024-08-01 18:49:36,161 - INFO -   Training: 0.471, Validation: 0.459
+2024-08-01 18:49:36,161 - INFO - Regression R2
+2024-08-01 18:49:36,161 - INFO -  Training: 0.026, Validation: -0.016
+2024-08-01 18:49:36,161 - INFO - iter: [ 1500] grad_stats: [2.42e-05 1.19e-05] (6.29e-06, 4.39e-05)
+2024-08-01 18:50:14,124 - INFO - Iter: 1600: avg. loss 0.004246
+2024-08-01 18:50:14,240 - INFO - Rank 0: performing validation at iteration 1600
+2024-08-01 18:50:17,861 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:50:22,116 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:50:22,528 - INFO - Performing classification task on rank 0...
+2024-08-01 18:50:25,081 - INFO - Training Accuracy: 0.454, Validation Accuracy: 0.475
+2024-08-01 18:50:25,081 - INFO - Training Precision: 0.459, Validation Precision: 0.475
+2024-08-01 18:50:25,081 - INFO - Training Recall: 0.454, Validation Recall: 0.475
+2024-08-01 18:50:25,081 - INFO - Training F1: 0.428, Validation F1: 0.451
+2024-08-01 18:50:25,083 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:50:28,087 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:50:28,468 - INFO - Performing regression task on rank 0..
+2024-08-01 18:50:35,749 - INFO - Training R2: 0.013, Validation R2: -0.007
+2024-08-01 18:50:36,350 - INFO - Plotting mask examples..
+2024-08-01 18:50:37,742 - INFO - Rank 0: Validation done at iteration 1600. Pretraining continues.
+2024-08-01 18:50:37,744 - INFO - [iter:  1600] [loss: 0.004] [masks: 110.3, 20.7] [wd: 4.00e-02] [lr: 1.68e-03] [mem: 6.18e+03] (121.7 ms)
+2024-08-01 18:50:37,744 - INFO - Batch Iterations: 1600/1000000
+2024-08-01 18:50:37,744 - INFO - Losses:
+2024-08-01 18:50:37,745 - INFO - Training Dataset
+2024-08-01 18:50:37,745 - INFO -   Total Loss: 0.004
+2024-08-01 18:50:37,745 - INFO -   Validation Dataset
+2024-08-01 18:50:37,745 - INFO -   Total Loss: 0.009
+2024-08-01 18:50:37,745 - INFO - Linear Probing Results:
+2024-08-01 18:50:37,745 - INFO - Classification Accuracy:
+2024-08-01 18:50:37,745 - INFO -   Training: 0.481, Validation: 0.474
+2024-08-01 18:50:37,745 - INFO - Classification Precision:
+2024-08-01 18:50:37,745 - INFO -   Training: 0.485, Validation: 0.469
+2024-08-01 18:50:37,745 - INFO - Classification Recall:
+2024-08-01 18:50:37,745 - INFO -   Training: 0.481, Validation: 0.474
+2024-08-01 18:50:37,745 - INFO - Classification F1:
+2024-08-01 18:50:37,745 - INFO -   Training: 0.468, Validation: 0.459
+2024-08-01 18:50:37,745 - INFO - Regression R2
+2024-08-01 18:50:37,745 - INFO -  Training: 0.025, Validation: -0.016
+2024-08-01 18:50:37,745 - INFO - iter: [ 1600] grad_stats: [1.26e-05 3.17e-06] (2.25e-06, 1.39e-05)
+2024-08-01 18:51:15,718 - INFO - Iter: 1700: avg. loss 0.004051
+2024-08-01 18:51:15,836 - INFO - Rank 0: performing validation at iteration 1700
+2024-08-01 18:51:18,762 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:51:22,902 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:51:23,318 - INFO - Performing classification task on rank 0...
+2024-08-01 18:51:26,412 - INFO - Training Accuracy: 0.458, Validation Accuracy: 0.474
+2024-08-01 18:51:26,412 - INFO - Training Precision: 0.467, Validation Precision: 0.475
+2024-08-01 18:51:26,412 - INFO - Training Recall: 0.458, Validation Recall: 0.474
+2024-08-01 18:51:26,412 - INFO - Training F1: 0.432, Validation F1: 0.448
+2024-08-01 18:51:26,414 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:51:29,423 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:51:29,806 - INFO - Performing regression task on rank 0..
+2024-08-01 18:51:38,873 - INFO - Training R2: 0.012, Validation R2: -0.006
+2024-08-01 18:51:39,281 - INFO - Plotting mask examples..
+2024-08-01 18:51:40,684 - INFO - Rank 0: Validation done at iteration 1700. Pretraining continues.
+2024-08-01 18:51:40,686 - INFO - [iter:  1700] [loss: 0.004] [masks: 110.3, 20.7] [wd: 4.00e-02] [lr: 1.76e-03] [mem: 6.18e+03] (121.8 ms)
+2024-08-01 18:51:40,686 - INFO - Batch Iterations: 1700/1000000
+2024-08-01 18:51:40,686 - INFO - Losses:
+2024-08-01 18:51:40,686 - INFO - Training Dataset
+2024-08-01 18:51:40,686 - INFO -   Total Loss: 0.004
+2024-08-01 18:51:40,687 - INFO -   Validation Dataset
+2024-08-01 18:51:40,687 - INFO -   Total Loss: 0.009
+2024-08-01 18:51:40,687 - INFO - Linear Probing Results:
+2024-08-01 18:51:40,687 - INFO - Classification Accuracy:
+2024-08-01 18:51:40,687 - INFO -   Training: 0.480, Validation: 0.474
+2024-08-01 18:51:40,687 - INFO - Classification Precision:
+2024-08-01 18:51:40,687 - INFO -   Training: 0.484, Validation: 0.470
+2024-08-01 18:51:40,687 - INFO - Classification Recall:
+2024-08-01 18:51:40,687 - INFO -   Training: 0.480, Validation: 0.474
+2024-08-01 18:51:40,687 - INFO - Classification F1:
+2024-08-01 18:51:40,687 - INFO -   Training: 0.466, Validation: 0.458
+2024-08-01 18:51:40,687 - INFO - Regression R2
+2024-08-01 18:51:40,687 - INFO -  Training: 0.024, Validation: -0.015
+2024-08-01 18:51:40,687 - INFO - iter: [ 1700] grad_stats: [1.38e-05 1.35e-06] (9.43e-07, 1.55e-05)
+2024-08-01 18:52:20,284 - INFO - Iter: 1800: avg. loss 0.003858
+2024-08-01 18:52:20,384 - INFO - Rank 0: performing validation at iteration 1800
+2024-08-01 18:52:23,329 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:52:27,514 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:52:27,936 - INFO - Performing classification task on rank 0...
+2024-08-01 18:52:31,002 - INFO - Training Accuracy: 0.448, Validation Accuracy: 0.464
+2024-08-01 18:52:31,003 - INFO - Training Precision: 0.456, Validation Precision: 0.459
+2024-08-01 18:52:31,003 - INFO - Training Recall: 0.448, Validation Recall: 0.464
+2024-08-01 18:52:31,003 - INFO - Training F1: 0.422, Validation F1: 0.436
+2024-08-01 18:52:31,004 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:52:34,006 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:52:34,386 - INFO - Performing regression task on rank 0..
+2024-08-01 18:52:42,190 - INFO - Training R2: 0.012, Validation R2: -0.008
+2024-08-01 18:52:42,587 - INFO - Plotting mask examples..
+2024-08-01 18:52:43,978 - INFO - Rank 0: Validation done at iteration 1800. Pretraining continues.
+2024-08-01 18:52:43,980 - INFO - [iter:  1800] [loss: 0.004] [masks: 110.3, 20.7] [wd: 4.00e-02] [lr: 1.84e-03] [mem: 6.18e+03] (121.2 ms)
+2024-08-01 18:52:43,981 - INFO - Batch Iterations: 1800/1000000
+2024-08-01 18:52:43,981 - INFO - Losses:
+2024-08-01 18:52:43,981 - INFO - Training Dataset
+2024-08-01 18:52:43,981 - INFO -   Total Loss: 0.004
+2024-08-01 18:52:43,981 - INFO -   Validation Dataset
+2024-08-01 18:52:43,981 - INFO -   Total Loss: 0.008
+2024-08-01 18:52:43,981 - INFO - Linear Probing Results:
+2024-08-01 18:52:43,981 - INFO - Classification Accuracy:
+2024-08-01 18:52:43,981 - INFO -   Training: 0.478, Validation: 0.473
+2024-08-01 18:52:43,981 - INFO - Classification Precision:
+2024-08-01 18:52:43,981 - INFO -   Training: 0.482, Validation: 0.469
+2024-08-01 18:52:43,981 - INFO - Classification Recall:
+2024-08-01 18:52:43,981 - INFO -   Training: 0.478, Validation: 0.473
+2024-08-01 18:52:43,981 - INFO - Classification F1:
+2024-08-01 18:52:43,981 - INFO -   Training: 0.464, Validation: 0.457
+2024-08-01 18:52:43,981 - INFO - Regression R2
+2024-08-01 18:52:43,981 - INFO -  Training: 0.023, Validation: -0.015
+2024-08-01 18:52:43,981 - INFO - iter: [ 1800] grad_stats: [1.04e-05 3.37e-06] (1.99e-06, 3.77e-05)
+2024-08-01 18:53:22,016 - INFO - Iter: 1900: avg. loss 0.003699
+2024-08-01 18:53:22,122 - INFO - Rank 0: performing validation at iteration 1900
+2024-08-01 18:53:25,417 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:53:29,748 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:53:30,176 - INFO - Performing classification task on rank 0...
+2024-08-01 18:53:33,110 - INFO - Training Accuracy: 0.456, Validation Accuracy: 0.463
+2024-08-01 18:53:33,110 - INFO - Training Precision: 0.462, Validation Precision: 0.457
+2024-08-01 18:53:33,110 - INFO - Training Recall: 0.456, Validation Recall: 0.463
+2024-08-01 18:53:33,110 - INFO - Training F1: 0.434, Validation F1: 0.440
+2024-08-01 18:53:33,111 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:53:36,130 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:53:36,512 - INFO - Performing regression task on rank 0..
+2024-08-01 18:53:45,359 - INFO - Training R2: 0.010, Validation R2: -0.004
+2024-08-01 18:53:45,781 - INFO - Plotting mask examples..
+2024-08-01 18:53:47,169 - INFO - Rank 0: Validation done at iteration 1900. Pretraining continues.
+2024-08-01 18:53:47,171 - INFO - [iter:  1900] [loss: 0.004] [masks: 110.2, 20.7] [wd: 4.00e-02] [lr: 1.92e-03] [mem: 6.18e+03] (121.5 ms)
+2024-08-01 18:53:47,172 - INFO - Batch Iterations: 1900/1000000
+2024-08-01 18:53:47,172 - INFO - Losses:
+2024-08-01 18:53:47,172 - INFO - Training Dataset
+2024-08-01 18:53:47,172 - INFO -   Total Loss: 0.004
+2024-08-01 18:53:47,172 - INFO -   Validation Dataset
+2024-08-01 18:53:47,172 - INFO -   Total Loss: 0.008
+2024-08-01 18:53:47,172 - INFO - Linear Probing Results:
+2024-08-01 18:53:47,172 - INFO - Classification Accuracy:
+2024-08-01 18:53:47,172 - INFO -   Training: 0.477, Validation: 0.473
+2024-08-01 18:53:47,172 - INFO - Classification Precision:
+2024-08-01 18:53:47,172 - INFO -   Training: 0.481, Validation: 0.469
+2024-08-01 18:53:47,172 - INFO - Classification Recall:
+2024-08-01 18:53:47,172 - INFO -   Training: 0.477, Validation: 0.473
+2024-08-01 18:53:47,172 - INFO - Classification F1:
+2024-08-01 18:53:47,172 - INFO -   Training: 0.462, Validation: 0.456
+2024-08-01 18:53:47,172 - INFO - Regression R2
+2024-08-01 18:53:47,172 - INFO -  Training: 0.023, Validation: -0.014
+2024-08-01 18:53:47,172 - INFO - iter: [ 1900] grad_stats: [5.67e-05 8.78e-06] (4.79e-06, 1.37e-04)
+2024-08-01 18:53:47,172 - INFO - Saving checkpoint at iteration 1901. 10.335017923514048 minutes of training since last checkpoint.
+2024-08-01 18:54:25,345 - INFO - Iter: 2000: avg. loss 0.003565
+2024-08-01 18:54:25,346 - INFO - Rank 0: Iter: 2000; learning rate: 0.00200; wd: 0.04000
+2024-08-01 18:54:25,445 - INFO - Rank 0: performing validation at iteration 2000
+2024-08-01 18:54:28,680 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:54:34,621 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:54:35,049 - INFO - Performing classification task on rank 0...
+2024-08-01 18:54:37,905 - INFO - Training Accuracy: 0.455, Validation Accuracy: 0.465
+2024-08-01 18:54:37,906 - INFO - Training Precision: 0.461, Validation Precision: 0.460
+2024-08-01 18:54:37,906 - INFO - Training Recall: 0.455, Validation Recall: 0.465
+2024-08-01 18:54:37,906 - INFO - Training F1: 0.433, Validation F1: 0.441
+2024-08-01 18:54:37,907 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:54:40,927 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:54:41,309 - INFO - Performing regression task on rank 0..
+2024-08-01 18:54:49,791 - INFO - Training R2: 0.009, Validation R2: -0.003
+2024-08-01 18:54:50,204 - INFO - Plotting mask examples..
+2024-08-01 18:54:51,608 - INFO - Rank 0: Validation done at iteration 2000. Pretraining continues.
+2024-08-01 18:54:51,610 - INFO - [iter:  2000] [loss: 0.004] [masks: 110.2, 20.8] [wd: 4.00e-02] [lr: 2.00e-03] [mem: 6.18e+03] (121.8 ms)
+2024-08-01 18:54:51,611 - INFO - Batch Iterations: 2000/1000000
+2024-08-01 18:54:51,611 - INFO - Losses:
+2024-08-01 18:54:51,611 - INFO - Training Dataset
+2024-08-01 18:54:51,611 - INFO -   Total Loss: 0.004
+2024-08-01 18:54:51,611 - INFO -   Validation Dataset
+2024-08-01 18:54:51,611 - INFO -   Total Loss: 0.008
+2024-08-01 18:54:51,611 - INFO - Linear Probing Results:
+2024-08-01 18:54:51,611 - INFO - Classification Accuracy:
+2024-08-01 18:54:51,611 - INFO -   Training: 0.476, Validation: 0.472
+2024-08-01 18:54:51,611 - INFO - Classification Precision:
+2024-08-01 18:54:51,611 - INFO -   Training: 0.480, Validation: 0.468
+2024-08-01 18:54:51,611 - INFO - Classification Recall:
+2024-08-01 18:54:51,611 - INFO -   Training: 0.476, Validation: 0.472
+2024-08-01 18:54:51,611 - INFO - Classification F1:
+2024-08-01 18:54:51,611 - INFO -   Training: 0.461, Validation: 0.455
+2024-08-01 18:54:51,611 - INFO - Regression R2
+2024-08-01 18:54:51,611 - INFO -  Training: 0.022, Validation: -0.014
+2024-08-01 18:54:51,611 - INFO - iter: [ 2000] grad_stats: [7.36e-06 1.63e-06] (1.13e-06, 1.90e-05)
+2024-08-01 18:55:30,290 - INFO - Iter: 2100: avg. loss 0.003426
+2024-08-01 18:55:30,401 - INFO - Rank 0: performing validation at iteration 2100
+2024-08-01 18:55:33,423 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:55:37,649 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:55:38,226 - INFO - Performing classification task on rank 0...
+2024-08-01 18:55:41,219 - INFO - Training Accuracy: 0.455, Validation Accuracy: 0.461
+2024-08-01 18:55:41,219 - INFO - Training Precision: 0.462, Validation Precision: 0.456
+2024-08-01 18:55:41,219 - INFO - Training Recall: 0.455, Validation Recall: 0.461
+2024-08-01 18:55:41,219 - INFO - Training F1: 0.433, Validation F1: 0.437
+2024-08-01 18:55:41,221 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:55:44,214 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:55:44,795 - INFO - Performing regression task on rank 0..
+2024-08-01 18:55:53,756 - INFO - Training R2: 0.009, Validation R2: -0.008
+2024-08-01 18:55:54,203 - INFO - Plotting mask examples..
+2024-08-01 18:55:55,783 - INFO - Rank 0: Validation done at iteration 2100. Pretraining continues.
+2024-08-01 18:55:55,785 - INFO - [iter:  2100] [loss: 0.003] [masks: 110.2, 20.8] [wd: 4.00e-02] [lr: 2.00e-03] [mem: 6.18e+03] (122.2 ms)
+2024-08-01 18:55:55,785 - INFO - Batch Iterations: 2100/1000000
+2024-08-01 18:55:55,786 - INFO - Losses:
+2024-08-01 18:55:55,786 - INFO - Training Dataset
+2024-08-01 18:55:55,786 - INFO -   Total Loss: 0.003
+2024-08-01 18:55:55,786 - INFO -   Validation Dataset
+2024-08-01 18:55:55,786 - INFO -   Total Loss: 0.008
+2024-08-01 18:55:55,786 - INFO - Linear Probing Results:
+2024-08-01 18:55:55,786 - INFO - Classification Accuracy:
+2024-08-01 18:55:55,786 - INFO -   Training: 0.475, Validation: 0.472
+2024-08-01 18:55:55,786 - INFO - Classification Precision:
+2024-08-01 18:55:55,786 - INFO -   Training: 0.479, Validation: 0.468
+2024-08-01 18:55:55,786 - INFO - Classification Recall:
+2024-08-01 18:55:55,786 - INFO -   Training: 0.475, Validation: 0.472
+2024-08-01 18:55:55,786 - INFO - Classification F1:
+2024-08-01 18:55:55,786 - INFO -   Training: 0.459, Validation: 0.454
+2024-08-01 18:55:55,786 - INFO - Regression R2
+2024-08-01 18:55:55,786 - INFO -  Training: 0.021, Validation: -0.013
+2024-08-01 18:55:55,786 - INFO - iter: [ 2100] grad_stats: [5.47e-05 1.62e-05] (1.16e-05, 2.10e-04)
+2024-08-01 18:56:33,320 - INFO - Iter: 2200: avg. loss 0.003301
+2024-08-01 18:56:33,422 - INFO - Rank 0: performing validation at iteration 2200
+2024-08-01 18:56:36,818 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:56:41,081 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:56:42,335 - INFO - Performing classification task on rank 0...
+2024-08-01 18:56:45,123 - INFO - Training Accuracy: 0.458, Validation Accuracy: 0.460
+2024-08-01 18:56:45,123 - INFO - Training Precision: 0.465, Validation Precision: 0.455
+2024-08-01 18:56:45,123 - INFO - Training Recall: 0.458, Validation Recall: 0.460
+2024-08-01 18:56:45,123 - INFO - Training F1: 0.437, Validation F1: 0.438
+2024-08-01 18:56:45,124 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:56:48,136 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:56:54,457 - INFO - Performing regression task on rank 0..
+2024-08-01 18:57:01,360 - INFO - Training R2: 0.009, Validation R2: -0.009
+2024-08-01 18:57:01,824 - INFO - Plotting mask examples..
+2024-08-01 18:57:03,332 - INFO - Rank 0: Validation done at iteration 2200. Pretraining continues.
+2024-08-01 18:57:03,357 - INFO - [iter:  2200] [loss: 0.003] [masks: 110.3, 20.8] [wd: 4.00e-02] [lr: 2.00e-03] [mem: 6.18e+03] (121.6 ms)
+2024-08-01 18:57:03,357 - INFO - Batch Iterations: 2200/1000000
+2024-08-01 18:57:03,357 - INFO - Losses:
+2024-08-01 18:57:03,357 - INFO - Training Dataset
+2024-08-01 18:57:03,357 - INFO -   Total Loss: 0.003
+2024-08-01 18:57:03,357 - INFO -   Validation Dataset
+2024-08-01 18:57:03,357 - INFO -   Total Loss: 0.008
+2024-08-01 18:57:03,357 - INFO - Linear Probing Results:
+2024-08-01 18:57:03,357 - INFO - Classification Accuracy:
+2024-08-01 18:57:03,357 - INFO -   Training: 0.474, Validation: 0.471
+2024-08-01 18:57:03,357 - INFO - Classification Precision:
+2024-08-01 18:57:03,357 - INFO -   Training: 0.479, Validation: 0.467
+2024-08-01 18:57:03,357 - INFO - Classification Recall:
+2024-08-01 18:57:03,358 - INFO -   Training: 0.474, Validation: 0.471
+2024-08-01 18:57:03,358 - INFO - Classification F1:
+2024-08-01 18:57:03,358 - INFO -   Training: 0.458, Validation: 0.454
+2024-08-01 18:57:03,358 - INFO - Regression R2
+2024-08-01 18:57:03,358 - INFO -  Training: 0.021, Validation: -0.013
+2024-08-01 18:57:03,358 - INFO - iter: [ 2200] grad_stats: [9.70e-06 4.28e-07] (3.27e-07, 9.70e-06)
+2024-08-01 18:57:41,716 - INFO - Iter: 2300: avg. loss 0.003187
+2024-08-01 18:57:41,824 - INFO - Rank 0: performing validation at iteration 2300
+2024-08-01 18:57:44,779 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:57:48,947 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:57:49,360 - INFO - Performing classification task on rank 0...
+2024-08-01 18:57:52,039 - INFO - Training Accuracy: 0.458, Validation Accuracy: 0.465
+2024-08-01 18:57:52,039 - INFO - Training Precision: 0.464, Validation Precision: 0.461
+2024-08-01 18:57:52,039 - INFO - Training Recall: 0.458, Validation Recall: 0.465
+2024-08-01 18:57:52,039 - INFO - Training F1: 0.439, Validation F1: 0.445
+2024-08-01 18:57:52,040 - INFO - Rank 0: encoding 47 batches...
+2024-08-01 18:57:55,065 - INFO - latent_features shape: torch.Size([6000, 256, 384]) in distributed case.
+2024-08-01 18:57:55,444 - INFO - Performing regression task on rank 0..
+2024-08-01 18:58:03,387 - INFO - Training R2: 0.009, Validation R2: -0.009
+2024-08-01 18:58:03,823 - INFO - Plotting mask examples..
+2024-08-01 18:58:05,214 - INFO - Rank 0: Validation done at iteration 2300. Pretraining continues.
+2024-08-01 18:58:05,216 - INFO - [iter:  2300] [loss: 0.003] [masks: 110.3, 20.7] [wd: 4.00e-02] [lr: 2.00e-03] [mem: 6.18e+03] (122.3 ms)
+2024-08-01 18:58:05,216 - INFO - Batch Iterations: 2300/1000000
+2024-08-01 18:58:05,216 - INFO - Losses:
+2024-08-01 18:58:05,216 - INFO - Training Dataset
+2024-08-01 18:58:05,216 - INFO -   Total Loss: 0.003
+2024-08-01 18:58:05,216 - INFO -   Validation Dataset
+2024-08-01 18:58:05,217 - INFO -   Total Loss: 0.008
+2024-08-01 18:58:05,217 - INFO - Linear Probing Results:
+2024-08-01 18:58:05,217 - INFO - Classification Accuracy:
+2024-08-01 18:58:05,217 - INFO -   Training: 0.473, Validation: 0.471
+2024-08-01 18:58:05,217 - INFO - Classification Precision:
+2024-08-01 18:58:05,217 - INFO -   Training: 0.478, Validation: 0.467
+2024-08-01 18:58:05,217 - INFO - Classification Recall:
+2024-08-01 18:58:05,217 - INFO -   Training: 0.473, Validation: 0.471
+2024-08-01 18:58:05,217 - INFO - Classification F1:
+2024-08-01 18:58:05,217 - INFO -   Training: 0.458, Validation: 0.453
+2024-08-01 18:58:05,217 - INFO - Regression R2
+2024-08-01 18:58:05,217 - INFO -  Training: 0.020, Validation: -0.013
+2024-08-01 18:58:05,217 - INFO - iter: [ 2300] grad_stats: [1.29e-04 2.19e-05] (1.52e-05, 3.04e-04)
+2024-08-01 19:08:29,888 - INFO - Cleaning up distributed training..
+2024-08-01 19:08:30,022 - INFO - Closing H5 file: /localscratch/heesters.32351846.0/HSC_dud_galaxy_GIRYZ7610_64_new.h5
+2024-08-01 19:08:30,023 - INFO - Cleaning up shared memory..

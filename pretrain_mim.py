@@ -449,16 +449,19 @@ def train_network_jepa(
         if cur_iter % 250 == 0:
             logger.debug(f'Rank {rank}: iter: {cur_iter}')
         try:
-            for data, metadata, masks_enc, masks_pred in dataloader_train:
+            for data, metadata, indices, masks_enc, masks_pred in dataloader_train:
 
-                def to_device(data, metadata, masks_enc, masks_pred):
+                def to_device(data, metadata, indices, masks_enc, masks_pred):
                     images = data.to(current_device, non_blocking=True)
                     meta = metadata.to(current_device, non_blocking=True)
+                    idxs = indices.to(current_device, non_blocking=True)
                     masks_encoder = [mask.to(current_device, non_blocking=True) for mask in masks_enc]
                     masks_predictor = [mask.to(current_device, non_blocking=True) for mask in masks_pred]
-                    return images, meta, masks_encoder, masks_predictor
+                    return images, meta, idxs, masks_encoder, masks_predictor
 
-                images, meta, masks_enc, masks_pred = to_device(data, metadata, masks_enc, masks_pred)
+                images, meta, idxs, masks_enc, masks_pred = to_device(
+                    data, metadata, indices, masks_enc, masks_pred
+                )
                 mask_enc_meter.update(len(masks_enc[0][0]))
                 mask_pred_meter.update(len(masks_pred[0][0]))
 
@@ -572,9 +575,9 @@ def train_network_jepa(
                         masks_enc_plot = []
                         masks_pred_plot = []
                         plot_idx = random.randint(0, len(dataloader_val) - 1)
-                        for i, (data, metadata, masks_enc, masks_pred) in enumerate(dataloader_val):
-                            images, meta, masks_encoder, masks_predictor = to_device(
-                                data, metadata, masks_enc, masks_pred
+                        for i, (data, metadata, indices, masks_enc, masks_pred) in enumerate(dataloader_val):
+                            images, meta, idxs, masks_encoder, masks_predictor = to_device(
+                                data, metadata, indices, masks_enc, masks_pred
                             )
 
                             if i == plot_idx:

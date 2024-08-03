@@ -304,6 +304,13 @@ def distributed_linear_probe(
             )
             if isinstance(latent_features, tuple):
                 latent_features = latent_features[0]
+                if len(latent_features == 2):
+                    coords = latent_features[1]
+                elif len(latent_features == 3):
+                    coords = latent_features[1]  # noqa: F841
+                    indices = latent_features[2]
+                else:
+                    raise ValueError('Invalid number of outputs from mae_latent')
 
         except Exception as e:
             logger.error(f'Error in generating embeddings: {e}')
@@ -319,6 +326,7 @@ def distributed_linear_probe(
         #     pass
 
         gathered_features = AllGather.apply(latent_features)
+        gathered_indices = AllGather.apply(indices)
 
         if rank == 0:
             # Combine gathered features
@@ -328,11 +336,16 @@ def distributed_linear_probe(
             else:
                 logger.info(f'latent_features shape: {gathered_features.shape} in non-distributed case.')  # type: ignore
 
+            sorted_order = torch.argsort(gathered_indices).cpu().numpy()  # type: ignore
             latent_features = gathered_features.cpu().numpy()  # type: ignore
+            latent_features = latent_features[sorted_order]
 
             # Load labels (assuming they're stored in the same order as the data)
             with h5py.File(data_path, 'r') as f:
-                y = f[y_label][:]
+                y = f[y_label][: len(latent_features)]
+                assert len(y) == len(
+                    latent_features
+                ), f'Mismatch: {len(y)} labels, {len(latent_features)} features'
 
             # Process features
             try:
