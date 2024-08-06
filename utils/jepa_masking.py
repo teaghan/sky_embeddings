@@ -4,6 +4,8 @@ from multiprocessing import Value
 
 import torch
 
+logger = logging.getLogger()
+
 _GLOBAL_SEED = 0
 
 
@@ -114,6 +116,9 @@ class jepa_mask_generator(object):
         # 5. return enc mask and pred mask
         """
         collated_batch = torch.utils.data.default_collate(batch)  # type: ignore
+
+        # logger.info(f'Collated batch length: {len(collated_batch)}')
+        # logger.info(f'Batch length: {len(batch)}')
 
         if len(collated_batch) == 2:
             collated_images = collated_batch[0]

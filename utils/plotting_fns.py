@@ -1216,3 +1216,56 @@ def desaturate(image, saturation_percentile, interpolate_neg=False, min_size=10,
     new_image[y_sat, x_sat] = interpolated_values
 
     return new_image, mask
+
+
+def plot_confusion_matrix(y_true, y_pred, labels, cmap='viridis', savename=None, show_plot=False):
+    cm = confusion_matrix(y_true, y_pred)
+    cm_percentage = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis] * 100
+    plt.GridSpec(len(labels), len(labels) + 1, width_ratios=[4] * len(labels) + [0.1])  # type: ignore  # noqa: F841
+    plt.figure(figsize=(len(labels) + 3, len(labels) + 3))
+    ax = sns.heatmap(
+        cm,
+        annot=False,
+        cmap=cmap,
+        cbar_kws={'shrink': 0.805},
+        square=True,
+        xticklabels=labels,
+        yticklabels=labels,
+    )
+
+    for i in range(len(labels)):
+        for j in range(len(labels)):
+            if i == j:
+                ax.text(
+                    j + 0.5,
+                    i + 0.5,
+                    f'{cm[i, j]:d}\n{cm_percentage[i, j]:.1f}%',
+                    ha='center',
+                    va='center',
+                    fontsize=10,
+                    color='black',
+                )
+            else:
+                ax.text(
+                    j + 0.5,
+                    i + 0.5,
+                    f'{cm[i, j]:d}\n{cm_percentage[i, j]:.1f}%',
+                    ha='center',
+                    va='center',
+                    fontsize=10,
+                    color='white',
+                )
+
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+
+    if savename is not None:
+        plt.savefig(
+            savename,
+            bbox_inches='tight',
+            dpi=300,
+        )
+    if show_plot:
+        plt.show()
+    else:
+        plt.close()

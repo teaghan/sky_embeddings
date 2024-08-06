@@ -1,4 +1,5 @@
 import logging
+import os
 
 import h5py
 import numpy as np
@@ -17,7 +18,8 @@ from utils.jepa_masking import apply_masks
 from utils.jepa_tensors import repeat_interleave_batch
 
 # from lark import logger
-from utils.misc import select_centre
+from utils.misc import log_memory_usage, select_centre
+from utils.plotting_fns import plot_confusion_matrix
 
 logger = logging.getLogger()
 
@@ -266,12 +268,15 @@ def distributed_linear_probe(
     device,
     dataloader_template,
     model_type,
+    model_name,
     class_data_path=None,
     regress_data_path=None,
     combine='central',
     remove_cls=True,
     world_size=1,
     rank=0,
+    plot_conf_matrix=False,
+    fig_dir='None',
 ):
     model.eval()
 
@@ -292,41 +297,48 @@ def distributed_linear_probe(
         )
         try:
             # Generate embeddings (this is distributed across all ranks)
-            latent_features = mae_latent(
-                model,
-                dataloader,
-                device=device,
-                model_type=model_type,
-                verbose=1,
-                remove_cls=remove_cls,
-                world_size=world_size,
-                rank=rank,
-            )
+            try:
+                latent_features = mae_latent(
+                    model,
+                    dataloader,
+                    device=device,
+                    model_type=model_type,
+                    verbose=1,
+                    remove_cls=remove_cls,
+                    world_size=world_size,
+                    rank=rank,
+                )
+            except Exception as e:
+                logger.error(f'Error in generating embeddings: {e}')
+            logger.info(f'len(latent_features): {len(latent_features)}')
             if isinstance(latent_features, tuple):
                 latent_features = latent_features[0]
                 if len(latent_features == 2):
-                    coords = latent_features[1]
+                    indices = latent_features[1]
                 elif len(latent_features == 3):
-                    coords = latent_features[1]  # noqa: F841
-                    indices = latent_features[2]
+                    indices = latent_features[1]
+                    images = latent_features[2]  # noqa: F841
                 else:
                     raise ValueError('Invalid number of outputs from mae_latent')
 
         except Exception as e:
             logger.error(f'Error in generating embeddings: {e}')
 
-        # if dist.is_available() and dist.is_initialized():
-        #     # Gather embeddings from all ranks
-        #     gathered_features = [torch.zeros_like(latent_features) for _ in range(world_size)]
-        #     try:
-        #         dist.all_gather(gathered_features, latent_features)
-        #     except Exception as e:
-        #         logger.error(f'Error in gathering embeddings: {e}')
-        # else:
-        #     pass
+        logger.info(f'Len indices: {len(indices)}, type: {type(indices)}')
+        logger.info(f'First 10 indices: {indices[:10]}')
+        logger.info(f'Shape indices: {indices.shape}')
 
-        gathered_features = AllGather.apply(latent_features)
-        gathered_indices = AllGather.apply(indices)
+        log_memory_usage()
+
+        # Gather embeddings from all ranks
+        try:
+            gathered_features = AllGather.apply(latent_features)
+            log_memory_usage()
+            # gathered_indices = AllGather.apply(indices)
+        except Exception as e:
+            logger.error(f'Error in all gather : {e}.')
+
+        log_memory_usage()
 
         if rank == 0:
             # Combine gathered features
@@ -336,13 +348,14 @@ def distributed_linear_probe(
             else:
                 logger.info(f'latent_features shape: {gathered_features.shape} in non-distributed case.')  # type: ignore
 
-            sorted_order = torch.argsort(gathered_indices).cpu().numpy()  # type: ignore
+            # Reorder the features back to the original order
+            # sorted_order = torch.argsort(gathered_indices).cpu().numpy()  # type: ignore
             latent_features = gathered_features.cpu().numpy()  # type: ignore
-            latent_features = latent_features[sorted_order]
+            # latent_features = latent_features[sorted_order]
 
             # Load labels (assuming they're stored in the same order as the data)
             with h5py.File(data_path, 'r') as f:
-                y = f[y_label][: len(latent_features)]
+                y = f[y_label][:]
                 assert len(y) == len(
                     latent_features
                 ), f'Mismatch: {len(y)} labels, {len(latent_features)} features'
@@ -401,6 +414,15 @@ def distributed_linear_probe(
             losses_cp['val_lp_precision'].append(float(test_precision))
             losses_cp['val_lp_recall'].append(float(test_recall))
             losses_cp['val_lp_f1'].append(float(test_f1))
+
+            # Plot confusion matrix
+            if plot_conf_matrix:
+                plot_confusion_matrix(
+                    y_test,
+                    y_pred_test,
+                    labels=['0, 1, 2'],
+                    savename=os.path.join(fig_dir, f'{model_name}_confusion_mat.png'),
+                )
 
     if regress_data_path:
         x, y = process_data(regress_data_path, 'zspec')

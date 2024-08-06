@@ -1,7 +1,9 @@
 import argparse
+import os
 
 import h5py
 import numpy as np
+import psutil
 import torch
 
 
@@ -222,3 +224,9 @@ def h5_snr(h5_path, n_central_pix=8, batch_size=5000, num_samples=None):
                 snr_vals.append(calculate_snr(cutouts, n_central_pix))
 
     return np.concatenate(snr_vals)
+
+
+def log_memory_usage():
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    print(f'Memory usage: {mem_info.rss / (1024 * 1024):.2f} MB')

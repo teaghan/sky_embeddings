@@ -44,7 +44,7 @@ from utils.jepa_tensors import repeat_interleave_batch  # noqa: E402
 from utils.jepa_vit import get_num_patches  # noqa: E402
 from utils.logging import AverageMeter, CSVLogger, gpu_timer, grad_logger  # noqa: E402
 from utils.mim_vit import build_model  # noqa: E402
-from utils.misc import parseArguments  # noqa: E402
+from utils.misc import log_memory_usage, parseArguments  # noqa: E402
 from utils.plotting_fns import plot_batch, plot_progress, visualize_masks  # noqa: E402
 from utils.pretrain_fns import (  # noqa: E402
     distributed_linear_probe,
@@ -107,6 +107,7 @@ def main(args):
         csv_logger = CSVLogger(
             ('%d', 'iter'),
             ('%.5f', 'train_loss'),
+            ('%.5f', 'val_loss'),
             ('%.5f', 'mask-enc'),
             ('%.5f', 'mask-pred'),
             ('%d', 'time (ms)'),
@@ -142,6 +143,7 @@ def main(args):
         batch_size = int(config['TRAINING']['batch_size'])
         ema = ast.literal_eval(config['TRAINING']['ema'])
         use_bfloat16 = ast.literal_eval(config['TRAINING']['use_bfloat16'])
+        plot_confusion_matrix = ast.literal_eval(config['TRAINING']['plot_confusion_matrix'])
 
         # Architecture parameters
         model_type = config['ARCHITECTURE']['model_type']
@@ -176,7 +178,7 @@ def main(args):
         save_path = os.path.join(model_dir, model_name + '_iter_{current_iter}.pth.tar')
 
         model, losses, cur_iter, optimizer, lr_scheduler, wd_scheduler, scaler = build_model(  # type: ignore
-            config, model_path, current_device, rank, build_optimizer=True
+            config, model_path, latest_path, current_device, rank, build_optimizer=True
         )
 
         if 'jepa' in model_type and isinstance(model, tuple):
@@ -334,6 +336,7 @@ def main(args):
                 patch_size=patch_size,
                 num_channels=num_channels,
                 bands=bands,
+                plot_conf_matrix=plot_confusion_matrix,
             )
 
         else:
@@ -406,6 +409,7 @@ def train_network_jepa(
     patch_size,
     num_channels,
     bands,
+    plot_conf_matrix,
 ):
     if rank == 0:
         logger.info(f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ...')
@@ -442,6 +446,7 @@ def train_network_jepa(
     # Train the neural networks
     cp_start_time = time.time()
     losses_cp = defaultdict(list)
+    val_loss = 1.0
     if rank == 0:
         logger.info('Starting training loop...')
     while cur_iter < (total_batch_iters):
@@ -531,7 +536,7 @@ def train_network_jepa(
                 time_meter.update(etime)
 
                 def log_stats(losses_cp):
-                    csv_logger.log(cur_iter, loss, mask_enc_meter.val, mask_pred_meter.val, etime)
+                    csv_logger.log(cur_iter, loss, val_loss, mask_enc_meter.val, mask_pred_meter.val, etime)
                     if rank == 0 and ((cur_iter % verbose_iters == 0) or np.isnan(loss) or np.isinf(loss)):  # type: ignore
                         logger.info(
                             f'[iter: {cur_iter:5d}] [loss: {loss_meter.avg:.3f}] '
@@ -596,6 +601,7 @@ def train_network_jepa(
                                 use_bfloat16,
                             )
                             losses_cp['val_loss'].append(loss.item())  # type: ignore
+                            val_loss = float(loss)  # noqa: F841
 
                         logger.debug(
                             f'Rank {rank}: Validation done at iteration {cur_iter}. Continuing with classifier and regressor.'
@@ -614,11 +620,14 @@ def train_network_jepa(
                                 device=current_device,
                                 dataloader_template=dataloader_val,
                                 model_type='jepa',
+                                model_name=model_name,
                                 class_data_path=lp_class_data_file,
                                 regress_data_path=lp_regress_data_file,
                                 combine=lp_combine,
                                 world_size=world_size,
                                 rank=rank,
+                                plot_conf_matrix=plot_conf_matrix,
+                                fig_dir=fig_dir,
                             )
                         if rank == 0:
                             if len(losses['batch_iters']) > 1:
@@ -645,8 +654,10 @@ def train_network_jepa(
                     if dist.is_initialized():
                         sync_barrier()
                         logger.info(f'Rank {rank}: performing validation at iteration {cur_iter}')
+                        log_memory_usage()
                         try:
                             validate()
+                            log_memory_usage()
                             logger.info(
                                 f'Rank {rank}: Validation done at iteration {cur_iter}. Pretraining continues.'
                             )

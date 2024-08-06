@@ -16,6 +16,7 @@ from astropy.wcs import WCS
 from torchvision.transforms import v2
 
 from utils.cleanup import H5FileRegistry, SharedMemoryRegistry
+from utils.distributed import sync_barrier
 
 torchvision.disable_beta_transforms_warning()
 
@@ -189,7 +190,7 @@ def build_fits_dataloader(
             use_calexp=use_calexp,
             rank=rank,
         )
-        dist_sampler = TileDistributedSampler(
+        dist_sampler = InfiniteTileDistributedSampler(
             dataset=dataset, num_replicas=world_size, rank=rank, current_device=current_device
         )
         dataloader = torch.utils.data.DataLoader(  # type: ignore
@@ -612,9 +613,9 @@ class H5Dataset_jepa(torch.utils.data.Dataset):  # type: ignore
         cutout, labels = self._process_cutout(idx, cutout)
 
         if self.label_keys is None:
-            return cutout, ra_dec
+            return cutout, ra_dec, idx
         else:
-            return cutout, ra_dec, labels
+            return cutout, ra_dec, idx, labels
 
     def _process_cutout(self, idx, cutout):
         # Clip pixel values
@@ -1093,9 +1094,9 @@ class FitsDataset_jepa(torch.utils.data.Dataset):  # type: ignore
         if self.ra_dec:
             _, radec = self.tiles_loaded[tile_index]
             ra_dec = radec[local_index] if radec is not None else None
-            return cutout, ra_dec
+            return cutout, ra_dec, idx
         else:
-            return cutout
+            return cutout, None, idx
 
     def cleanup(self):
         if self.shared_mem:
@@ -1170,6 +1171,80 @@ class TileDistributedSampler(torch.utils.data.Sampler):  # type: ignore
 
     def __len__(self):
         return self.num_tiles_per_replica * self.dataset.cutouts_per_tile
+
+
+class InfiniteTileDistributedSampler(torch.utils.data.Sampler):  # type: ignore
+    """
+    Custom distributed sampler that distributes tiles of images (each containing multiple cutouts)
+    across GPUs, ensuring each tile's cutouts are processed fully before moving to the next tile.
+    This minimizes I/O operations by loading and processing entire tiles on individual GPUs.
+
+    Attributes:
+        dataset (torch.utils.data.Dataset): Dataset to sample from.
+        num_replicas (int): Number of distributed replicas or processes.
+        rank (int): Rank of the current replica.
+        shuffle (bool): Whether to shuffle the tiles before distributing.
+    """
+
+    def __init__(self, dataset, num_replicas=1, rank=0, current_device=0, shuffle=True):
+        self.dataset = dataset
+        self.num_replicas = num_replicas
+        self.rank = rank
+        self.current_device = current_device
+        self.shuffle = shuffle
+        self.num_tiles = len(dataset) // dataset.cutouts_per_tile
+        self.num_tiles_per_replica = (self.num_tiles + self.num_replicas - 1) // self.num_replicas
+        self.epoch = 0
+
+        if self.num_tiles == 0:
+            raise ValueError("Dataset doesn't contain any tiles")
+        logger.debug(
+            f'Rank {self.rank} has {self.num_tiles_per_replica}/{self.num_tiles} tiles. World size: {self.num_replicas}'
+        )
+
+    def __iter__(self):
+        while True:
+            # Generate a tensor of tile indices
+            indices = torch.arange(self.num_tiles, dtype=torch.long)
+
+            if self.shuffle:
+                if self.rank == 0:
+                    # Shuffling indices on the root rank
+                    indices = indices[torch.randperm(indices.numel())]
+                # Ensure the indices tensor is on the correct device before broadcasting
+                indices = indices.to(self.current_device)
+                # Broadcast the shuffled or unshuffled indices tensor
+                if dist.is_available() and dist.is_initialized():
+                    dist.broadcast(indices, src=0)
+
+            # Calculate start and end indices for this replica
+            start_idx = self.rank * self.num_tiles_per_replica
+            end_idx = min(start_idx + self.num_tiles_per_replica, self.num_tiles)
+            indices = indices[start_idx:end_idx]
+
+            # Expand tile indices to cutout indices
+            cutout_indices = []
+            for idx in indices:
+                cutout_indices.extend(
+                    range(idx * self.dataset.cutouts_per_tile, (idx + 1) * self.dataset.cutouts_per_tile)
+                )
+            logger.info(f'Rank {self.rank} handles indices from {start_idx} to {end_idx-1}')
+
+            for idx in cutout_indices:
+                yield idx
+
+            logger.info(f'Rank {self.rank} completed an epoch. Reshuffling indices.')
+
+            # Increment epoch for next iteration
+            self.epoch += 1
+
+            sync_barrier()
+
+    def __len__(self):
+        return self.num_tiles_per_replica * self.dataset.cutouts_per_tile
+
+    def set_epoch(self, epoch):
+        self.epoch = epoch
 
 
 def extract_center(array, n):

@@ -20,7 +20,7 @@ from utils.pos_embed import get_2d_sincos_pos_embed
 logger = logging.getLogger()
 
 
-def build_model(config, model_filename, device, rank, build_optimizer=False):
+def build_model(config, model_path, model_path_latest, device, rank, build_optimizer=False):
     # Model architecture
     norm_pix_loss = str2bool(config['TRAINING']['norm_pix_loss'])
     img_size = int(config['DATA']['img_size'])
@@ -204,25 +204,38 @@ def build_model(config, model_filename, device, rank, build_optimizer=False):
             wd_scheduler, scaler = None, None
 
         model, losses, cur_iter = load_model(
-            model, model_filename, optimizer, lr_scheduler, wd_scheduler, scaler, rank=rank
+            model, model_path, model_path_latest, optimizer, lr_scheduler, wd_scheduler, scaler, rank=rank
         )
 
         return model, losses, cur_iter, optimizer, lr_scheduler, wd_scheduler, scaler
     else:
-        model, losses, cur_iter = load_model(model, model_filename, rank=rank)
+        model, losses, cur_iter = load_model(model, model_path, model_path_latest, rank=rank)
         return model, losses, cur_iter
 
 
 def load_model(
-    model, model_filename, optimizer=None, lr_scheduler=None, wd_scheduler=None, scaler=None, rank=0
+    model,
+    model_path,
+    model_path_latest,
+    optimizer=None,
+    lr_scheduler=None,
+    wd_scheduler=None,
+    scaler=None,
+    rank=0,
 ):
     # Check for pre-trained weights
-    if os.path.exists(model_filename):
-        # Load saved model state
-        logger.info('Loading saved model weights...')
+    if os.path.exists(model_path) or os.path.exists(model_path_latest):
+        if os.path.exists(model_path):
+            # Load saved model state
+            logger.info(f'Loading saved model weights from {model_path}...')
+            saved_path = model_path
+        if os.path.exists(model_path_latest):
+            # Load saved model state
+            logger.info(f'Loading saved model weights from {model_path_latest}...')
+            saved_path = model_path_latest
 
         # Load model info
-        checkpoint = torch.load(model_filename, map_location=lambda storage, loc: storage)
+        checkpoint = torch.load(saved_path, map_location=lambda storage, loc: storage)
         losses = defaultdict(list, dict(checkpoint['losses']))
         cur_iter = checkpoint['batch_iters'] + 1
 
