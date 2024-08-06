@@ -153,13 +153,17 @@ def main(args):
         # Masking parameters
         max_mask_ratio = float(config['MASK']['max_mask_ratio'])
         mask_ratio = float(config['MASK']['mask_ratio'])
-        allow_overlap = ast.literal_eval(config['MASK']['allow_overlap'])  # overlap context/target blocks
+        allow_overlap = ast.literal_eval(
+            config['MASK']['allow_overlap']
+        )  # overlap context/target blocks
         num_enc_masks = int(config['MASK']['num_enc_masks'])  # number of context blocks
         num_pred_masks = int(config['MASK']['num_pred_masks'])  # number of target blocks
         min_keep = int(config['MASK']['min_keep'])  # min number of patches in context block
         enc_mask_scale = ast.literal_eval(config['MASK']['enc_mask_scale'])  # scale of context blocks
         pred_mask_scale = ast.literal_eval(config['MASK']['pred_mask_scale'])  # scale of target blocks
-        aspect_ratio_targets = ast.literal_eval(config['MASK']['aspect_ratio_targets'])  # ar of target blocks
+        aspect_ratio_targets = ast.literal_eval(
+            config['MASK']['aspect_ratio_targets']
+        )  # ar of target blocks
 
         # Display model configuration
         if rank == 0:
@@ -412,7 +416,9 @@ def train_network_jepa(
     plot_conf_matrix,
 ):
     if rank == 0:
-        logger.info(f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ...')
+        logger.info(
+            f'Training the network with a batch size of {dataloader_train.batch_size} per GPU ...'
+        )
         logger.info(
             f'Progress will be displayed every {verbose_iters} batch iterations and the model will be saved every {cp_time} minutes.'
         )
@@ -536,8 +542,12 @@ def train_network_jepa(
                 time_meter.update(etime)
 
                 def log_stats(losses_cp):
-                    csv_logger.log(cur_iter, loss, val_loss, mask_enc_meter.val, mask_pred_meter.val, etime)
-                    if rank == 0 and ((cur_iter % verbose_iters == 0) or np.isnan(loss) or np.isinf(loss)):  # type: ignore
+                    csv_logger.log(
+                        cur_iter, loss, val_loss, mask_enc_meter.val, mask_pred_meter.val, etime
+                    )
+                    if rank == 0 and (
+                        (cur_iter % verbose_iters == 0) or np.isnan(loss) or np.isinf(loss)  # type: ignore
+                    ):  # type: ignore
                         logger.info(
                             f'[iter: {cur_iter:5d}] [loss: {loss_meter.avg:.3f}] '
                             f'[masks: {mask_enc_meter.avg:.1f}, {mask_pred_meter.avg:.1f}] '
@@ -580,7 +590,9 @@ def train_network_jepa(
                         masks_enc_plot = []
                         masks_pred_plot = []
                         plot_idx = random.randint(0, len(dataloader_val) - 1)
-                        for i, (data, metadata, indices, masks_enc, masks_pred) in enumerate(dataloader_val):
+                        for i, (data, metadata, indices, masks_enc, masks_pred) in enumerate(
+                            dataloader_val
+                        ):
                             images, meta, idxs, masks_encoder, masks_predictor = to_device(
                                 data, metadata, indices, masks_enc, masks_pred
                             )
@@ -601,7 +613,7 @@ def train_network_jepa(
                                 use_bfloat16,
                             )
                             losses_cp['val_loss'].append(loss.item())  # type: ignore
-                            val_loss = float(loss)  # noqa: F841
+                            val_loss = float(loss)  # type: ignore # noqa: F841
 
                         logger.debug(
                             f'Rank {rank}: Validation done at iteration {cur_iter}. Continuing with classifier and regressor.'
@@ -668,7 +680,9 @@ def train_network_jepa(
                         sync_barrier()
                         logger.debug(f'Rank {rank}: passed barrier after final validation step.')
                     else:
-                        logger.debug(f'Rank {rank}: distributed environment not initialized at validation.')
+                        logger.debug(
+                            f'Rank {rank}: distributed environment not initialized at validation.'
+                        )
                         logger.info(f'Rank {rank}: performing validation at iteration {cur_iter}')
                         try:
                             validate()
