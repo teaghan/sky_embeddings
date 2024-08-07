@@ -19,6 +19,7 @@ from utils.mim_vit import build_model, consistency_loss
 from utils.dataloaders import build_h5_dataloader, build_fits_dataloader
 from utils.plotting_fns import plot_progress, plot_batch
 from utils.eval_fns import mae_predict
+from torch.utils.tensorboard import SummaryWriter
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -165,6 +166,10 @@ def train_network(student_model, teacher_model, dataloader_train, dataloader_val
     num_batches_per_epoch = len(dataloader_train)
     # Debugging statement before the loop
     logger.info('Starting training loop...')
+    
+    
+    # Initialize TensorBoard SummaryWriter
+    writer = SummaryWriter(log_dir=fig_dir)
 
     for epoch in tqdm(range(cur_epoch, total_epochs), desc="Epochs"):
     # for epoch in tqdm(range(1), desc="Epochs"):
@@ -242,7 +247,11 @@ def train_network(student_model, teacher_model, dataloader_train, dataloader_val
 
                 # Calculate averages
                 for k in losses_cp.keys():
-                    losses[k].append(np.mean(np.array(losses_cp[k]), axis=0))
+                    if len(losses_cp[k]) > 0:
+                        avg_loss = np.mean(np.array(losses_cp[k]), axis=0)
+                        losses[k].append(avg_loss)
+                    else:
+                        losses[k].append(0.0)  # Add zero if no values are present
                 losses['batch_iters'].append(epoch * num_batches_per_epoch + batch_idx)
 
                 logger.info(f'\nEpoch: {epoch}, Batch: {batch_idx}/{num_batches_per_epoch}')
@@ -259,12 +268,19 @@ def train_network(student_model, teacher_model, dataloader_train, dataloader_val
                 
                 losses_cp = defaultdict(list)
 
+                # Debugging statements
+                print(f"Batch iters length: {len(losses['batch_iters'])}")
+                print(f"Train total loss length: {len(losses['train_total_loss'])}")
+                if 'val_total_loss' in losses.keys():
+                    print(f"Val total loss length: {len(losses['val_total_loss'])}")
+
                 if len(losses['batch_iters']) > 1:
                     # Plot progress
-                    
-                    plot_progress(losses, y_lims=[(0, 0.7), (0.8, 1.), (0.6, 1.)],
+                    plot_progress(losses, y_lims=[(0, 1), (0, 1), (0, 1), (0, 1)],
                                   savename=os.path.join(fig_dir,
                                                         f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
+                else:
+                    print("Not enough data to plot progress")
                 # Plot 5 validation samples
                 pred_imgs, mask_imgs, orig_imgs = mae_predict(student_model, dataloader_val,
                                                               device,
@@ -319,23 +335,23 @@ def train_network(student_model, teacher_model, dataloader_train, dataloader_val
         
         # Plot progress
         if len(losses['batch_iters']) > 1:
-            plot_progress(losses, y_lims=[(0, 0.7), (0.8, 1.), (0.6, 1.)],
+            plot_progress(losses, y_lims=[(0, 1), (0, 1), (0, 1), (0, 1)],
                           savename=os.path.join(fig_dir,
                                                 f'{os.path.basename(model_filename).split(".")[0]}_progress.png'))
 
-        # # Save model after each epoch
-        # logger.info('Saving network...')
-        # try:
-        #     torch.save({'epoch': epoch,
-        #                 'batch_iters': (epoch + 1) * num_batches_per_epoch,
-        #                 'losses': losses,
-        #                 'optimizer': optimizer.state_dict(),
-        #                 'lr_scheduler': lr_scheduler.state_dict(),
-        #                 'model': student_model.module.state_dict()},
-        #                model_filename)
-        # except Exception as e:
-        #     logger.error(f'Error saving network: {e}')
-        #     raise
+        # Save model after each epoch
+        logger.info('Saving network...')
+        try:
+            torch.save({'epoch': epoch,
+                        'batch_iters': (epoch + 1) * num_batches_per_epoch,
+                        'losses': losses,
+                        'optimizer': optimizer.state_dict(),
+                        'lr_scheduler': lr_scheduler.state_dict(),
+                        'model': student_model.module.state_dict()},
+                       model_filename)
+        except Exception as e:
+            logger.error(f'Error saving network: {e}')
+            raise
         
 
     logger.info('Training complete.')
@@ -344,7 +360,7 @@ def train_network(student_model, teacher_model, dataloader_train, dataloader_val
 if __name__ == "__main__":
     # args = parseArguments()
     # args = args.parse_args()
-    args = {"model_name":'mim_subset', "verbose_iters":5000, "cp_time":10.0, "data_dir":None}
+    args = {"model_name":'mim_MOCO_32', "verbose_iters":50, "cp_time":10.0, "data_dir":None}
     class khers:
         def __init__(self, **entries):
             self.__dict__.update(entries)
@@ -354,6 +370,9 @@ if __name__ == "__main__":
     args = khers(**args)
     print(args)
     main(args)
+    
+    # Close the TensorBoard writer
+    writer.close()
     # import trace; import sys;
     # #     # Set up the tracer
     # # tracer = trace.Trace(

@@ -14,9 +14,9 @@ plt.rcParams.update({
 
 def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
                   fontsize=18, savename=None):
-    
-    fontsize_small=0.8*fontsize
+    fontsize_small = 0.8 * fontsize
 
+    # Calculate the number of subplots needed
     num_ax = 1
     if 'train_lp_acc' in losses.keys():
         num_ax += 1
@@ -24,65 +24,56 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
         num_ax += 1
     if ('train_acc' in losses.keys()) or ('train_mae' in losses.keys()):
         num_ax += 1
-        
-    fig = plt.figure(figsize=(9,3*(num_ax)))
-    
+
+    fig = plt.figure(figsize=(9, 3 * num_ax))
     gs = gridspec.GridSpec(num_ax, 1)
     
-    linestyles = ['-', '--', '-.', ':']
-
     ax1 = plt.subplot(gs[0])
     axs = [ax1]
     cur_ax = 0
     if 'train_lp_acc' in losses.keys():
-        cur_ax +=1
+        cur_ax += 1
         ax2 = plt.subplot(gs[cur_ax])
         axs.append(ax2)
     if 'train_lp_r2' in losses.keys():
-        cur_ax +=1
+        cur_ax += 1
         ax3 = plt.subplot(gs[cur_ax])
         axs.append(ax3)
     if ('train_acc' in losses.keys()) or ('train_mae' in losses.keys()):
-        cur_ax +=1
+        cur_ax += 1
         ax4 = plt.subplot(gs[cur_ax])
         axs.append(ax4)
     
-    ax1.set_title('Objective Function', fontsize=fontsize)
-    ax1.plot(losses['batch_iters'], losses['train_loss'],
-                 label=r'Train', c='k')
-    if 'val_loss' in losses.keys():
-        ax1.plot(losses['batch_iters'], losses['val_loss'],
-                     label=r'Val', c='r')
-        ax1.set_ylabel('Loss',fontsize=fontsize)
+    # Temporarily set y-limits manually
+    y_lims = [(0, 10), (0, 1), (0, 1), (0, 1)]  # Adjust these limits based on expected loss values
 
+    # Plot Objective Function
+    ax1.set_title('Objective Function', fontsize=fontsize)
+    ax1.plot(losses['batch_iters'], losses['train_total_loss'], label='Train', c='k')
+    if 'val_total_loss' in losses.keys():
+        ax1.plot(losses['batch_iters'], losses['val_total_loss'], label='Val', c='r')
+    ax1.set_ylabel('Loss', fontsize=fontsize)
+    
     if 'train_lp_acc' in losses.keys():
         ax2.set_title('Linear Probe Classification', fontsize=fontsize)
-        ax2.plot(losses['batch_iters'], losses['train_lp_acc'],
-                     label=r'Train', c='k')
-        ax2.plot(losses['batch_iters'], losses['val_lp_acc'],
-                         label=r'Val', c='r')
-        ax2.set_ylabel('Accuracy',fontsize=fontsize)
+        ax2.plot(losses['batch_iters'], losses['train_lp_acc'], label='Train', c='k')
+        ax2.plot(losses['batch_iters'], losses['val_lp_acc'], label='Val', c='r')
+        ax2.set_ylabel('Accuracy', fontsize=fontsize)
     if 'train_lp_r2' in losses.keys():
         ax3.set_title('Linear Probe Regression', fontsize=fontsize)
-        ax3.plot(losses['batch_iters'], losses['train_lp_r2'],
-                     label=r'Train', c='k')
-        ax3.plot(losses['batch_iters'], losses['val_lp_r2'],
-                         label=r'Val', c='r')
-        ax3.set_ylabel(r'$R^2$',fontsize=fontsize)
+        ax3.plot(losses['batch_iters'], losses['train_lp_r2'], label='Train', c='k')
+        ax3.plot(losses['batch_iters'], losses['val_lp_r2'], label='Val', c='r')
+        ax3.set_ylabel(r'$R^2$', fontsize=fontsize)
     if 'train_acc' in losses.keys():
         ax4.set_title('Classification Accuracy', fontsize=fontsize)
-        ax4.plot(losses['batch_iters'], losses['train_acc'],
-                     label=r'Train', c='k')
-        ax4.plot(losses['batch_iters'], losses['val_acc'],
-                         label=r'Val', c='r')
-        ax4.set_ylabel(r'Acc (\%)',fontsize=fontsize)
+        ax4.plot(losses['batch_iters'], losses['train_acc'], label='Train', c='k')
+        ax4.plot(losses['batch_iters'], losses['val_acc'], label='Val', c='r')
+        ax4.set_ylabel(r'Acc (%)', fontsize=fontsize)
     elif 'train_mae' in losses.keys():
         ax4.set_title('Regression Error', fontsize=fontsize)
-        ax4.plot(losses['batch_iters'], losses['train_mae'],
-                     label=r'Train', c='k')
-        ax4.plot(losses['batch_iters'], losses['val_mae'],
-                         label=r'Val', c='r')
-        ax4.set_ylabel(r'MAE',fontsize=fontsize)
+        ax4.plot(losses['batch_iters'], losses['train_mae'], label='Train', c='k')
+        ax4.plot(losses['batch_iters'], losses['val_mae'], label='Val', c='r')
+        ax4.set_ylabel(r'MAE', fontsize=fontsize)
     
     for i, ax in enumerate(axs):
         if x_lim is not None:
@@ -90,7 +81,7 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
         else:
             ax.set_xlim(losses['batch_iters'][0], losses['batch_iters'][-1])
         ax.set_ylim(*y_lims[i])
-        ax.set_xlabel('Batch Iterations',fontsize=fontsize)
+        ax.set_xlabel('Batch Iterations', fontsize=fontsize)
         ax.tick_params(labelsize=fontsize_small)
         ax.grid(True)
         ax.legend(fontsize=fontsize_small, ncol=1)
@@ -98,13 +89,13 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
     plt.tight_layout()
     
     if savename is not None:
-        plt.savefig(savename, facecolor='white', transparent=False, dpi=100,
-                    bbox_inches='tight', pad_inches=0.05)
-
+        plt.savefig(savename, facecolor='white', transparent=False, dpi=100, bbox_inches='tight', pad_inches=0.05)
     else:
         plt.show()
 
     plt.close()
+
+
 
 def normalize_images(images):
     """

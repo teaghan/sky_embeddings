@@ -41,7 +41,7 @@ def run_iter(student_model, teacher_model, samples, ra_decs, masks, mask_ratio, 
     consistency_loss_val = consistency_loss(student_latent, teacher_latent)
 
     # Total loss is a sum of reconstruction loss and consistency loss
-    total_loss = reconstruction_loss +  100 * consistency_loss_val
+    total_loss = reconstruction_loss +  consistency_loss_val
 
     if 'train' in mode:
         
