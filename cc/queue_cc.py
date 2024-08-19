@@ -295,7 +295,7 @@ def main(config):
             cluster = "moo"
         elif hostname.startswith("se"):
             cluster = "sockeye"
-        elif hostname.startswith("narval"):
+        elif "narval" in hostname:
             cluster = "narval"
         elif hostname.startswith("borg"):
             cluster = "snubfin"

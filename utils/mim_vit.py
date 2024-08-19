@@ -123,11 +123,11 @@ def build_model(config, model_filename, device, build_optimizer=False, resume=Fa
     teacher_model = nn.DataParallel(teacher_model)
 
     if build_optimizer:
-        total_epochs = int(config['TRAINING']['total_epochs'])
         weight_decay = float(config['TRAINING']['weight_decay'])
         init_lr = float(config['TRAINING']['init_lr'])
         final_lr_factor = float(config['TRAINING']['final_lr_factor'])
-        
+        total_iters = int(config['TRAINING']['total_batch_iters'])  # Use total_batch_iters
+
         # Set weight decay to 0 for bias and norm layers
         param_groups = optim_factory.param_groups_weight_decay(student_model, weight_decay)
 
@@ -135,15 +135,14 @@ def build_model(config, model_filename, device, build_optimizer=False, resume=Fa
         optimizer = torch.optim.AdamW(param_groups, lr=init_lr, betas=(0.9, 0.95))
 
         # Learning rate scheduler
-        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, total_epochs, eta_min=init_lr/final_lr_factor)
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, total_iters, eta_min=init_lr/final_lr_factor)
 
-        student_model, teacher_model, losses, cur_epoch = load_model(student_model, teacher_model, model_filename, optimizer, lr_scheduler, resume)
+        student_model, teacher_model, losses, cur_iter = load_model(student_model, teacher_model, model_filename, optimizer, lr_scheduler, resume)
         
-        return student_model, teacher_model, losses, cur_epoch, optimizer, lr_scheduler
+        return student_model, teacher_model, losses, cur_iter, optimizer, lr_scheduler
     else:
-        student_model, teacher_model, losses, cur_epoch = load_model(student_model, teacher_model, model_filename, resume=resume)
-        return student_model, teacher_model, losses, cur_epoch
-
+        student_model, teacher_model, losses, cur_iter = load_model(student_model, teacher_model, model_filename, resume=resume)
+        return student_model, teacher_model, losses, cur_iter
 
 
 def load_model(student_model, teacher_model, model_filename, optimizer=None, lr_scheduler=None, resume=False):

@@ -17,63 +17,39 @@ def plot_progress(losses, y_lims=[(0,1)], x_lim=None, lp=False,
     fontsize_small = 0.8 * fontsize
 
     # Calculate the number of subplots needed
-    num_ax = 1
-    if 'train_lp_acc' in losses.keys():
-        num_ax += 1
-    if 'train_lp_r2' in losses.keys():
-        num_ax += 1
-    if ('train_acc' in losses.keys()) or ('train_mae' in losses.keys()):
-        num_ax += 1
+    num_ax = 3  # For total, reconstruction, and consistency losses
 
     fig = plt.figure(figsize=(9, 3 * num_ax))
     gs = gridspec.GridSpec(num_ax, 1)
     
     ax1 = plt.subplot(gs[0])
-    axs = [ax1]
-    cur_ax = 0
-    if 'train_lp_acc' in losses.keys():
-        cur_ax += 1
-        ax2 = plt.subplot(gs[cur_ax])
-        axs.append(ax2)
-    if 'train_lp_r2' in losses.keys():
-        cur_ax += 1
-        ax3 = plt.subplot(gs[cur_ax])
-        axs.append(ax3)
-    if ('train_acc' in losses.keys()) or ('train_mae' in losses.keys()):
-        cur_ax += 1
-        ax4 = plt.subplot(gs[cur_ax])
-        axs.append(ax4)
+    ax2 = plt.subplot(gs[1])
+    ax3 = plt.subplot(gs[2])
+    axs = [ax1, ax2, ax3]
     
-    # Temporarily set y-limits manually
-    y_lims = [(0, 10), (0, 1), (0, 1), (0, 1)]  # Adjust these limits based on expected loss values
+    # Set y-limits for each subplot
+    y_lims = [(0, 1), (0, 1), (0, 1)]  # Adjust these limits based on expected loss values
 
-    # Plot Objective Function
-    ax1.set_title('Objective Function', fontsize=fontsize)
+    # Plot Total Loss
+    ax1.set_title('Total Loss', fontsize=fontsize)
     ax1.plot(losses['batch_iters'], losses['train_total_loss'], label='Train', c='k')
     if 'val_total_loss' in losses.keys():
         ax1.plot(losses['batch_iters'], losses['val_total_loss'], label='Val', c='r')
     ax1.set_ylabel('Loss', fontsize=fontsize)
     
-    if 'train_lp_acc' in losses.keys():
-        ax2.set_title('Linear Probe Classification', fontsize=fontsize)
-        ax2.plot(losses['batch_iters'], losses['train_lp_acc'], label='Train', c='k')
-        ax2.plot(losses['batch_iters'], losses['val_lp_acc'], label='Val', c='r')
-        ax2.set_ylabel('Accuracy', fontsize=fontsize)
-    if 'train_lp_r2' in losses.keys():
-        ax3.set_title('Linear Probe Regression', fontsize=fontsize)
-        ax3.plot(losses['batch_iters'], losses['train_lp_r2'], label='Train', c='k')
-        ax3.plot(losses['batch_iters'], losses['val_lp_r2'], label='Val', c='r')
-        ax3.set_ylabel(r'$R^2$', fontsize=fontsize)
-    if 'train_acc' in losses.keys():
-        ax4.set_title('Classification Accuracy', fontsize=fontsize)
-        ax4.plot(losses['batch_iters'], losses['train_acc'], label='Train', c='k')
-        ax4.plot(losses['batch_iters'], losses['val_acc'], label='Val', c='r')
-        ax4.set_ylabel(r'Acc (%)', fontsize=fontsize)
-    elif 'train_mae' in losses.keys():
-        ax4.set_title('Regression Error', fontsize=fontsize)
-        ax4.plot(losses['batch_iters'], losses['train_mae'], label='Train', c='k')
-        ax4.plot(losses['batch_iters'], losses['val_mae'], label='Val', c='r')
-        ax4.set_ylabel(r'MAE', fontsize=fontsize)
+    # Plot Reconstruction Loss
+    ax2.set_title('Reconstruction Loss', fontsize=fontsize)
+    ax2.plot(losses['batch_iters'], losses['train_reconstruction_loss'], label='Train', c='k')
+    if 'val_reconstruction_loss' in losses.keys():
+        ax2.plot(losses['batch_iters'], losses['val_reconstruction_loss'], label='Val', c='r')
+    ax2.set_ylabel('Loss', fontsize=fontsize)
+    
+    # Plot Consistency Loss
+    ax3.set_title('Consistency Loss', fontsize=fontsize)
+    ax3.plot(losses['batch_iters'], losses['train_consistency_loss'], label='Train', c='k')
+    if 'val_consistency_loss' in losses.keys():
+        ax3.plot(losses['batch_iters'], losses['val_consistency_loss'], label='Val', c='r')
+    ax3.set_ylabel('Loss', fontsize=fontsize)
     
     for i, ax in enumerate(axs):
         if x_lim is not None:
