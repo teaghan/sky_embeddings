@@ -66,7 +66,7 @@ def main(args):
 
     # Construct the model, optimizer, etc.
     model_filename = os.path.join(model_dir, model_name + '.pth.tar')
-    student_model, teacher_model, losses, cur_epoch, optimizer, lr_scheduler = build_model(config, model_filename, device, build_optimizer=True, resume=resume)
+    student_model, teacher_model, losses, cur_iter, optimizer, lr_scheduler = build_model(config, model_filename, device, build_optimizer=True, resume=resume)
     
     # Data loader stuff
     num_workers = min([os.cpu_count(), 12 * n_gpu])
@@ -132,7 +132,7 @@ def main(args):
     train_network(student_model, teacher_model, dataloader_train, dataloader_val, train_nested_batches,
                   optimizer, lr_scheduler, device,
                   mask_ratio,
-                  losses, cur_epoch,
+                  losses, cur_iter,
                   total_batch_iters, args.verbose_iters, args.cp_time, model_filename, fig_dir,
                   lp_class_data_file, lp_regress_data_file, config['DATA']['lp_combine'])
 
@@ -164,9 +164,12 @@ def train_network(student_model, teacher_model, dataloader_train, dataloader_val
     losses_cp = defaultdict(list)
     cp_start_time = time.time()
     logger.info('Starting training loop...')
+    
+    
 
     # Initialize TensorBoard SummaryWriter
-    writer = SummaryWriter(log_dir=fig_dir/firstrun)
+    runname = "first_run"
+    writer = SummaryWriter(log_dir=os.path.join(fig_dir, runname))
     
     # Initialize iteration counter
     iter_counter = cur_iter
@@ -239,6 +242,16 @@ def train_network(student_model, teacher_model, dataloader_train, dataloader_val
                 if lp_class_data_file or lp_regress_data_file:
                     linear_probe(student_model, losses_cp, device, dataloader_val,
                                  lp_class_data_file, lp_regress_data_file, combine=lp_combine)
+                
+                
+                writer.add_scalar('Loss/Train_Total', iter_loss_total / iter_batches, iter_counter)
+                writer.add_scalar('Loss/Train_Reconstruction', iter_reconstruction_loss / iter_batches, iter_counter)
+                writer.add_scalar('Loss/Train_Consistency', iter_consistency_loss / iter_batches, iter_counter)
+                
+                writer.add_scalar('Loss/Val_Total', val_loss_total, iter_counter)
+                writer.add_scalar('Loss/Val_Reconstruction', val_loss_recon, iter_counter)
+                writer.add_scalar('Loss/Val_Consistency', val_loss_cons, iter_counter)   
+                        
 
             # Calculate averages
             for k in losses_cp.keys():
@@ -259,15 +272,18 @@ def train_network(student_model, teacher_model, dataloader_train, dataloader_val
             logger.info(f'\tValidation Consistency Loss: {val_loss_cons:0.3f}')
             
             
-            # Inside your training loop
-            writer.add_scalar('Loss/Train_Total', iter_loss_total / iter_batches, iter_counter)
-            writer.add_scalar('Loss/Train_Reconstruction', iter_reconstruction_loss / iter_batches, iter_counter)
-            writer.add_scalar('Loss/Train_Consistency', iter_consistency_loss / iter_batches, iter_counter)
+            print(f"Writing to TensorBoard at iteration {iter_counter}")
+            
+            
+            # # Inside your training loop
+            # writer.add_scalar('Loss/Train_Total', iter_loss_total / iter_batches, iter_counter)
+            # writer.add_scalar('Loss/Train_Reconstruction', iter_reconstruction_loss / iter_batches, iter_counter)
+            # writer.add_scalar('Loss/Train_Consistency', iter_consistency_loss / iter_batches, iter_counter)
 
-            # Log validation metrics
-            writer.add_scalar('Loss/Val_Total', val_loss_total, iter_counter)
-            writer.add_scalar('Loss/Val_Reconstruction', val_loss_recon, iter_counter)
-            writer.add_scalar('Loss/Val_Consistency', val_loss_cons, iter_counter)
+            # # Log validation metrics
+            # writer.add_scalar('Loss/Val_Total', val_loss_total, iter_counter)
+            # writer.add_scalar('Loss/Val_Reconstruction', val_loss_recon, iter_counter)
+            # writer.add_scalar('Loss/Val_Consistency', val_loss_cons, iter_counter)
             
             if lp_class_data_file or lp_regress_data_file:
                 logger.info('Linear Probing Results:')

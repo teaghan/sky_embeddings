@@ -162,7 +162,8 @@ def load_model(student_model, teacher_model, model_filename, optimizer=None, lr_
         checkpoint = torch.load(model_filename, 
                                 map_location=lambda storage, loc: storage)
         losses = defaultdict(list, dict(checkpoint['losses']))
-        cur_epoch = checkpoint['epoch'] + 1
+        print(checkpoint.keys())
+        cur_iter = checkpoint['batch_iters'] + 1
         
         # Load optimizer states
         if optimizer is not None:
@@ -176,8 +177,8 @@ def load_model(student_model, teacher_model, model_filename, optimizer=None, lr_
     else:
         print('\nStarting fresh model to train...')
         losses = defaultdict(list)
-        cur_epoch = 0
-    return student_model, teacher_model, losses, cur_epoch
+        cur_iter = 0
+    return student_model, teacher_model, losses, cur_iter
 
 class MaskedAutoencoderViT(nn.Module):
     '''Masked Autoencoder with VisionTransformer backbone.'''

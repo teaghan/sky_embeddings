@@ -38,10 +38,14 @@ def run_iter(student_model, teacher_model, samples, ra_decs, masks, mask_ratio, 
     student_latent, _, _ = student_model.module.forward_features(samples, ra_dec=ra_decs, mask_ratio=mask_ratio, mask=masks)
 
     # Calculate consistency loss
-    consistency_loss_val = consistency_loss(student_latent, teacher_latent)
+    consistency_loss_val = consistency_loss(student_latent, teacher_latent)\
+    
+    # print(f"#############reconstruction_loss {reconstruction_loss} & ######consistency_loss_val {consistency_loss_val} ")
+    
+    scaled_consistency_loss_Value =  100 *  consistency_loss_val
 
     # Total loss is a sum of reconstruction loss and consistency loss
-    total_loss = reconstruction_loss +  consistency_loss_val
+    total_loss = reconstruction_loss + scaled_consistency_loss_Value
 
     if 'train' in mode:
         
@@ -61,13 +65,13 @@ def run_iter(student_model, teacher_model, samples, ra_decs, masks, mask_ratio, 
         # Save loss and metrics
         losses_cp['train_total_loss'].append(float(total_loss))
         losses_cp['train_reconstruction_loss'].append(float(reconstruction_loss))
-        losses_cp['train_consistency_loss'].append(float(consistency_loss_val))
+        losses_cp['train_consistency_loss'].append(float(scaled_consistency_loss_Value))
 
     else:
         # Save loss and metrics
         losses_cp['val_total_loss'].append(float(total_loss))
         losses_cp['val_reconstruction_loss'].append(float(reconstruction_loss))
-        losses_cp['val_consistency_loss'].append(float(consistency_loss_val))
+        losses_cp['val_consistency_loss'].append(float(scaled_consistency_loss_Value))
                 
 
                 
