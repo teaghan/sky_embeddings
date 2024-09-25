@@ -200,15 +200,15 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
                 # Print current status
                 print('\nBatch Iterations: %i/%i ' % (cur_iter, total_batch_iters))
                 print('\tTraining Dataset')
-                print('\t\tTotal Loss: %0.3f'% (losses['train_loss'][-1]))
+                print('\t\tTotal Loss: %0.3e'% (losses['train_loss'][-1]))
                 if 'mse' in loss_fn.lower():
-                    print('\t\tMAE: %0.3f'% (losses['train_mae'][-1]))
+                    print('\t\tMAE: %0.3e'% (losses['train_mae'][-1]))
                 else:
                     print('\t\tAccuracy: %0.3f'% (losses['train_acc'][-1]))
                 print('\tValidation Dataset')
-                print('\t\tTotal Loss: %0.3f'% (losses['val_loss'][-1]))
+                print('\t\tTotal Loss: %0.3e'% (losses['val_loss'][-1]))
                 if 'mse' in loss_fn.lower():
-                    print('\t\tMAE: %0.3f'% (losses['val_mae'][-1]))
+                    print('\t\tMAE: %0.3e'% (losses['val_mae'][-1]))
                 else:
                     print('\t\tAccuracy: %0.3f'% (losses['val_acc'][-1]))
 
@@ -228,7 +228,6 @@ def train_network(model, dataloader_train, dataloader_val, optimizer, lr_schedul
 
                 # Save best model
                 if losses['val_loss'][-1]<best_val_loss:
-                    print('\t%0.3f, %0.3f'% (best_val_loss, losses['val_loss'][-1]))
                     best_val_loss = losses['val_loss'][-1]
                     print('Saving network...')
                     torch.save({'batch_iters': cur_iter,
