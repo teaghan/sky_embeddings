@@ -3,8 +3,8 @@ import glob
 import numpy as np
 import h5py
 
-data_dir = '/arc/projects/ots/HSC_h5/'
-in_path = os.path.join(data_dir, 'HSC_galaxies_zspec_64.h5')
+data_dir = '/home/obriaint/scratch/sky_embeddings/data/'
+in_path = os.path.join(data_dir, 'HSC_dud_galaxy_GIRYZ7610_64.h5')
 subsets = ['train', 'val', 'test']
 subset_frac = [0.8,0.1,0.1]
 
